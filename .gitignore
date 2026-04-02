@@ -1,0 +1,5 @@
+data/mylists
+data/vocab
+out/*
+src/__pycache__/*
+spec.md
