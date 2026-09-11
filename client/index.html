@@ -1,80 +1,80 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Hanja Vocab</title>
+	<title>한자 어휘</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
 	<link rel="stylesheet" href="/style/style.css">
 	<script type="module" src="/lib/app.js"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
-		<p class="title">Hanja Vocab</p>
-		<p class="subtitle">Select the fixed level catalog, overlay Anki status, build vocabulary</p>
+		<p class="title">한자 어휘</p>
+		<p class="subtitle">급수별 한자를 선택하고 학습 상태와 관련 어휘를 확인하세요</p>
 	</div></div></section>
 
 	<main class="container px-4 py-5">
-		<div id="message" class="notification is-hidden" role="status"><button id="messageClose" class="delete" type="button" aria-label="Close"></button><span id="messageText"></span></div>
-		<div class="tabs is-boxed mb-5" aria-label="Application views"><ul>
-			<li id="charactersTab" class="is-active"><a href="#characters">Characters</a></li>
-			<li id="vocabularyTab"><a href="#vocabulary">Vocabulary</a></li>
+		<div id="message" class="notification is-hidden" role="status"><button id="messageClose" class="delete" type="button" aria-label="닫기"></button><span id="messageText"></span></div>
+		<div class="tabs is-boxed mb-5" aria-label="화면 선택"><ul>
+			<li id="charactersTab" class="is-active"><a href="#characters">한자</a></li>
+			<li id="vocabularyTab"><a href="#vocabulary">어휘</a></li>
 			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
 		</ul></div>
 
 		<div id="charactersView">
 			<section class="box" aria-labelledby="ankiTitle">
-				<div class="level mb-4"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">Anki status</h1><p class="subtitle is-6 mb-0">Optional: AnkiConnect is called only by this Go server</p></div></div><div class="level-right"><span id="ankiStatus" class="tag is-medium is-light">Checking…</span></div></div>
+				<div class="level mb-4"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">앙키 학습 상태</h1><p class="subtitle is-6 mb-0">선택 사항이며 앙키 연결은 이 서버에서만 처리합니다</p></div></div><div class="level-right"><span id="ankiStatus" class="tag is-medium is-light">확인 중…</span></div></div>
 				<div class="columns is-multiline">
-					<div class="column is-one-third"><label class="label" for="deckSelect">Deck</label><div class="select is-fullwidth"><select id="deckSelect"></select></div></div>
-					<div class="column is-one-third"><label class="label" for="noteTypeSelect">Note type</label><div class="select is-fullwidth"><select id="noteTypeSelect"></select></div></div>
-					<div class="column is-one-third"><label class="label" for="characterFieldSelect">Hanja field</label><div class="select is-fullwidth"><select id="characterFieldSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="deckSelect">덱</label><div class="select is-fullwidth"><select id="deckSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="noteTypeSelect">노트 유형</label><div class="select is-fullwidth"><select id="noteTypeSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="characterFieldSelect">한자 필드</label><div class="select is-fullwidth"><select id="characterFieldSelect"></select></div></div>
 				</div>
-				<div class="buttons"><button id="refreshStatusButton" class="button is-primary" type="button">Refresh Anki status</button><button id="refreshAnkiButton" class="button is-light" type="button">Reconnect</button></div>
+				<div class="buttons"><button id="refreshStatusButton" class="button is-primary" type="button">앙키 상태 새로고침</button><button id="refreshAnkiButton" class="button is-light" type="button">다시 연결</button></div>
 			</section>
 
 			<section class="box" aria-labelledby="saveTitle">
-				<h2 id="saveTitle" class="title is-5 mb-2">Saved selection</h2><p class="subtitle is-6">Use server file storage or a browser JSON file</p>
+				<h2 id="saveTitle" class="title is-5 mb-2">선택 항목 저장</h2><p class="subtitle is-6">서버 저장소 또는 브라우저 파일을 사용합니다</p>
 				<div class="columns is-multiline is-vcentered">
-					<div class="column is-half"><label class="label" for="saveName">Save name</label><div class="field has-addons"><div class="control is-expanded"><input id="saveName" class="input" value="daily" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._-]*"></div><div class="control"><button id="saveLocalButton" class="button is-link" type="button">Save</button></div></div></div>
-					<div class="column is-half"><label class="label" for="savedSelect">Stored in data/saves</label><div class="field has-addons"><div class="control is-expanded"><div class="select is-fullwidth"><select id="savedSelect"></select></div></div><div class="control"><button id="loadLocalButton" class="button is-info is-light" type="button">Load</button></div><div class="control"><button id="deleteLocalButton" class="button is-danger is-light" type="button">Delete</button></div></div></div>
+					<div class="column is-half"><label class="label" for="saveName">저장 이름</label><div class="field has-addons"><div class="control is-expanded"><input id="saveName" class="input" value="20260911" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._-]*"></div><div class="control"><button id="saveLocalButton" class="button is-link" type="button">저장</button></div></div></div>
+					<div class="column is-half"><label class="label" for="savedSelect">서버에 저장된 항목</label><div class="field has-addons"><div class="control is-expanded"><div class="select is-fullwidth"><select id="savedSelect"></select></div></div><div class="control"><button id="loadLocalButton" class="button is-info is-light" type="button">불러오기</button></div><div class="control"><button id="deleteLocalButton" class="button is-danger is-light" type="button">삭제</button></div></div></div>
 				</div>
-				<div class="buttons"><button id="saveFileButton" class="button is-light" type="button">Save JSON file</button><button id="openFileButton" class="button is-light" type="button">Open JSON file</button><button id="refreshSavesButton" class="button is-light" type="button">Refresh saves</button></div>
-				<input id="openFileInput" class="is-hidden" type="file" accept="application/json,.json"><p class="help">Chromium uses the File System Access picker; other browsers use download/upload</p>
+				<div class="buttons"><button id="saveFileButton" class="button is-light" type="button">파일로 저장</button><button id="openFileButton" class="button is-light" type="button">파일 열기</button><button id="refreshSavesButton" class="button is-light" type="button">저장 목록 새로고침</button></div>
+				<input id="openFileInput" class="is-hidden" type="file" accept="application/json,.json"><p class="help">지원하는 브라우저에서는 파일 선택기를 사용하며 그 외에는 내려받기와 올리기를 사용합니다</p>
 			</section>
 
 			<section id="charactersSection" aria-labelledby="charactersTitle">
-				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">Characters</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">Known 0</span><span id="newCount" class="tag is-info is-light">New 0</span><span id="unknownCount" class="tag is-light">Unknown 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">Select known</button><button id="selectNewButton" class="button is-info is-light" type="button">Select new</button><button id="clearSelectionButton" class="button is-light" type="button">Clear</button></div></div></div>
+				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">학습함 0</span><span id="newCount" class="tag is-info is-light">새 카드 0</span><span id="unknownCount" class="tag is-light">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-info is-light" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
 				<div id="levelGroups"></div>
 			</section>
-			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p><strong id="selectedCount">0</strong> characters selected</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>Build vocabulary</button></div></div></section>
+			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p>한자 <strong id="selectedCount">0</strong>자 선택됨</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>관련 어휘 만들기</button></div></div></section>
 		</div>
 
 		<div id="vocabularyView" class="is-hidden">
 			<section class="box" aria-labelledby="vocabTitle">
-				<h2 id="vocabTitle" class="title is-4 mb-1">Vocabulary</h2><p id="vocabSummary" class="subtitle is-6"></p>
+				<h2 id="vocabTitle" class="title is-4 mb-1">어휘</h2><p id="vocabSummary" class="subtitle is-6"></p>
 				<div class="columns is-multiline">
-					<div class="column is-half-tablet"><label class="label" for="vocabFilter">Filter</label><input id="vocabFilter" class="input" type="search" placeholder="Hanja, Hangul, English"></div>
-					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabSort">Sort</label><div class="select is-fullwidth"><select id="vocabSort"><option value="frequency">Frequency</option><option value="hanja-asc">Hanja A–Z</option><option value="hanja-desc">Hanja Z–A</option><option value="hangul-asc">Hangul A–Z</option><option value="english-asc">English A–Z</option></select></div></div>
-					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="maxRank">Max frequency rank</label><input id="maxRank" class="input" type="number" min="1" step="1" placeholder="No maximum"></div>
+					<div class="column is-half-tablet"><label class="label" for="vocabFilter">검색</label><input id="vocabFilter" class="input" type="search" placeholder="한자, 한글, 뜻"></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabSort">정렬</label><div class="select is-fullwidth"><select id="vocabSort"><option value="frequency">빈도순</option><option value="hanja-asc">한자 오름차순</option><option value="hanja-desc">한자 내림차순</option><option value="hangul-asc">한글 오름차순</option><option value="english-asc">뜻 오름차순</option></select></div></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="maxRank">최대 빈도 순위</label><input id="maxRank" class="input" type="number" min="1" step="1" placeholder="제한 없음"></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>Hanja</th><th>Hangul</th><th>English</th><th>Pokémon</th><th>NIKL</th></tr></thead><tbody id="vocabBody"></tbody></table></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한자</th><th>한글</th><th>뜻</th><th>포켓몬 순위</th><th>국립국어원 순위</th></tr></thead><tbody id="vocabBody"></tbody></table></div>
 			</section>
 		</div>
 
 		<div id="idiomsView" class="is-hidden">
 			<section class="box" aria-labelledby="idiomsTitle">
-				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">Loading the NIKL catalog…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light" target="_blank" rel="noreferrer">Official source</a></div></div>
+				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">국립국어원 목록을 불러오는 중…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light" target="_blank" rel="noreferrer">공식 출처</a></div></div>
 				<div class="columns is-multiline is-vcentered">
-					<div class="column is-half"><label class="label" for="idiomFilter">Filter</label><input id="idiomFilter" class="input" type="search" placeholder="Hangul or Hanja"></div>
-					<div class="column is-one-quarter"><label class="label" for="idiomSort">Sort</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">Hangul</option><option value="hanja">Hanja</option><option value="source">Report order</option></select></div></div>
-					<div class="column is-one-quarter"><label class="checkbox mt-5"><input id="idiomSelectedOnly" type="checkbox"> Uses only selected Hanja</label></div>
+					<div class="column is-half"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="source">보고서 수록순</option></select></div></div>
+					<div class="column is-one-quarter"><label class="checkbox mt-5"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>Korean</th><th>Hanja notation</th><th>Selected</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
 				<p id="idiomsLicense" class="help mt-4"></p>
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">Go · Bulma · KRDict · AnkiConnect status</div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구</div></footer>
 </body>
 </html>

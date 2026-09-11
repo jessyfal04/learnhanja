@@ -1,7 +1,7 @@
 import { api } from "./api.js";
 import { state } from "./state.js";
 import { toggledSelection, withLevelSelection } from "./selection.js";
-import { setLoading, setOptions, showMessage } from "./ui.js";
+import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
 
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");
@@ -12,24 +12,24 @@ export async function loadCatalog() {
 		state.catalog = await api("/api/levels");
 		renderCatalog();
 	} catch (error) {
-		showMessage("danger", error.message);
+		showMessage("danger", koreanError(error, "급수별 한자 목록을 불러올 수 없습니다"));
 	}
 }
 
 export async function loadMetadata() {
 	const status = document.getElementById("ankiStatus");
 	status.className = "tag is-medium is-warning is-light";
-	status.textContent = "Connecting…";
+	status.textContent = "연결 중…";
 	try {
 		const metadata = await api("/api/anki");
 		setOptions(deckSelect, metadata.decks, ["어문회::A. 독음", "日中韓漢字::A. Reco::A. Reco Hanja", "한자"]);
 		status.className = "tag is-medium is-success is-light";
-		status.textContent = `Connected · API ${metadata.version}`;
+		status.textContent = `연결됨 · 규격 ${metadata.version}`;
 		await loadNoteTypes();
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
-		status.textContent = "Anki unavailable";
-		showMessage("warning", "The fixed catalog still works; Anki status is unavailable");
+		status.textContent = "앙키를 사용할 수 없음";
+		showMessage("warning", "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다");
 	}
 }
 
@@ -52,9 +52,9 @@ export async function refreshStatus() {
 	try {
 		state.ankiStatus = await api("/api/anki/status", {method: "POST", body: JSON.stringify({deck: deckSelect.value, noteType: noteTypeSelect.value, characterField: characterFieldSelect.value})});
 		renderCatalog();
-		showMessage("success", `Matched ${state.ankiStatus.total} catalog statuses from Anki`);
+		showMessage("success", `앙키에서 한자 ${state.ankiStatus.total}자의 상태를 확인했습니다`);
 	} catch (error) {
-		showMessage("danger", error.message);
+		showMessage("danger", koreanError(error, "앙키 상태를 확인할 수 없습니다"));
 	} finally {
 		setLoading(button, false);
 	}
@@ -83,9 +83,9 @@ export function renderCatalog() {
 		if (status === "known") known++;
 		if (status === "new") fresh++;
 	}
-	document.getElementById("knownCount").textContent = `Known ${known}`;
-	document.getElementById("newCount").textContent = `New ${fresh}`;
-	document.getElementById("unknownCount").textContent = `Unknown ${state.catalog.total - known - fresh}`;
+	document.getElementById("knownCount").textContent = `학습함 ${known}`;
+	document.getElementById("newCount").textContent = `새 카드 ${fresh}`;
+	document.getElementById("unknownCount").textContent = `상태 없음 ${state.catalog.total - known - fresh}`;
 	const groups = document.getElementById("levelGroups");
 	groups.replaceChildren(...state.catalog.groups.map(renderGroup));
 	updateSelectionUI();
@@ -101,7 +101,7 @@ function renderGroup(group) {
 	title.textContent = `${group.level} · ${group.characters.length}`;
 	const actions = document.createElement("div");
 	actions.className = "buttons are-small";
-	actions.append(actionButton("Select level", "is-link is-light", true), actionButton("Clear level", "is-light", false));
+	actions.append(actionButton("급수 전체 선택", "is-link is-light", true), actionButton("급수 선택 해제", "is-light", false));
 	heading.append(title, actions);
 	box.appendChild(heading);
 	const grid = document.createElement("div");
@@ -112,7 +112,7 @@ function renderGroup(group) {
 		button.type = "button";
 		button.className = `button hanja-button ${statusClass(info.status)}`;
 		button.textContent = value;
-		button.title = `${group.level} · ${info.status}${info.suspended ? " · suspended" : ""}`;
+		button.title = `${group.level} · ${statusLabel(info.status)}${info.suspended ? " · 일시 중단" : ""}`;
 		button.dataset.character = value;
 		button.classList.toggle("is-suspended", Boolean(info.suspended));
 		button.addEventListener("click", () => { state.selected = toggledSelection(state.selected, value); updateCharacterButtons(); updateSelectionUI(); });
@@ -142,6 +142,12 @@ function statusClass(status) {
 	if (status === "known") return "is-success is-light";
 	if (status === "new") return "is-info is-light";
 	return "is-light";
+}
+
+function statusLabel(status) {
+	if (status === "known") return "학습함";
+	if (status === "new") return "새 카드";
+	return "상태 없음";
 }
 
 function updateSelectionUI() {

@@ -14,10 +14,10 @@ test("createSnapshot normalizes and deduplicates selection", () => {
 });
 
 test("validateSnapshot rejects invalid files", () => {
-	assert.throws(() => validateSnapshot({}), /invalid deck/);
+	assert.throws(() => validateSnapshot({}), /덱 값이 올바르지 않습니다/);
 	assert.throws(() => validateSnapshot({
 		deck: "d", noteType: "n", characterField: "c", selected: ["abc"],
-	}), /invalid Hanja/);
+	}), /올바르지 않은 한자/);
 });
 
 test("selection does not require Anki configuration", () => {

@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { state } from "./state.js";
-import { setLoading, showMessage } from "./ui.js";
+import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
 import { showView } from "./views.js";
 
@@ -17,7 +17,7 @@ export async function buildVocabulary() {
 		renderVocabulary();
 		showView("vocabulary");
 	} catch (error) {
-		showMessage("danger", error.message);
+		showMessage("danger", koreanError(error, "관련 어휘를 불러올 수 없습니다"));
 	} finally {
 		setLoading(button, false);
 	}
@@ -28,7 +28,7 @@ export function renderVocabulary() {
 	const body = document.getElementById("vocabBody");
 	body.replaceChildren();
 	for (const entry of visible) body.appendChild(renderRow(entry));
-	document.getElementById("vocabSummary").textContent = `${visible.length} shown · ${state.vocabulary.length} loaded · ${state.vocabularyTotal} total matches`;
+	document.getElementById("vocabSummary").textContent = `${visible.length}개 표시 · ${state.vocabulary.length}개 불러옴 · 전체 ${state.vocabularyTotal}개`;
 }
 
 function renderRow(entry) {

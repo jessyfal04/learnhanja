@@ -12,12 +12,12 @@ export function createSnapshot(config, selected, now = new Date()) {
 }
 
 export function validateSnapshot(snapshot) {
-	if (!snapshot || typeof snapshot !== "object") throw new Error("Invalid selection file");
-	for (const field of ["deck", "noteType", "characterField"]) {
-		if (typeof snapshot[field] !== "string") throw new Error(`Selection file has invalid ${field}`);
+	if (!snapshot || typeof snapshot !== "object") throw new Error("올바르지 않은 선택 목록 파일입니다");
+	for (const [field, label] of [["deck", "덱"], ["noteType", "노트 유형"], ["characterField", "한자 필드"]]) {
+		if (typeof snapshot[field] !== "string") throw new Error(`선택 목록 파일의 ${label} 값이 올바르지 않습니다`);
 	}
 	if (!Array.isArray(snapshot.selected) || snapshot.selected.some((value) => !/^[\u3400-\u9fff\uf900-\ufaff]$/u.test(value))) {
-		throw new Error("Selection file contains invalid Hanja characters");
+		throw new Error("선택 목록 파일에 올바르지 않은 한자가 있습니다");
 	}
 	return snapshot;
 }

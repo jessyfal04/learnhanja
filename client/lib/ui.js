@@ -12,9 +12,14 @@ export function hideMessage() {
 	document.getElementById("message").classList.add("is-hidden");
 }
 
+export function koreanError(error, fallback) {
+	const message = String(error?.message || "");
+	return /[가-힣]/u.test(message) ? message : fallback;
+}
+
 export function setOptions(select, values, preferred, includeBlank = false) {
 	select.replaceChildren();
-	if (includeBlank) select.add(new Option("No level grouping", ""));
+	if (includeBlank) select.add(new Option("급수로 묶지 않음", ""));
 	for (const value of values || []) select.add(new Option(value, value));
 	const match = preferred.find((candidate) => Array.from(select.options).some((option) => option.value === candidate));
 	if (match) select.value = match;
