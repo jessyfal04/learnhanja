@@ -1,0 +1,32 @@
+.hanja-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+	gap: 0.5rem;
+}
+
+.hanja-button {
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: 1.35rem;
+	min-height: 3rem;
+}
+
+.hanja-button.is-selected {
+	box-shadow: 0 0 0 3px hsl(var(--bulma-link-h), var(--bulma-link-s), var(--bulma-link-l));
+	font-weight: 700;
+}
+
+.hanja-button.is-suspended {
+	text-decoration: line-through;
+}
+
+.selection-bar {
+	bottom: 1rem;
+	position: sticky;
+	z-index: 20;
+}
+
+.vocab-hanja {
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: 1.5rem;
+	white-space: nowrap;
+}

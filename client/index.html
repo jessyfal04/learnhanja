@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Hanja Vocab</title>
+	<link rel="stylesheet" href="/style/bulma.min.css">
+	<link rel="stylesheet" href="/style/style.css">
+	<script type="module" src="/lib/app.js"></script>
+</head>
+<body>
+	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
+		<p class="title">Hanja Vocab</p>
+		<p class="subtitle">Select the fixed level catalog, overlay Anki status, build vocabulary</p>
+	</div></div></section>
+
+	<main class="container px-4 py-5">
+		<div id="message" class="notification is-hidden" role="status"><button id="messageClose" class="delete" type="button" aria-label="Close"></button><span id="messageText"></span></div>
+		<div class="tabs is-boxed mb-5" aria-label="Application views"><ul>
+			<li id="charactersTab" class="is-active"><a href="#characters">Characters</a></li>
+			<li id="vocabularyTab"><a href="#vocabulary">Vocabulary</a></li>
+		</ul></div>
+
+		<div id="charactersView">
+			<section class="box" aria-labelledby="ankiTitle">
+				<div class="level mb-4"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">Anki status</h1><p class="subtitle is-6 mb-0">Optional: AnkiConnect is called only by this Go server</p></div></div><div class="level-right"><span id="ankiStatus" class="tag is-medium is-light">Checking…</span></div></div>
+				<div class="columns is-multiline">
+					<div class="column is-one-third"><label class="label" for="deckSelect">Deck</label><div class="select is-fullwidth"><select id="deckSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="noteTypeSelect">Note type</label><div class="select is-fullwidth"><select id="noteTypeSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="characterFieldSelect">Hanja field</label><div class="select is-fullwidth"><select id="characterFieldSelect"></select></div></div>
+				</div>
+				<div class="buttons"><button id="refreshStatusButton" class="button is-primary" type="button">Refresh Anki status</button><button id="refreshAnkiButton" class="button is-light" type="button">Reconnect</button></div>
+			</section>
+
+			<section class="box" aria-labelledby="saveTitle">
+				<h2 id="saveTitle" class="title is-5 mb-2">Saved selection</h2><p class="subtitle is-6">Use server file storage or a browser JSON file</p>
+				<div class="columns is-multiline is-vcentered">
+					<div class="column is-half"><label class="label" for="saveName">Save name</label><div class="field has-addons"><div class="control is-expanded"><input id="saveName" class="input" value="daily" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._-]*"></div><div class="control"><button id="saveLocalButton" class="button is-link" type="button">Save</button></div></div></div>
+					<div class="column is-half"><label class="label" for="savedSelect">Stored in data/saves</label><div class="field has-addons"><div class="control is-expanded"><div class="select is-fullwidth"><select id="savedSelect"></select></div></div><div class="control"><button id="loadLocalButton" class="button is-info is-light" type="button">Load</button></div><div class="control"><button id="deleteLocalButton" class="button is-danger is-light" type="button">Delete</button></div></div></div>
+				</div>
+				<div class="buttons"><button id="saveFileButton" class="button is-light" type="button">Save JSON file</button><button id="openFileButton" class="button is-light" type="button">Open JSON file</button><button id="refreshSavesButton" class="button is-light" type="button">Refresh saves</button></div>
+				<input id="openFileInput" class="is-hidden" type="file" accept="application/json,.json"><p class="help">Chromium uses the File System Access picker; other browsers use download/upload</p>
+			</section>
+
+			<section id="charactersSection" aria-labelledby="charactersTitle">
+				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">Characters</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">Known 0</span><span id="newCount" class="tag is-info is-light">New 0</span><span id="unknownCount" class="tag is-light">Unknown 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">Select known</button><button id="selectNewButton" class="button is-info is-light" type="button">Select new</button><button id="clearSelectionButton" class="button is-light" type="button">Clear</button></div></div></div>
+				<div id="levelGroups"></div>
+			</section>
+			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p><strong id="selectedCount">0</strong> characters selected</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>Build vocabulary</button></div></div></section>
+		</div>
+
+		<div id="vocabularyView" class="is-hidden">
+			<section class="box" aria-labelledby="vocabTitle">
+				<h2 id="vocabTitle" class="title is-4 mb-1">Vocabulary</h2><p id="vocabSummary" class="subtitle is-6"></p>
+				<div class="columns is-multiline">
+					<div class="column is-half-tablet"><label class="label" for="vocabFilter">Filter</label><input id="vocabFilter" class="input" type="search" placeholder="Hanja, Hangul, English"></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabSort">Sort</label><div class="select is-fullwidth"><select id="vocabSort"><option value="frequency">Frequency</option><option value="hanja-asc">Hanja A–Z</option><option value="hanja-desc">Hanja Z–A</option><option value="hangul-asc">Hangul A–Z</option><option value="english-asc">English A–Z</option></select></div></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="maxRank">Max frequency rank</label><input id="maxRank" class="input" type="number" min="1" step="1" placeholder="No maximum"></div>
+				</div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>Hanja</th><th>Hangul</th><th>English</th><th>Pokémon</th><th>NIKL</th></tr></thead><tbody id="vocabBody"></tbody></table></div>
+			</section>
+		</div>
+	</main>
+	<footer class="footer py-5"><div class="content has-text-centered">Go · Bulma · KRDict · AnkiConnect status</div></footer>
+</body>
+</html>

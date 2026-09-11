@@ -1,5 +1,6 @@
 data/mylists
 data/vocab
+data/saves/
 out/*
-src/__pycache__/*
-spec.md
+.cache/
+bin/
