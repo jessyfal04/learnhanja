@@ -1,6 +1,7 @@
 import { clearSelection, loadCatalog, loadFields, loadMetadata, loadNoteTypes, refreshStatus, selectStatus } from "./anki.js";
 import { deleteLocal, loadLocal, openBrowserFile, refreshSaves, saveBrowserFile, saveLocal } from "./saves.js";
 import { hideMessage } from "./ui.js";
+import { loadIdioms, renderIdioms } from "./idioms.js";
 import { buildVocabulary, renderVocabulary } from "./vocab.js";
 import { showView } from "./views.js";
 
@@ -22,7 +23,9 @@ document.getElementById("openFileButton").addEventListener("click", openBrowserF
 document.getElementById("refreshSavesButton").addEventListener("click", refreshSaves);
 document.querySelector("#charactersTab a").addEventListener("click", (event) => { event.preventDefault(); showView("characters"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
+document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
+for (const id of ["idiomFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
 
-showView(window.location.hash === "#vocabulary" ? "vocabulary" : "characters");
-await loadCatalog();
+showView(window.location.hash.slice(1));
+await Promise.all([loadCatalog(), loadIdioms()]);
 await Promise.all([loadMetadata(), refreshSaves()]);

@@ -42,6 +42,21 @@ type LevelCatalog struct {
 	Groups []CatalogGroup `json:"groups"`
 }
 
+type Idiom struct {
+	Korean     string `json:"korean"`
+	Hanja      string `json:"hanja"`
+	Partial    bool   `json:"partial"`
+	SourceForm string `json:"sourceForm,omitempty"`
+}
+
+type IdiomCatalog struct {
+	Source    string  `json:"source"`
+	SourceURL string  `json:"sourceUrl"`
+	License   string  `json:"license"`
+	Total     int     `json:"total"`
+	Entries   []Idiom `json:"entries"`
+}
+
 type VocabEntry struct {
 	Hanja       string   `json:"hanja"`
 	Hangul      string   `json:"hangul"`

@@ -18,6 +18,10 @@ go run ./server/main -port 8090
 
 The catalog contains 3,500 embedded characters in 14 어문회 levels. Choose an Anki deck, a compatible note type, and its Hanja field to overlay status.
 
+The 사자성어 view contains only the 214 entries in section 4.3 of the National Institute of Korean Language report *한국어 교육 어휘 내용 개발(3단계)*. It supports Hangul/Hanja filtering, source-order or alphabetical sorting, selection coverage, and adding an idiom's Hanja to the active selection. Original compatibility and partial notation is preserved for display and normalized only when matching characters.
+
+Source: [국립국어원 report page](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800), 공공누리 제4유형 (출처표시, 비상업적 이용, 변경금지).
+
 ## Configuration
 
 | Environment | Default |
@@ -57,6 +61,7 @@ The test target runs Go unit/integration/HTTP tests, JavaScript unit tests, and 
 
 - `server/anki`: AnkiConnect client and status mapping
 - `server/levels`: embedded immutable level catalog
+- `server/idioms`: validated embedded NIKL 214-entry catalog
 - `server/vocab`: KRDict and frequency data
 - `server/api`: HTTP routes
 - `server/model`: shared response models

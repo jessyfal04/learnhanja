@@ -26,6 +26,10 @@ type LevelCatalog interface {
 	Data() model.LevelCatalog
 }
 
+type IdiomCatalog interface {
+	Data() model.IdiomCatalog
+}
+
 type VocabStore interface {
 	Search([]string, int) model.VocabResult
 }
@@ -40,13 +44,14 @@ type SaveStore interface {
 type Server struct {
 	anki   ankiAPI
 	levels LevelCatalog
+	idioms IdiomCatalog
 	vocab  VocabStore
 	saves  SaveStore
 	files  fs.FS
 }
 
-func NewServer(ankiService ankiAPI, levelCatalog LevelCatalog, vocabStore VocabStore, saveStore SaveStore, files fs.FS) *Server {
-	return &Server{anki: ankiService, levels: levelCatalog, vocab: vocabStore, saves: saveStore, files: files}
+func NewServer(ankiService ankiAPI, levelCatalog LevelCatalog, idiomCatalog IdiomCatalog, vocabStore VocabStore, saveStore SaveStore, files fs.FS) *Server {
+	return &Server{anki: ankiService, levels: levelCatalog, idioms: idiomCatalog, vocab: vocabStore, saves: saveStore, files: files}
 }
 
 func (s *Server) ServeMux() *http.ServeMux {
@@ -57,6 +62,7 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/anki/fields", s.logged(s.ankiFields))
 	mux.HandleFunc("POST /api/anki/status", s.logged(s.ankiStatus))
 	mux.HandleFunc("GET /api/levels", s.logged(s.levelCatalog))
+	mux.HandleFunc("GET /api/idioms", s.logged(s.idiomCatalog))
 	mux.HandleFunc("POST /api/vocab", s.logged(s.vocabulary))
 	mux.HandleFunc("GET /api/saves", s.logged(s.savedSelections))
 	mux.HandleFunc("GET /api/saves/{name}", s.logged(s.loadSelection))
@@ -190,6 +196,10 @@ func (s *Server) ankiStatus(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) levelCatalog(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, s.levels.Data())
+}
+
+func (s *Server) idiomCatalog(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, s.idioms.Data())
 }
 
 type vocabRequest struct {

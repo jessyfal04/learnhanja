@@ -42,6 +42,12 @@ func (fakeLevels) Data() model.LevelCatalog {
 	return model.LevelCatalog{Total: 1, Groups: []model.CatalogGroup{{Level: "8급", Characters: []string{"人"}}}}
 }
 
+type fakeIdioms struct{}
+
+func (fakeIdioms) Data() model.IdiomCatalog {
+	return model.IdiomCatalog{Total: 1, Entries: []model.Idiom{{Korean: "각양각색", Hanja: "各樣各色"}}}
+}
+
 type fakeVocab struct{}
 
 func (fakeVocab) Search(_ []string, _ int) model.VocabResult {
@@ -85,13 +91,13 @@ func (f *fakeSaves) Delete(name string) error {
 
 func testServer(ankiService ankiAPI) http.Handler {
 	files := fstest.MapFS{"index.html": &fstest.MapFile{Data: []byte("Hanja Vocab")}}
-	return NewServer(ankiService, fakeLevels{}, fakeVocab{}, &fakeSaves{values: make(map[string]model.SavedSelection)}, files).ServeMux()
+	return NewServer(ankiService, fakeLevels{}, fakeIdioms{}, fakeVocab{}, &fakeSaves{values: make(map[string]model.SavedSelection)}, files).ServeMux()
 }
 
 func TestSaveRoutes(t *testing.T) {
 	saves := &fakeSaves{values: make(map[string]model.SavedSelection)}
 	files := fstest.MapFS{"index.html": &fstest.MapFile{Data: []byte("Hanja Vocab")}}
-	handler := NewServer(fakeAnki{}, fakeLevels{}, fakeVocab{}, saves, files).ServeMux()
+	handler := NewServer(fakeAnki{}, fakeLevels{}, fakeIdioms{}, fakeVocab{}, saves, files).ServeMux()
 	payload := `{"deck":"Hanja","noteType":"Hanja","characterField":"Char","selected":["人"]}`
 
 	response := httptest.NewRecorder()
@@ -143,6 +149,7 @@ func TestAnkiRoutes(t *testing.T) {
 		{http.MethodGet, "/api/anki/fields?noteType=Hanja", "", `"fields":["Char","Grade"]`},
 		{http.MethodPost, "/api/anki/status", `{"deck":"Hanja","noteType":"Hanja","characterField":"Char"}`, `"total":1`},
 		{http.MethodGet, "/api/levels", "", `"level":"8급"`},
+		{http.MethodGet, "/api/idioms", "", `"korean":"각양각색"`},
 	}
 	for _, test := range tests {
 		response := httptest.NewRecorder()

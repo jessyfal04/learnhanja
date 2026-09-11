@@ -1,8 +1,10 @@
+const views = ["characters", "vocabulary", "idioms"];
+
 export function showView(name) {
-	const vocabulary = name === "vocabulary";
-	document.getElementById("charactersView").classList.toggle("is-hidden", vocabulary);
-	document.getElementById("vocabularyView").classList.toggle("is-hidden", !vocabulary);
-	document.getElementById("charactersTab").classList.toggle("is-active", !vocabulary);
-	document.getElementById("vocabularyTab").classList.toggle("is-active", vocabulary);
-	window.location.hash = vocabulary ? "vocabulary" : "characters";
+	const active = views.includes(name) ? name : "characters";
+	for (const view of views) {
+		document.getElementById(`${view}View`).classList.toggle("is-hidden", view !== active);
+		document.getElementById(`${view}Tab`).classList.toggle("is-active", view === active);
+	}
+	window.location.hash = active;
 }

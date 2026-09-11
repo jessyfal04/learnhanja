@@ -19,6 +19,7 @@
 		<div class="tabs is-boxed mb-5" aria-label="Application views"><ul>
 			<li id="charactersTab" class="is-active"><a href="#characters">Characters</a></li>
 			<li id="vocabularyTab"><a href="#vocabulary">Vocabulary</a></li>
+			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
 		</ul></div>
 
 		<div id="charactersView">
@@ -58,6 +59,19 @@
 					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="maxRank">Max frequency rank</label><input id="maxRank" class="input" type="number" min="1" step="1" placeholder="No maximum"></div>
 				</div>
 				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>Hanja</th><th>Hangul</th><th>English</th><th>Pokémon</th><th>NIKL</th></tr></thead><tbody id="vocabBody"></tbody></table></div>
+			</section>
+		</div>
+
+		<div id="idiomsView" class="is-hidden">
+			<section class="box" aria-labelledby="idiomsTitle">
+				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">Loading the NIKL catalog…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light" target="_blank" rel="noreferrer">Official source</a></div></div>
+				<div class="columns is-multiline is-vcentered">
+					<div class="column is-half"><label class="label" for="idiomFilter">Filter</label><input id="idiomFilter" class="input" type="search" placeholder="Hangul or Hanja"></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSort">Sort</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">Hangul</option><option value="hanja">Hanja</option><option value="source">Report order</option></select></div></div>
+					<div class="column is-one-quarter"><label class="checkbox mt-5"><input id="idiomSelectedOnly" type="checkbox"> Uses only selected Hanja</label></div>
+				</div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>Korean</th><th>Hanja notation</th><th>Selected</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
+				<p id="idiomsLicense" class="help mt-4"></p>
 			</section>
 		</div>
 	</main>

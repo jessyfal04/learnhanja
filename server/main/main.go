@@ -16,6 +16,7 @@ import (
 	clientassets "hanjavocab/client"
 	"hanjavocab/server/anki"
 	"hanjavocab/server/api"
+	"hanjavocab/server/idioms"
 	"hanjavocab/server/levels"
 	"hanjavocab/server/storage"
 	"hanjavocab/server/vocab"
@@ -43,8 +44,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("load level catalog: %v", err)
 	}
+	idiomCatalog, err := idioms.Load()
+	if err != nil {
+		log.Fatalf("load idiom catalog: %v", err)
+	}
 	ankiClient := anki.NewClient(*ankiURL, 30*time.Second)
-	server := api.NewServer(anki.NewService(ankiClient), levelCatalog, store, saveStore, clientassets.Files)
+	server := api.NewServer(anki.NewService(ankiClient), levelCatalog, idiomCatalog, store, saveStore, clientassets.Files)
 	address := net.JoinHostPort(*host, *port)
 
 	httpServer := &http.Server{

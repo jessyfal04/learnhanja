@@ -4,4 +4,5 @@ export const state = {
 	selected: new Set(),
 	vocabulary: [],
 	vocabularyTotal: 0,
+	idioms: null,
 };
