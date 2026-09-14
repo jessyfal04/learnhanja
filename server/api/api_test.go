@@ -36,6 +36,10 @@ func (f fakeAnki) Status(context.Context, anki.StatusRequest) (model.AnkiStatus,
 	return model.AnkiStatus{Total: 1, Known: 1, Characters: map[string]model.CharacterStatusInfo{"人": {Status: model.StatusKnown}}}, f.err
 }
 
+func (f fakeAnki) IdiomStatus(context.Context, anki.IdiomStatusRequest) (model.AnkiIdiomStatus, error) {
+	return model.AnkiIdiomStatus{Total: 1, New: 1, Idioms: map[string]model.CharacterStatusInfo{"一字千金": {Status: model.StatusNew}}}, f.err
+}
+
 type fakeLevels struct{}
 
 func (fakeLevels) Data() model.LevelCatalog {
@@ -148,6 +152,7 @@ func TestAnkiRoutes(t *testing.T) {
 		{http.MethodGet, "/api/anki/note-types?deck=Hanja", "", `"noteTypes":["Hanja"]`},
 		{http.MethodGet, "/api/anki/fields?noteType=Hanja", "", `"fields":["Char","Grade"]`},
 		{http.MethodPost, "/api/anki/status", `{"deck":"Hanja","noteType":"Hanja","characterField":"Char"}`, `"total":1`},
+		{http.MethodPost, "/api/anki/idiom-status", `{"deck":"Idioms","noteType":"사자성어","idiomField":"Char"}`, `"一字千金"`},
 		{http.MethodGet, "/api/levels", "", `"level":"8급"`},
 		{http.MethodGet, "/api/idioms", "", `"korean":"각양각색"`},
 	}
@@ -182,6 +187,7 @@ func TestValidationAndUpstreamErrors(t *testing.T) {
 		{"missing note type", testServer(fakeAnki{}), http.MethodGet, "/api/anki/fields", nil, http.StatusBadRequest},
 		{"missing deck", testServer(fakeAnki{}), http.MethodGet, "/api/anki/note-types", nil, http.StatusBadRequest},
 		{"missing characters", testServer(fakeAnki{}), http.MethodPost, "/api/vocab", strings.NewReader(`{"characters":[]}`), http.StatusBadRequest},
+		{"missing idiom field", testServer(fakeAnki{}), http.MethodPost, "/api/anki/idiom-status", strings.NewReader(`{"deck":"Idioms","noteType":"사자성어"}`), http.StatusBadRequest},
 		{"unknown JSON field", testServer(fakeAnki{}), http.MethodPost, "/api/vocab", strings.NewReader(`{"characters":["人"],"extra":1}`), http.StatusBadRequest},
 		{"Anki unavailable", testServer(fakeAnki{err: errors.New("offline")}), http.MethodGet, "/api/anki", nil, http.StatusServiceUnavailable},
 	}

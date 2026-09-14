@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { renderCatalog } from "./anki.js";
-import { filterAndSortIdioms, idiomCharacters } from "./idiom-filter.js";
+import { filterAndSortIdioms, idiomCharacters, idiomStatusInfo } from "./idiom-filter.js";
 import { state } from "./state.js";
 import { koreanError, showMessage } from "./ui.js";
 
@@ -23,7 +23,8 @@ export function renderIdioms() {
 	const body = document.getElementById("idiomsBody");
 	body.replaceChildren(...visible.map((entry) => renderRow(entry, state.idioms.sources)));
 	const source = state.idioms.sources.find((item) => item.id === sourceID);
-	document.getElementById("idiomsSummary").textContent = `${visible.length}개 표시 · ${source?.name || `통합 목록 ${state.idioms.total}개`}`;
+	const statusSummary = summarizeStatuses(visible);
+	document.getElementById("idiomsSummary").textContent = `${visible.length}개 표시 · ${source?.name || `통합 목록 ${state.idioms.total}개`}${statusSummary}`;
 	renderSourceDetails(source);
 }
 
@@ -32,6 +33,7 @@ function renderRow(entry, sources) {
 	row.append(cell(entry.korean), cell(entry.hanja, "vocab-hanja"));
 	const labels = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
 	row.append(cell(labels.join(" · ")), cell(entry.page || "—"));
+	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));
 	const characters = Array.from(new Set(idiomCharacters(entry)));
 	const covered = characters.filter((character) => state.selected.has(character)).length;
 	row.append(cell(`${covered}/${characters.length}${entry.partial ? " · 일부 한자 표기" : ""}`));
@@ -48,6 +50,27 @@ function renderRow(entry, sources) {
 	action.appendChild(button);
 	row.appendChild(action);
 	return row;
+}
+
+function statusCell(info) {
+	if (!state.idiomAnkiStatus) return cell("미확인");
+	const labels = {known: "학습함", new: "새 카드", unknown: "상태 없음"};
+	const element = cell(`${labels[info?.status] || "상태 없음"}${info?.suspended ? " · 일시 중단" : ""}`);
+	if (info?.status === "known") element.className = "has-text-success";
+	if (info?.status === "new") element.className = "has-text-info";
+	return element;
+}
+
+function summarizeStatuses(entries) {
+	if (!state.idiomAnkiStatus) return " · 앙키 상태 미확인";
+	let known = 0;
+	let fresh = 0;
+	for (const entry of entries) {
+		const status = idiomStatusInfo(entry, state.idiomAnkiStatus.idioms)?.status;
+		if (status === "known") known++;
+		if (status === "new") fresh++;
+	}
+	return ` · 학습함 ${known} · 새 카드 ${fresh} · 상태 없음 ${entries.length - known - fresh}`;
 }
 
 function renderSourceDetails(source) {

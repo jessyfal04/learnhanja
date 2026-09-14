@@ -20,6 +20,7 @@ type ankiAPI interface {
 	NoteTypes(context.Context, string) ([]string, error)
 	Fields(context.Context, string) ([]string, error)
 	Status(context.Context, anki.StatusRequest) (model.AnkiStatus, error)
+	IdiomStatus(context.Context, anki.IdiomStatusRequest) (model.AnkiIdiomStatus, error)
 }
 
 type LevelCatalog interface {
@@ -61,6 +62,7 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/anki/note-types", s.logged(s.ankiNoteTypes))
 	mux.HandleFunc("GET /api/anki/fields", s.logged(s.ankiFields))
 	mux.HandleFunc("POST /api/anki/status", s.logged(s.ankiStatus))
+	mux.HandleFunc("POST /api/anki/idiom-status", s.logged(s.ankiIdiomStatus))
 	mux.HandleFunc("GET /api/levels", s.logged(s.levelCatalog))
 	mux.HandleFunc("GET /api/idioms", s.logged(s.idiomCatalog))
 	mux.HandleFunc("POST /api/vocab", s.logged(s.vocabulary))
@@ -187,6 +189,23 @@ func (s *Server) ankiStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status, err := s.anki.Status(r.Context(), request)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, status)
+}
+
+func (s *Server) ankiIdiomStatus(w http.ResponseWriter, r *http.Request) {
+	var request anki.IdiomStatusRequest
+	if !readJSON(w, r, &request) {
+		return
+	}
+	if strings.TrimSpace(request.Deck) == "" || strings.TrimSpace(request.NoteType) == "" || strings.TrimSpace(request.IdiomField) == "" {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("deck, noteType, and idiomField are required"))
+		return
+	}
+	status, err := s.anki.IdiomStatus(r.Context(), request)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, err)
 		return

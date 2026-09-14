@@ -6,6 +6,9 @@ import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");
 const characterFieldSelect = document.getElementById("characterFieldSelect");
+const idiomDeckSelect = document.getElementById("idiomDeckSelect");
+const idiomNoteTypeSelect = document.getElementById("idiomNoteTypeSelect");
+const idiomFieldSelect = document.getElementById("idiomFieldSelect");
 
 export async function loadCatalog() {
 	try {
@@ -23,9 +26,10 @@ export async function loadMetadata() {
 	try {
 		const metadata = await api("/api/anki");
 		setOptions(deckSelect, metadata.decks, ["어문회::A. 독음", "日中韓漢字::A. Reco::A. Reco Hanja", "한자"]);
+		setOptions(idiomDeckSelect, metadata.decks, ["어문회::D. 사자성어", "사자성어"]);
 		status.className = "tag is-medium is-success is-light";
 		status.textContent = `연결됨 · 규격 ${metadata.version}`;
-		await loadNoteTypes();
+		await Promise.all([loadNoteTypes(), loadIdiomNoteTypes()]);
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
@@ -46,6 +50,19 @@ export async function loadFields() {
 	setOptions(characterFieldSelect, result.fields, ["Char", "Hanja", "漢字", "Character"]);
 }
 
+export async function loadIdiomNoteTypes() {
+	if (!idiomDeckSelect.value) return;
+	const result = await api(`/api/anki/note-types?deck=${encodeURIComponent(idiomDeckSelect.value)}`);
+	setOptions(idiomNoteTypeSelect, result.noteTypes, ["사자성어"]);
+	await loadIdiomFields();
+}
+
+export async function loadIdiomFields() {
+	if (!idiomNoteTypeSelect.value) return;
+	const result = await api(`/api/anki/fields?noteType=${encodeURIComponent(idiomNoteTypeSelect.value)}`);
+	setOptions(idiomFieldSelect, result.fields, ["Char", "Hanja", "한자", "漢字", "Idiom", "Sound"]);
+}
+
 export async function refreshStatus() {
 	const button = document.getElementById("refreshStatusButton");
 	setLoading(button, true);
@@ -55,6 +72,24 @@ export async function refreshStatus() {
 		showMessage("success", `앙키에서 한자 ${state.ankiStatus.total}자의 상태를 확인했습니다`);
 	} catch (error) {
 		showMessage("danger", koreanError(error, "앙키 상태를 확인할 수 없습니다"));
+	} finally {
+		setLoading(button, false);
+	}
+}
+
+export async function refreshIdiomStatus() {
+	const button = document.getElementById("refreshIdiomStatusButton");
+	setLoading(button, true);
+	try {
+		const result = await api("/api/anki/idiom-status", {method: "POST", body: JSON.stringify({deck: idiomDeckSelect.value, noteType: idiomNoteTypeSelect.value, idiomField: idiomFieldSelect.value})});
+		const idioms = {};
+		for (const [idiom, info] of Object.entries(result.idioms || {})) idioms[idiom.normalize("NFKC")] = info;
+		state.idiomAnkiStatus = {...result, idioms};
+		const { renderIdioms } = await import("./idioms.js");
+		renderIdioms();
+		showMessage("success", `앙키에서 사자성어 ${result.total}개의 상태를 확인했습니다`);
+	} catch (error) {
+		showMessage("danger", koreanError(error, "사자성어 앙키 상태를 확인할 수 없습니다"));
 	} finally {
 		setLoading(button, false);
 	}

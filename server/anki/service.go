@@ -25,6 +25,12 @@ type StatusRequest struct {
 	CharacterField string `json:"characterField"`
 }
 
+type IdiomStatusRequest struct {
+	Deck       string `json:"deck"`
+	NoteType   string `json:"noteType"`
+	IdiomField string `json:"idiomField"`
+}
+
 type noteInfo struct {
 	NoteID int64                `json:"noteId"`
 	Fields map[string]noteField `json:"fields"`
@@ -130,6 +136,47 @@ func (s *Service) Status(ctx context.Context, request StatusRequest) (model.Anki
 	return buildStatus(notes, request, idSet(knownIDs), idSet(newIDs), idSet(suspendedIDs)), nil
 }
 
+func (s *Service) IdiomStatus(ctx context.Context, request IdiomStatusRequest) (model.AnkiIdiomStatus, error) {
+	request.Deck = strings.TrimSpace(request.Deck)
+	request.NoteType = strings.TrimSpace(request.NoteType)
+	request.IdiomField = strings.TrimSpace(request.IdiomField)
+	if request.Deck == "" || request.NoteType == "" || request.IdiomField == "" {
+		return model.AnkiIdiomStatus{}, fmt.Errorf("deck, note type, and idiom field are required")
+	}
+
+	fields, err := s.Fields(ctx, request.NoteType)
+	if err != nil {
+		return model.AnkiIdiomStatus{}, err
+	}
+	if !contains(fields, request.IdiomField) {
+		return model.AnkiIdiomStatus{}, fmt.Errorf("idiom field %q does not exist on note type %q", request.IdiomField, request.NoteType)
+	}
+
+	query := `deck:"` + escapeQuery(request.Deck) + `" note:"` + escapeQuery(request.NoteType) + `"`
+	allIDs, err := s.findNotes(ctx, query)
+	if err != nil {
+		return model.AnkiIdiomStatus{}, err
+	}
+	knownIDs, err := s.findNotes(ctx, query+" -is:new")
+	if err != nil {
+		return model.AnkiIdiomStatus{}, err
+	}
+	newIDs, err := s.findNotes(ctx, query+" is:new")
+	if err != nil {
+		return model.AnkiIdiomStatus{}, err
+	}
+	suspendedIDs, err := s.findNotes(ctx, query+" is:suspended")
+	if err != nil {
+		return model.AnkiIdiomStatus{}, err
+	}
+	notes, err := s.notesInfo(ctx, allIDs)
+	if err != nil {
+		return model.AnkiIdiomStatus{}, err
+	}
+
+	return buildIdiomStatus(notes, request, idSet(knownIDs), idSet(newIDs), idSet(suspendedIDs)), nil
+}
+
 func (s *Service) findNotes(ctx context.Context, query string) ([]int64, error) {
 	var ids []int64
 	err := s.client.invoke(ctx, "findNotes", map[string]string{"query": query}, &ids)
@@ -189,6 +236,47 @@ func buildStatus(notes []noteInfo, request StatusRequest, known, newCards, suspe
 			result.Unknown++
 		}
 		result.Characters[character] = aggregate.status
+		result.Total++
+	}
+	return result
+}
+
+func buildIdiomStatus(notes []noteInfo, request IdiomStatusRequest, known, newCards, suspended map[int64]bool) model.AnkiIdiomStatus {
+	aggregates := make(map[string]*characterAggregate)
+	for _, note := range notes {
+		field, ok := note.Fields[request.IdiomField]
+		if !ok {
+			continue
+		}
+		idiom := cleanField(field.Value)
+		if idiom == "" {
+			continue
+		}
+		aggregate := aggregates[idiom]
+		if aggregate == nil {
+			aggregate = &characterAggregate{}
+			aggregates[idiom] = aggregate
+		}
+		aggregate.status.NoteCount++
+		aggregate.known = aggregate.known || known[note.NoteID]
+		aggregate.new = aggregate.new || newCards[note.NoteID]
+		aggregate.status.Suspended = aggregate.status.Suspended || suspended[note.NoteID]
+	}
+
+	result := model.AnkiIdiomStatus{Idioms: make(map[string]model.CharacterStatusInfo, len(aggregates))}
+	for idiom, aggregate := range aggregates {
+		switch {
+		case aggregate.known:
+			aggregate.status.Status = model.StatusKnown
+			result.Known++
+		case aggregate.new:
+			aggregate.status.Status = model.StatusNew
+			result.New++
+		default:
+			aggregate.status.Status = model.StatusUnknown
+			result.Unknown++
+		}
+		result.Idioms[idiom] = aggregate.status
 		result.Total++
 	}
 	return result

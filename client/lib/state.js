@@ -1,6 +1,7 @@
 export const state = {
 	catalog: null,
 	ankiStatus: null,
+	idiomAnkiStatus: null,
 	selected: new Set(),
 	vocabulary: [],
 	vocabularyTotal: 0,

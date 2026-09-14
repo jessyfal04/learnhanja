@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterAndSortIdioms, idiomCharacters } from "./idiom-filter.js";
+import { filterAndSortIdioms, idiomCharacters, idiomStatusInfo } from "./idiom-filter.js";
 
 const entries = [
 	{korean: "각양각색", hanja: "各樣各色", sources: ["nikl"], sourceOrders: {nikl: 1}},
@@ -16,6 +16,11 @@ test("extracts only Hanja from NIKL notation", () => {
 test("normalizes compatibility Hanja when searching", () => {
 	const compatibilityEntry = {korean: "금지옥엽", hanja: "金枝玉葉", sources: ["nikl"], sourceOrders: {nikl: 3}};
 	assert.deepEqual(filterAndSortIdioms([compatibilityEntry], "金", new Set(), false, "source", "nikl").map((entry) => entry.korean), ["금지옥엽"]);
+});
+
+test("matches idiom status by normalized Hanja or Hangul", () => {
+	assert.equal(idiomStatusInfo({korean: "금지옥엽", hanja: "金枝玉葉"}, {金枝玉葉: {status: "known"}}).status, "known");
+	assert.equal(idiomStatusInfo({korean: "일자천금", hanja: "一字千金"}, {일자천금: {status: "new"}}).status, "new");
 });
 
 test("filters by Hangul and selected Hanja", () => {

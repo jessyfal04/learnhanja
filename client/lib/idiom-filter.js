@@ -2,6 +2,11 @@ export function idiomCharacters(idiom) {
 	return Array.from((idiom.hanja || "").normalize("NFKC")).filter((character) => /[\u3400-\u9fff\uf900-\ufaff]/u.test(character));
 }
 
+export function idiomStatusInfo(idiom, statuses) {
+	if (!statuses) return null;
+	return statuses[String(idiom.hanja || "").normalize("NFKC")] || statuses[String(idiom.korean || "").normalize("NFKC")] || null;
+}
+
 export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort, source = "all") {
 	const needle = String(query || "").normalize("NFKC").trim().toLocaleLowerCase();
 	const filtered = (entries || []).filter((entry) => {

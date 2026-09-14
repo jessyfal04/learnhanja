@@ -17,20 +17,32 @@
 	<main class="container px-4 py-5">
 		<div id="message" class="notification is-hidden" role="status"><button id="messageClose" class="delete" type="button" aria-label="닫기"></button><span id="messageText"></span></div>
 		<div class="tabs is-boxed mb-5" aria-label="화면 선택"><ul>
-			<li id="charactersTab" class="is-active"><a href="#characters">한자</a></li>
+			<li id="connectionTab" class="is-active"><a href="#connection">연결 및 저장</a></li>
+			<li id="charactersTab"><a href="#characters">한자 선택</a></li>
 			<li id="vocabularyTab"><a href="#vocabulary">어휘</a></li>
 			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
 		</ul></div>
 
-		<div id="charactersView">
+		<div id="connectionView">
 			<section class="box" aria-labelledby="ankiTitle">
-				<div class="level mb-4"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">앙키 학습 상태</h1><p class="subtitle is-6 mb-0">선택 사항이며 앙키 연결은 이 서버에서만 처리합니다</p></div></div><div class="level-right"><span id="ankiStatus" class="tag is-medium is-light">확인 중…</span></div></div>
+				<div class="level mb-5"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">앙키 연결</h1><p class="subtitle is-6 mb-0">한자와 사자성어 학습 상태를 한 연결에서 확인합니다</p></div></div><div class="level-right"><div class="buttons"><span id="ankiStatus" class="tag is-medium is-light">확인 중…</span><button id="refreshAnkiButton" class="button is-small is-light" type="button">다시 연결</button></div></div></div>
+				<h2 class="title is-5 mb-1">한자 학습 상태</h2>
+				<p class="subtitle is-6">급수별 한자가 들어 있는 필드를 선택합니다</p>
 				<div class="columns is-multiline">
 					<div class="column is-one-third"><label class="label" for="deckSelect">덱</label><div class="select is-fullwidth"><select id="deckSelect"></select></div></div>
 					<div class="column is-one-third"><label class="label" for="noteTypeSelect">노트 유형</label><div class="select is-fullwidth"><select id="noteTypeSelect"></select></div></div>
 					<div class="column is-one-third"><label class="label" for="characterFieldSelect">한자 필드</label><div class="select is-fullwidth"><select id="characterFieldSelect"></select></div></div>
 				</div>
-				<div class="buttons"><button id="refreshStatusButton" class="button is-primary" type="button">앙키 상태 새로고침</button><button id="refreshAnkiButton" class="button is-light" type="button">다시 연결</button></div>
+				<button id="refreshStatusButton" class="button is-primary" type="button">한자 상태 새로고침</button>
+				<hr>
+				<h2 class="title is-5 mb-1">사자성어 학습 상태</h2>
+				<p class="subtitle is-6">사자성어 전체가 들어 있는 필드를 선택합니다</p>
+				<div class="columns is-multiline">
+					<div class="column is-one-third"><label class="label" for="idiomDeckSelect">덱</label><div class="select is-fullwidth"><select id="idiomDeckSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="idiomNoteTypeSelect">노트 유형</label><div class="select is-fullwidth"><select id="idiomNoteTypeSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="idiomFieldSelect">사자성어 필드</label><div class="select is-fullwidth"><select id="idiomFieldSelect"></select></div></div>
+				</div>
+				<button id="refreshIdiomStatusButton" class="button is-primary" type="button">사자성어 상태 새로고침</button>
 			</section>
 
 			<section class="box" aria-labelledby="saveTitle">
@@ -42,7 +54,9 @@
 				<div class="buttons"><button id="saveFileButton" class="button is-light" type="button">파일로 저장</button><button id="openFileButton" class="button is-light" type="button">파일 열기</button><button id="refreshSavesButton" class="button is-light" type="button">저장 목록 새로고침</button></div>
 				<input id="openFileInput" class="is-hidden" type="file" accept="application/json,.json"><p class="help">지원하는 브라우저에서는 파일 선택기를 사용하며 그 외에는 내려받기와 올리기를 사용합니다</p>
 			</section>
+		</div>
 
+		<div id="charactersView" class="is-hidden">
 			<section id="charactersSection" aria-labelledby="charactersTitle">
 				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">학습함 0</span><span id="newCount" class="tag is-info is-light">새 카드 0</span><span id="unknownCount" class="tag is-light">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-info is-light" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
 				<div id="levelGroups"></div>
@@ -68,10 +82,10 @@
 				<div class="columns is-multiline is-vcentered">
 					<div class="column is-one-third"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
 					<div class="column is-one-quarter"><label class="label" for="idiomSourceFilter">출처</label><div class="select is-fullwidth"><select id="idiomSourceFilter"><option value="exam">불러오는 중…</option></select></div></div>
-					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="page">쪽순</option><option value="source">출처 수록순</option></select></div></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="page" selected>쪽순</option><option value="source">출처 수록순</option></select></div></div>
 					<div class="column"><label class="checkbox mt-5"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>출처</th><th>쪽</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>출처</th><th>쪽</th><th>앙키 상태</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
 				<p id="idiomsLicense" class="help mt-4"></p>
 			</section>
 		</div>

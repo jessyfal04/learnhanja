@@ -31,6 +31,14 @@ type AnkiStatus struct {
 	Total      int                            `json:"total"`
 }
 
+type AnkiIdiomStatus struct {
+	Idioms  map[string]CharacterStatusInfo `json:"idioms"`
+	Known   int                            `json:"known"`
+	New     int                            `json:"new"`
+	Unknown int                            `json:"unknown"`
+	Total   int                            `json:"total"`
+}
+
 type CatalogGroup struct {
 	Level      string   `json:"level"`
 	Characters []string `json:"characters"`

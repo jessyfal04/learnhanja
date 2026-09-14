@@ -81,6 +81,25 @@ func TestStatusByCharacter(t *testing.T) {
 	}
 }
 
+func TestBuildIdiomStatusUsesWholeField(t *testing.T) {
+	request := IdiomStatusRequest{IdiomField: "Char"}
+	notes := []noteInfo{
+		{NoteID: 1, Fields: map[string]noteField{"Char": {Value: "<b>一字千金</b>"}}},
+		{NoteID: 2, Fields: map[string]noteField{"Char": {Value: "弱肉強食"}}},
+		{NoteID: 3, Fields: map[string]noteField{"Char": {Value: "弱肉強食"}}},
+	}
+	result := buildIdiomStatus(notes, request, map[int64]bool{1: true, 3: true}, map[int64]bool{2: true}, map[int64]bool{2: true})
+	if result.Total != 2 || result.Known != 2 || result.New != 0 {
+		t.Fatalf("unexpected counts: %#v", result)
+	}
+	if result.Idioms["一字千金"].Status != model.StatusKnown {
+		t.Fatalf("unexpected idiom status: %#v", result.Idioms["一字千金"])
+	}
+	if result.Idioms["弱肉強食"].NoteCount != 2 || !result.Idioms["弱肉強食"].Suspended {
+		t.Fatalf("unexpected aggregate: %#v", result.Idioms["弱肉強食"])
+	}
+}
+
 func TestNoteTypesFiltersModelsByDeck(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var request struct {

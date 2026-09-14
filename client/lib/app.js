@@ -1,4 +1,4 @@
-import { clearSelection, loadCatalog, loadFields, loadMetadata, loadNoteTypes, refreshStatus, selectStatus } from "./anki.js";
+import { clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js";
 import { deleteLocal, loadLocal, openBrowserFile, refreshSaves, saveBrowserFile, saveLocal } from "./saves.js";
 import { hideMessage } from "./ui.js";
 import { loadIdioms, renderIdioms } from "./idioms.js";
@@ -9,7 +9,10 @@ document.getElementById("messageClose").addEventListener("click", hideMessage);
 document.getElementById("refreshAnkiButton").addEventListener("click", loadMetadata);
 document.getElementById("deckSelect").addEventListener("change", loadNoteTypes);
 document.getElementById("noteTypeSelect").addEventListener("change", loadFields);
+document.getElementById("idiomDeckSelect").addEventListener("change", loadIdiomNoteTypes);
+document.getElementById("idiomNoteTypeSelect").addEventListener("change", loadIdiomFields);
 document.getElementById("refreshStatusButton").addEventListener("click", refreshStatus);
+document.getElementById("refreshIdiomStatusButton").addEventListener("click", refreshIdiomStatus);
 document.getElementById("selectKnownButton").addEventListener("click", () => selectStatus("known"));
 document.getElementById("selectNewButton").addEventListener("click", () => selectStatus("new"));
 document.getElementById("clearSelectionButton").addEventListener("click", clearSelection);
@@ -21,6 +24,7 @@ document.getElementById("deleteLocalButton").addEventListener("click", deleteLoc
 document.getElementById("saveFileButton").addEventListener("click", saveBrowserFile);
 document.getElementById("openFileButton").addEventListener("click", openBrowserFile);
 document.getElementById("refreshSavesButton").addEventListener("click", refreshSaves);
+document.querySelector("#connectionTab a").addEventListener("click", (event) => { event.preventDefault(); showView("connection"); });
 document.querySelector("#charactersTab a").addEventListener("click", (event) => { event.preventDefault(); showView("characters"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
