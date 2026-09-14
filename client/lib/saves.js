@@ -1,4 +1,3 @@
-import { api } from "./api.js";
 import { loadFields, loadNoteTypes, refreshStatus, renderCatalog } from "./anki.js";
 import { createSnapshot, validateSnapshot } from "./persistence.js";
 import { state } from "./state.js";
@@ -7,7 +6,13 @@ import { koreanError, showMessage } from "./ui.js";
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");
 const characterFieldSelect = document.getElementById("characterFieldSelect");
-const savedSelect = document.getElementById("savedSelect");
+const fileStatus = document.getElementById("selectionFileStatus");
+const handleDatabase = "hanja-vocab-files";
+const handleStore = "handles";
+
+let linkedHandle = null;
+let writeQueue = Promise.resolve();
+let loadingSnapshot = false;
 
 export function currentSnapshot() {
 	return createSnapshot({
@@ -17,100 +22,97 @@ export function currentSnapshot() {
 	}, state.selected);
 }
 
-export async function refreshSaves() {
+export async function initializeFileSave() {
+	if (!("showOpenFilePicker" in window)) {
+		document.getElementById("saveFileButton").textContent = "파일 내려받기";
+		document.getElementById("openFileButton").textContent = "파일 불러오기";
+		setFileStatus("수동 저장", "is-warning is-light");
+		return;
+	}
 	try {
-		const result = await api("/api/saves");
-		savedSelect.replaceChildren();
-		for (const save of result.saves || []) {
-			const date = save.savedAt ? new Date(save.savedAt).toLocaleString("ko-KR") : "";
-			savedSelect.add(new Option(`${save.name} · ${save.selected}자 · ${date}`, save.name));
+		const handle = await loadStoredHandle();
+		if (!handle || await handle.queryPermission({mode: "readwrite"}) !== "granted") {
+			setFileStatus("파일 연결 안 됨", "is-light");
+			return;
 		}
-		const disabled = savedSelect.options.length === 0;
-		document.getElementById("loadLocalButton").disabled = disabled;
-		document.getElementById("deleteLocalButton").disabled = disabled;
-	} catch (error) {
-		showMessage("danger", koreanError(error, "저장 목록을 불러올 수 없습니다"));
-	}
-}
-
-export async function saveLocal() {
-	try {
-		const name = document.getElementById("saveName").value.trim();
-		if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(name)) throw new Error("저장 이름은 영문자, 숫자, 점, 밑줄, 붙임표로 1~64자까지 입력하세요");
-		await api(`/api/saves/${encodeURIComponent(name)}`, {
-			method: "PUT",
-			body: JSON.stringify(currentSnapshot()),
-		});
-		await refreshSaves();
-		savedSelect.value = name;
-		showMessage("success", `${name}.json을 저장했습니다`);
-	} catch (error) {
-		showMessage("danger", koreanError(error, "선택 목록을 저장할 수 없습니다"));
-	}
-}
-
-export async function loadLocal() {
-	if (!savedSelect.value) return;
-	try {
-		const snapshot = await api(`/api/saves/${encodeURIComponent(savedSelect.value)}`);
-		await applySnapshot(snapshot);
-		showMessage("success", `${savedSelect.value}.json을 불러왔습니다`);
-	} catch (error) {
-		showMessage("danger", koreanError(error, "선택 목록을 불러올 수 없습니다"));
-	}
-}
-
-export async function deleteLocal() {
-	if (!savedSelect.value) return;
-	try {
-		const name = savedSelect.value;
-		await api(`/api/saves/${encodeURIComponent(name)}`, { method: "DELETE" });
-		await refreshSaves();
-		showMessage("success", `${name}.json을 삭제했습니다`);
-	} catch (error) {
-		showMessage("danger", koreanError(error, "선택 목록을 삭제할 수 없습니다"));
+		linkedHandle = handle;
+		await loadFromHandle(handle);
+		setFileStatus(`${handle.name} · 자동 저장`, "is-success is-light");
+	} catch {
+		linkedHandle = null;
+		setFileStatus("파일 다시 연결 필요", "is-warning is-light");
 	}
 }
 
 export async function saveBrowserFile() {
 	try {
-		const contents = JSON.stringify(currentSnapshot(), null, 2) + "\n";
-		if ("showSaveFilePicker" in window) {
-			const handle = await window.showSaveFilePicker({
-				id: "hanja-vocab-selection",
-				suggestedName: "한자-선택.json",
-				types: [{ description: "한자 선택 목록", accept: { "application/json": [".json"] } }],
-			});
-			const writable = await handle.createWritable();
-			await writable.write(contents);
-			await writable.close();
-		} else {
-			downloadJSON(contents);
+		if (!("showSaveFilePicker" in window)) {
+			downloadJSON(JSON.stringify(currentSnapshot(), null, 2) + "\n");
+			showMessage("success", "선택 목록 파일을 내려받았습니다");
+			return;
 		}
-		showMessage("success", "선택 목록 파일을 저장했습니다");
+		const handle = await window.showSaveFilePicker({
+			id: "hanja-vocab-selection",
+			suggestedName: "한자-선택.json",
+			types: [{description: "한자 선택 목록", accept: {"application/json": [".json"]}}],
+		});
+		await linkHandle(handle);
+		await writeLinkedFile();
+		showMessage("success", `${handle.name}에 연결했습니다. 선택 변경이 자동 저장됩니다`);
 	} catch (error) {
-		if (error.name !== "AbortError") showMessage("danger", koreanError(error, "파일을 저장할 수 없습니다"));
+		if (error.name !== "AbortError") showMessage("danger", koreanError(error, "파일을 연결할 수 없습니다"));
 	}
 }
 
 export async function openBrowserFile() {
 	try {
-		let file;
-		if ("showOpenFilePicker" in window) {
-			const [handle] = await window.showOpenFilePicker({
-				id: "hanja-vocab-selection",
-				types: [{ description: "한자 선택 목록", accept: { "application/json": [".json"] } }],
-				multiple: false,
-			});
-			file = await handle.getFile();
-		} else {
-			file = await chooseUpload();
+		if (!("showOpenFilePicker" in window)) {
+			const file = await chooseUpload();
+			await applySnapshot(JSON.parse(await file.text()));
+			showMessage("success", `${file.name}을 불러왔습니다. 이 브라우저에서는 자동 저장할 수 없습니다`);
+			return;
 		}
-		const snapshot = JSON.parse(await file.text());
-		await applySnapshot(snapshot);
-		showMessage("success", `${file.name}을 불러왔습니다`);
+		const [handle] = await window.showOpenFilePicker({
+			id: "hanja-vocab-selection",
+			types: [{description: "한자 선택 목록", accept: {"application/json": [".json"]}}],
+			multiple: false,
+		});
+		await loadFromHandle(handle);
+		await linkHandle(handle);
+		showMessage("success", `${handle.name}을 불러왔습니다. 선택 변경이 자동 저장됩니다`);
 	} catch (error) {
 		if (error.name !== "AbortError") showMessage("danger", koreanError(error, "파일을 불러올 수 없습니다"));
+	}
+}
+
+export function autoSaveSelection() {
+	if (!linkedHandle || loadingSnapshot) return;
+	writeQueue = writeQueue.catch(() => {}).then(writeLinkedFile).catch((error) => {
+		setFileStatus("자동 저장 실패", "is-danger is-light");
+		showMessage("danger", koreanError(error, "연결된 파일에 자동 저장할 수 없습니다"));
+	});
+}
+
+async function linkHandle(handle) {
+	linkedHandle = handle;
+	await storeHandle(handle);
+	setFileStatus(`${handle.name} · 자동 저장`, "is-success is-light");
+}
+
+async function writeLinkedFile() {
+	const writable = await linkedHandle.createWritable();
+	await writable.write(JSON.stringify(currentSnapshot(), null, 2) + "\n");
+	await writable.close();
+	setFileStatus(`${linkedHandle.name} · 자동 저장`, "is-success is-light");
+}
+
+async function loadFromHandle(handle) {
+	loadingSnapshot = true;
+	try {
+		const file = await handle.getFile();
+		await applySnapshot(JSON.parse(await file.text()));
+	} finally {
+		loadingSnapshot = false;
 	}
 }
 
@@ -118,7 +120,7 @@ async function applySnapshot(snapshot) {
 	validateSnapshot(snapshot);
 	state.selected = new Set(snapshot.selected);
 	renderCatalog();
-	if (snapshot.deck && snapshot.noteType && snapshot.characterField) {
+	if (snapshot.deck && snapshot.noteType && snapshot.characterField && deckSelect.options.length > 0) {
 		setExistingValue(deckSelect, snapshot.deck, "덱");
 		await loadNoteTypes();
 		setExistingValue(noteTypeSelect, snapshot.noteType, "노트 유형");
@@ -129,14 +131,56 @@ async function applySnapshot(snapshot) {
 }
 
 function setExistingValue(select, value, label) {
-	if (!Array.from(select.options).some((option) => option.value === value)) {
-		throw new Error(`저장된 ${label} '${value}'을(를) 사용할 수 없습니다`);
-	}
+	if (!Array.from(select.options).some((option) => option.value === value)) throw new Error(`저장된 ${label} '${value}'을(를) 사용할 수 없습니다`);
 	select.value = value;
 }
 
+function setFileStatus(label, classes) {
+	fileStatus.className = `tag is-medium ${classes}`;
+	fileStatus.textContent = label;
+}
+
+async function storeHandle(handle) {
+	try {
+		const database = await openHandleDatabase();
+		await new Promise((resolve, reject) => {
+			const transaction = database.transaction(handleStore, "readwrite");
+			transaction.objectStore(handleStore).put(handle, "selection");
+			transaction.oncomplete = resolve;
+			transaction.onerror = () => reject(transaction.error);
+		});
+		database.close();
+	} catch {
+		// The active session still keeps the file handle when IndexedDB is unavailable
+	}
+}
+
+async function loadStoredHandle() {
+	try {
+		const database = await openHandleDatabase();
+		const handle = await new Promise((resolve, reject) => {
+			const request = database.transaction(handleStore).objectStore(handleStore).get("selection");
+			request.onsuccess = () => resolve(request.result || null);
+			request.onerror = () => reject(request.error);
+		});
+		database.close();
+		return handle;
+	} catch {
+		return null;
+	}
+}
+
+function openHandleDatabase() {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open(handleDatabase, 1);
+		request.onupgradeneeded = () => request.result.createObjectStore(handleStore);
+		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error);
+	});
+}
+
 function downloadJSON(contents) {
-	const url = URL.createObjectURL(new Blob([contents], { type: "application/json" }));
+	const url = URL.createObjectURL(new Blob([contents], {type: "application/json"}));
 	const link = document.createElement("a");
 	link.href = url;
 	link.download = "한자-선택.json";

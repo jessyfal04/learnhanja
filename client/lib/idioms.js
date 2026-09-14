@@ -1,12 +1,12 @@
-import { api } from "./api.js";
 import { renderCatalog } from "./anki.js";
 import { filterAndSortIdioms, idiomCharacters, idiomStatusInfo } from "./idiom-filter.js";
 import { state } from "./state.js";
+import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
 
 export async function loadIdioms() {
 	try {
-		state.idioms = await api("/api/idioms");
+		state.idioms = await loadStaticJSON("/data/idioms.json");
 		const filter = document.getElementById("idiomSourceFilter");
 		filter.replaceChildren(option("all", `전체 통합 (${state.idioms.total})`), ...state.idioms.sources.map((source) => option(source.id, `${source.shortName} (${source.total})`)));
 		filter.value = "exam";

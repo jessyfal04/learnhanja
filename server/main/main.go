@@ -14,18 +14,13 @@ import (
 	"time"
 
 	clientassets "hanjavocab/client"
-	"hanjavocab/server/anki"
 	"hanjavocab/server/api"
-	"hanjavocab/server/idioms"
-	"hanjavocab/server/levels"
-	"hanjavocab/server/storage"
 	"hanjavocab/server/vocab"
 )
 
 func main() {
 	host := flag.String("host", env("HOST", "::"), "listen host")
 	port := flag.String("port", env("PORT", "8004"), "listen port")
-	ankiURL := flag.String("anki-url", env("ANKI_URL", "http://127.0.0.1:8765"), "AnkiConnect URL")
 	dataDir := flag.String("data-dir", env("DATA_DIR", "data"), "data directory")
 	flag.Parse()
 
@@ -36,20 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("load vocabulary: %v", err)
 	}
-	saveStore, err := storage.New(*dataDir)
-	if err != nil {
-		log.Fatalf("open save storage: %v", err)
-	}
-	levelCatalog, err := levels.Load()
-	if err != nil {
-		log.Fatalf("load level catalog: %v", err)
-	}
-	idiomCatalog, err := idioms.Load()
-	if err != nil {
-		log.Fatalf("load idiom catalog: %v", err)
-	}
-	ankiClient := anki.NewClient(*ankiURL, 30*time.Second)
-	server := api.NewServer(anki.NewService(ankiClient), levelCatalog, idiomCatalog, store, saveStore, clientassets.Files)
+	server := api.NewServer(store, clientassets.Files)
 	address := net.JoinHostPort(*host, *port)
 
 	httpServer := &http.Server{

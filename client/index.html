@@ -25,7 +25,7 @@
 
 		<div id="connectionView">
 			<section class="box" aria-labelledby="ankiTitle">
-				<div class="level mb-5"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">앙키 연결</h1><p class="subtitle is-6 mb-0">한자와 사자성어 학습 상태를 한 연결에서 확인합니다</p></div></div><div class="level-right"><div class="buttons"><span id="ankiStatus" class="tag is-medium is-light">확인 중…</span><button id="refreshAnkiButton" class="button is-small is-light" type="button">다시 연결</button></div></div></div>
+				<div class="level mb-4"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">앙키 연결</h1><p class="subtitle is-6 mb-0">브라우저에서 이 컴퓨터의 앙키커넥트에 직접 연결합니다</p></div></div><div class="level-right"><div class="buttons"><span id="ankiStatus" class="tag is-medium is-light">확인 중…</span><button id="refreshAnkiButton" class="button is-small is-light" type="button">다시 연결</button></div></div></div>
 				<h2 class="title is-5 mb-1">한자 학습 상태</h2>
 				<p class="subtitle is-6">급수별 한자가 들어 있는 필드를 선택합니다</p>
 				<div class="columns is-multiline">
@@ -46,13 +46,9 @@
 			</section>
 
 			<section class="box" aria-labelledby="saveTitle">
-				<h2 id="saveTitle" class="title is-5 mb-2">선택 항목 저장</h2><p class="subtitle is-6">서버 저장소 또는 브라우저 파일을 사용합니다</p>
-				<div class="columns is-multiline is-vcentered">
-					<div class="column is-half"><label class="label" for="saveName">저장 이름</label><div class="field has-addons"><div class="control is-expanded"><input id="saveName" class="input" value="20260911" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._-]*"></div><div class="control"><button id="saveLocalButton" class="button is-link" type="button">저장</button></div></div></div>
-					<div class="column is-half"><label class="label" for="savedSelect">서버에 저장된 항목</label><div class="field has-addons"><div class="control is-expanded"><div class="select is-fullwidth"><select id="savedSelect"></select></div></div><div class="control"><button id="loadLocalButton" class="button is-info is-light" type="button">불러오기</button></div><div class="control"><button id="deleteLocalButton" class="button is-danger is-light" type="button">삭제</button></div></div></div>
-				</div>
-				<div class="buttons"><button id="saveFileButton" class="button is-light" type="button">파일로 저장</button><button id="openFileButton" class="button is-light" type="button">파일 열기</button><button id="refreshSavesButton" class="button is-light" type="button">저장 목록 새로고침</button></div>
-				<input id="openFileInput" class="is-hidden" type="file" accept="application/json,.json"><p class="help">지원하는 브라우저에서는 파일 선택기를 사용하며 그 외에는 내려받기와 올리기를 사용합니다</p>
+				<div class="level mb-3"><div class="level-left"><div><h2 id="saveTitle" class="title is-5 mb-1">선택 파일</h2><p class="subtitle is-6 mb-0">파일을 한 번 연결하면 선택 변경을 자동 저장합니다</p></div></div><div class="level-right"><span id="selectionFileStatus" class="tag is-medium is-light">확인 중…</span></div></div>
+				<div class="buttons"><button id="saveFileButton" class="button is-link" type="button">새 파일 연결</button><button id="openFileButton" class="button is-light" type="button">기존 파일 연결</button></div>
+				<input id="openFileInput" class="is-hidden" type="file" accept="application/json,.json"><p class="help">파일 시스템 접근을 지원하는 브라우저에서는 연결된 파일에 자동 저장합니다. 그 외 브라우저에서는 수동 내려받기와 불러오기를 사용합니다</p>
 			</section>
 		</div>
 

@@ -1,5 +1,5 @@
 import { clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js";
-import { deleteLocal, loadLocal, openBrowserFile, refreshSaves, saveBrowserFile, saveLocal } from "./saves.js";
+import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js";
 import { hideMessage } from "./ui.js";
 import { loadIdioms, renderIdioms } from "./idioms.js";
 import { buildVocabulary, renderVocabulary } from "./vocab.js";
@@ -18,12 +18,9 @@ document.getElementById("selectNewButton").addEventListener("click", () => selec
 document.getElementById("clearSelectionButton").addEventListener("click", clearSelection);
 document.getElementById("buildVocabButton").addEventListener("click", buildVocabulary);
 for (const id of ["vocabFilter", "vocabSort", "maxRank"]) document.getElementById(id).addEventListener("input", renderVocabulary);
-document.getElementById("saveLocalButton").addEventListener("click", saveLocal);
-document.getElementById("loadLocalButton").addEventListener("click", loadLocal);
-document.getElementById("deleteLocalButton").addEventListener("click", deleteLocal);
 document.getElementById("saveFileButton").addEventListener("click", saveBrowserFile);
 document.getElementById("openFileButton").addEventListener("click", openBrowserFile);
-document.getElementById("refreshSavesButton").addEventListener("click", refreshSaves);
+document.addEventListener("hanja-selection-change", autoSaveSelection);
 document.querySelector("#connectionTab a").addEventListener("click", (event) => { event.preventDefault(); showView("connection"); });
 document.querySelector("#charactersTab a").addEventListener("click", (event) => { event.preventDefault(); showView("characters"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
@@ -32,4 +29,5 @@ for (const id of ["idiomFilter", "idiomSourceFilter", "idiomSort", "idiomSelecte
 
 showView(window.location.hash.slice(1));
 await Promise.all([loadCatalog(), loadIdioms()]);
-await Promise.all([loadMetadata(), refreshSaves()]);
+await loadMetadata();
+await initializeFileSave();
