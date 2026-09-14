@@ -64,13 +64,14 @@
 
 		<div id="idiomsView" class="is-hidden">
 			<section class="box" aria-labelledby="idiomsTitle">
-				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">국립국어원 목록을 불러오는 중…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light" target="_blank" rel="noreferrer">공식 출처</a></div></div>
+				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">사자성어 목록을 불러오는 중…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light is-hidden" target="_blank" rel="noreferrer">공식 출처</a></div></div>
 				<div class="columns is-multiline is-vcentered">
-					<div class="column is-half"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
-					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="source">보고서 수록순</option></select></div></div>
-					<div class="column is-one-quarter"><label class="checkbox mt-5"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
+					<div class="column is-one-third"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSourceFilter">출처</label><div class="select is-fullwidth"><select id="idiomSourceFilter"><option value="exam">불러오는 중…</option></select></div></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="page">쪽순</option><option value="source">출처 수록순</option></select></div></div>
+					<div class="column"><label class="checkbox mt-5"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>출처</th><th>쪽</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
 				<p id="idiomsLicense" class="help mt-4"></p>
 			</section>
 		</div>

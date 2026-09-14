@@ -43,18 +43,28 @@ type LevelCatalog struct {
 }
 
 type Idiom struct {
-	Korean     string `json:"korean"`
-	Hanja      string `json:"hanja"`
-	Partial    bool   `json:"partial"`
-	SourceForm string `json:"sourceForm,omitempty"`
+	Korean       string         `json:"korean"`
+	Hanja        string         `json:"hanja"`
+	Partial      bool           `json:"partial"`
+	SourceForm   string         `json:"sourceForm,omitempty"`
+	Sources      []string       `json:"sources"`
+	SourceOrders map[string]int `json:"sourceOrders"`
+	Page         int            `json:"page,omitempty"`
+}
+
+type IdiomSource struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	ShortName string `json:"shortName"`
+	SourceURL string `json:"sourceUrl,omitempty"`
+	License   string `json:"license,omitempty"`
+	Total     int    `json:"total"`
 }
 
 type IdiomCatalog struct {
-	Source    string  `json:"source"`
-	SourceURL string  `json:"sourceUrl"`
-	License   string  `json:"license"`
-	Total     int     `json:"total"`
-	Entries   []Idiom `json:"entries"`
+	Sources []IdiomSource `json:"sources"`
+	Total   int           `json:"total"`
+	Entries []Idiom       `json:"entries"`
 }
 
 type VocabEntry struct {

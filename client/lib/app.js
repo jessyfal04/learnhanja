@@ -24,7 +24,7 @@ document.getElementById("refreshSavesButton").addEventListener("click", refreshS
 document.querySelector("#charactersTab a").addEventListener("click", (event) => { event.preventDefault(); showView("characters"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
-for (const id of ["idiomFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
+for (const id of ["idiomFilter", "idiomSourceFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
 
 showView(window.location.hash.slice(1));
 await Promise.all([loadCatalog(), loadIdioms()]);
