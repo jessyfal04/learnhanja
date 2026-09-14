@@ -1,4 +1,4 @@
-import { renderCatalog } from "./anki.js";
+import { renderCatalog } from "./anki.js?v=2";
 import { filterAndSortIdioms, idiomCharacters, idiomStatusInfo } from "./idiom-filter.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";

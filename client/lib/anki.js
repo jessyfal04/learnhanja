@@ -1,4 +1,4 @@
-import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js";
+import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=2";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { toggledSelection, withLevelSelection } from "./selection.js";
@@ -36,7 +36,7 @@ export async function loadMetadata() {
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
-		showMessage("warning", "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다");
+		showMessage("warning", koreanError(error, "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다"));
 	}
 }
 

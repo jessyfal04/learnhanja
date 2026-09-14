@@ -42,6 +42,9 @@ func TestHealthAndStaticClient(t *testing.T) {
 		if response.Code != http.StatusOK || response.Body.String() != test.body {
 			t.Fatalf("%s: status=%d body=%q", test.path, response.Code, response.Body.String())
 		}
+		if test.path != "/healthz" && response.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("%s: cache-control=%q", test.path, response.Header().Get("Cache-Control"))
+		}
 	}
 }
 

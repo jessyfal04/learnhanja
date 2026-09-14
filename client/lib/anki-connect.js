@@ -16,11 +16,12 @@ export async function ankiMetadata() {
 
 export async function ankiNoteTypes(deck) {
 	const noteTypes = await invoke("modelNames");
-	const matches = await Promise.all((noteTypes || []).map(async (noteType) => {
+	const matches = [];
+	for (const noteType of noteTypes || []) {
 		const ids = await findNotes(`deck:"${escapeQuery(deck)}" note:"${escapeQuery(noteType)}"`);
-		return ids.length > 0 ? noteType : null;
-	}));
-	return matches.filter(Boolean).sort();
+		if (ids.length > 0) matches.push(noteType);
+	}
+	return matches.sort();
 }
 
 export async function ankiFields(noteType) {

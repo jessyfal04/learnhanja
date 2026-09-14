@@ -27,8 +27,16 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.logged(s.health))
 	mux.HandleFunc("POST /api/vocab", s.logged(s.vocabulary))
-	mux.Handle("GET /", s.loggedHandler(http.FileServer(http.FS(s.files))))
+	mux.Handle("GET /", s.loggedHandler(s.staticFiles()))
 	return mux
+}
+
+func (s *Server) staticFiles() http.Handler {
+	files := http.FileServer(http.FS(s.files))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		files.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) logged(next http.HandlerFunc) http.HandlerFunc {
