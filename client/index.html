@@ -55,6 +55,7 @@
 		<div id="charactersView" class="is-hidden">
 			<section id="charactersSection" aria-labelledby="charactersTitle">
 				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">학습함 0</span><span id="newCount" class="tag is-info is-light">새 카드 0</span><span id="unknownCount" class="tag is-light">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-info is-light" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
+				<p class="help mb-4"><strong>출처:</strong> 어문회 Grade 필드 스냅샷 (2026-09-09) · 14개 급수, 3,500자 · 앱에 포함된 정적 목록</p>
 				<div id="levelGroups"></div>
 			</section>
 			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p>한자 <strong id="selectedCount">0</strong>자 선택됨</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>관련 어휘 만들기</button></div></div></section>
@@ -63,6 +64,11 @@
 		<div id="vocabularyView" class="is-hidden">
 			<section class="box" aria-labelledby="vocabTitle">
 				<h2 id="vocabTitle" class="title is-4 mb-1">어휘</h2><p id="vocabSummary" class="subtitle is-6"></p>
+				<div class="notification is-light py-3 mb-4"><div class="content is-small mb-0">
+					<p><strong>어휘 출처:</strong> 국립국어원 <a href="https://krdict.korean.go.kr/download/downloadPopup" target="_blank" rel="noreferrer">한국어기초사전(KRDict) 전체 XML</a> 2025-12-19 덤프의 한글·한자·영문 뜻 · 웹사이트를 스크레이핑하지 않고 내려받은 ZIP을 변환합니다</p>
+					<p><strong>빈도 출처:</strong> 국립국어원(NIKL) 《현대 국어 사용 빈도 조사》와 <a href="https://github.com/CPokemon/swsh-text" target="_blank" rel="noreferrer">Pokémon Sword v1.3.0</a>·<a href="https://github.com/CPokemon/pla-text" target="_blank" rel="noreferrer">Pokémon Legends: Arceus</a> 한국어 텍스트 덤프 · 추출 도구 <a href="https://github.com/kwsch/pkNX" target="_blank" rel="noreferrer">pkNX</a></p>
+					<p>선택한 한자로만 이루어진 한국어기초사전 항목을 찾고, 같은 한자 표기와 한글 표기의 뜻을 합칩니다. 각 한글 표기를 두 빈도 목록에서 정확히 찾아 순위를 따로 표시하며, 빈도순은 존재하는 두 순위 중 더 높은 순위(작은 숫자)를 사용합니다. 빈칸은 해당 목록에 없다는 뜻입니다</p>
+				</div></div>
 				<div class="columns is-multiline">
 					<div class="column is-half-tablet"><label class="label" for="vocabFilter">검색</label><input id="vocabFilter" class="input" type="search" placeholder="한자, 한글, 뜻"></div>
 					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabSort">정렬</label><div class="select is-fullwidth"><select id="vocabSort"><option value="frequency">빈도순</option><option value="hanja-asc">한자 오름차순</option><option value="hanja-desc">한자 내림차순</option><option value="hangul-asc">한글 오름차순</option><option value="english-asc">뜻 오름차순</option></select></div></div>
@@ -75,6 +81,10 @@
 		<div id="idiomsView" class="is-hidden">
 			<section class="box" aria-labelledby="idiomsTitle">
 				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">사자성어 목록을 불러오는 중…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light is-hidden" target="_blank" rel="noreferrer">공식 출처</a></div></div>
+				<div class="notification is-light py-3 mb-4"><div class="content is-small mb-0">
+					<p><strong>시험 교재:</strong> 《꼭 시험에 나오는 고사성어》 247개 · 표의 쪽수는 교재 원문 기준</p>
+					<p><strong>국립국어원(NIKL):</strong> 《한국어 교육 어휘 내용 개발(3단계)》 4.3절 214개 · 두 목록의 중복을 하나로 합쳐 총 383개이며 각 항목의 모든 출처를 유지합니다</p>
+				</div></div>
 				<div class="columns is-multiline is-vcentered">
 					<div class="column is-one-third"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
 					<div class="column is-one-quarter"><label class="label" for="idiomSourceFilter">출처</label><div class="select is-fullwidth"><select id="idiomSourceFilter"><option value="exam">불러오는 중…</option></select></div></div>

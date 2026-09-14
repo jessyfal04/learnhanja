@@ -18,9 +18,35 @@ go run ./server/main -port 8090
 
 The static catalog contains 3,500 characters in 14 어문회 levels. The first tab contains local Anki and file connections; character selection is kept in the second tab. Choose an Anki deck, a compatible note type, and its Hanja field to overlay status.
 
-The 사자성어 view combines the 247-entry *꼭 시험에 나오는 고사성어 목록* with the existing 214 entries in section 4.3 of the National Institute of Korean Language report *한국어 교육 어휘 내용 개발(3단계)*. Shared idioms are shown once, producing 383 unique entries. The exam list is the default source; source filtering keeps either original list available, and the exam source's page number is shown in the table. A separate Anki deck, note type, and whole-idiom field can overlay known/new status. Hanja compatibility forms are normalized when matching. The view also supports Hangul/Hanja filtering, page/source-order or alphabetical sorting, selection coverage, and adding an idiom's Hanja to the active selection.
+The 사자성어 view combines 247 entries from *꼭 시험에 나오는 고사성어* with 214 entries in section 4.3 of the National Institute of Korean Language report *한국어 교육 어휘 내용 개발(3단계)*. Shared idioms are shown once, producing 383 unique entries. The exam list is the default source; source filtering keeps either original list available, and the exam source's page number is shown in the table. A separate Anki deck, note type, and whole-idiom field can overlay known/new status. Hanja compatibility forms are normalized when matching. The view also supports Hangul/Hanja filtering, page/source-order or alphabetical sorting, selection coverage, and adding an idiom's Hanja to the active selection.
 
 Source: [국립국어원 report page](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800), 공공누리 제4유형 (출처표시, 비상업적 이용, 변경금지).
+
+## Data sources and processing
+
+### Hanja levels
+
+`client/data/levels.json` is a static snapshot of the 어문회 `Grade` field taken on 2026-09-09. It contains 3,500 characters across 14 levels.
+
+### Idioms
+
+- *꼭 시험에 나오는 고사성어*: 247 entries with their original book page numbers
+- National Institute of Korean Language (NIKL), *한국어 교육 어휘 내용 개발(3단계)* section 4.3: 214 entries
+- Entries shared by both lists appear once but retain both source labels, resulting in 383 unique entries
+- The original inputs remain in `data/idioms`; the browser reads the merged static `client/data/idioms.json`
+
+### Vocabulary
+
+Vocabulary content and frequency are deliberately separate:
+
+1. The word, Hanja spelling, and English meanings come from the 2025-12-19 XML ZIP obtained through the official [KRDict full-dictionary download](https://krdict.korean.go.kr/download/downloadPopup). The app does not scrape the website. Rows without a pure-Hanja spelling are excluded. Rows with the same Hanja and Hangul spelling are deduplicated and their meanings are merged.
+2. Only entries whose complete Hanja spelling can be made from the selected characters are returned.
+3. The Hangul spelling is looked up exactly in two independent ranked lists:
+   - **NIKL rank:** the word index from the National Institute of Korean Language's *현대 국어 사용 빈도 조사*. Null markers and marked duplicate spellings are ignored.
+   - **Pokémon rank:** Korean `common/ko.txt` and `story/ko.txt` from [CPokemon/swsh-text](https://github.com/CPokemon/swsh-text) (*Pokémon Sword* v1.3.0) and [CPokemon/pla-text](https://github.com/CPokemon/pla-text) (*Pokémon Legends: Arceus*), normalized and stemmed with KoNLPy/Okt, restricted to Hangul tokens, counted, and ordered by descending frequency. The upstream dumps credit [kwsch/pkNX](https://github.com/kwsch/pkNX) for extraction.
+4. Both ranks remain visible. A blank means that spelling is absent from that list. The default frequency sort and maximum-rank filter use the smaller available rank; entries absent from both lists come last.
+
+The frequency assets and a compact explanation are in `data/freq`; the KRDict conversion command is documented in `data/kr-dict_hanja/README.md`.
 
 ## Configuration
 
@@ -69,3 +95,5 @@ The test target runs Go unit/integration/HTTP tests, JavaScript unit tests, and 
 - `client/data`: explicit static Hanja and idiom catalogs
 - `client`: embedded Bulma interface and modular JavaScript, including direct AnkiConnect and local-file handling
 - `data/idioms`: preserved source lists used to build the static idiom catalog
+- `data/freq`: NIKL and Pokémon ranked Hangul lists
+- `data/kr-dict_hanja`: KRDict dump, converter, and generated Hanja vocabulary TSV
