@@ -12,6 +12,8 @@ const idiomNoteTypeSelect = document.getElementById("idiomNoteTypeSelect");
 const idiomFieldSelect = document.getElementById("idiomFieldSelect");
 
 let selectionSignature = "";
+let statusRequestID = 0;
+let statusPromise = null;
 
 export async function loadCatalog() {
 	try {
@@ -36,21 +38,52 @@ export async function loadMetadata() {
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
+		invalidateCharacterStatus();
+		state.ankiStatusError = "앙키에 연결할 수 없습니다. AnkiConnect와 연결 설정을 확인하세요";
+		document.dispatchEvent(new Event("hanja-status-change"));
 		showMessage("warning", koreanError(error, "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다"));
 	}
 }
 
 export async function loadNoteTypes() {
-	if (!deckSelect.value) return;
-	const noteTypes = await ankiNoteTypes(deckSelect.value);
+	invalidateCharacterStatus();
+	const deck = deckSelect.value;
+	noteTypeSelect.replaceChildren();
+	characterFieldSelect.replaceChildren();
+	if (!deck) return;
+	const noteTypes = await ankiNoteTypes(deck);
+	if (deck !== deckSelect.value) return;
 	setOptions(noteTypeSelect, noteTypes, ["Hanja", "CJK Story"]);
 	await loadFields();
 }
 
 export async function loadFields() {
-	if (!noteTypeSelect.value) return;
-	const fields = await ankiFields(noteTypeSelect.value);
+	invalidateCharacterStatus();
+	const deck = deckSelect.value;
+	const noteType = noteTypeSelect.value;
+	characterFieldSelect.replaceChildren();
+	if (!noteType) return;
+	const fields = await ankiFields(noteType);
+	if (deck !== deckSelect.value || noteType !== noteTypeSelect.value) return;
 	setOptions(characterFieldSelect, fields, ["Char", "Hanja", "漢字", "Character"]);
+	document.dispatchEvent(new Event("hanja-anki-ready"));
+}
+
+export function characterFieldChanged() {
+	invalidateCharacterStatus();
+	document.dispatchEvent(new Event("hanja-anki-ready"));
+}
+
+function invalidateCharacterStatus() {
+	statusRequestID++;
+	statusPromise = null;
+	state.ankiStatus = null;
+	state.ankiStatusLoading = false;
+	state.ankiStatusError = "";
+	state.ankiStatusSource = null;
+	setLoading(document.getElementById("refreshStatusButton"), false);
+	renderCatalog();
+	document.dispatchEvent(new Event("hanja-status-change"));
 }
 
 export async function loadIdiomNoteTypes() {
@@ -66,18 +99,47 @@ export async function loadIdiomFields() {
 	setOptions(idiomFieldSelect, fields, ["Char", "Hanja", "한자", "漢字", "Idiom", "Sound"]);
 }
 
-export async function refreshStatus() {
+export function refreshStatus({silent = false} = {}) {
+	if (statusPromise) return statusPromise;
+	const config = {deck: deckSelect.value, noteType: noteTypeSelect.value, field: characterFieldSelect.value};
+	if (!config.deck || !config.noteType || !config.field) {
+		state.ankiStatusError = "연결 탭에서 덱, 노트 유형, 한자 필드를 선택하세요";
+		document.dispatchEvent(new Event("hanja-status-change"));
+		return Promise.resolve(false);
+	}
+	const id = ++statusRequestID;
 	const button = document.getElementById("refreshStatusButton");
 	setLoading(button, true);
-	try {
-		state.ankiStatus = await ankiCharacterStatus({deck: deckSelect.value, noteType: noteTypeSelect.value, field: characterFieldSelect.value});
-		renderCatalog();
-		showMessage("success", `앙키에서 한자 ${state.ankiStatus.total}자의 상태를 확인했습니다`);
-	} catch (error) {
-		showMessage("danger", koreanError(error, "앙키 상태를 확인할 수 없습니다"));
-	} finally {
-		setLoading(button, false);
-	}
+	state.ankiStatusLoading = true;
+	state.ankiStatusError = "";
+	document.dispatchEvent(new Event("hanja-status-change"));
+	statusPromise = (async () => {
+		try {
+			const result = await ankiCharacterStatus(config);
+			if (id !== statusRequestID) return false;
+			state.ankiStatus = result;
+			state.ankiStatusSource = {...config, checkedAt: Date.now()};
+			renderCatalog();
+			if (!silent) showMessage("success", `앙키에서 한자 ${result.total}자의 상태를 확인했습니다`);
+			return true;
+		} catch (error) {
+			if (id !== statusRequestID) return false;
+			state.ankiStatus = null;
+			state.ankiStatusSource = null;
+			state.ankiStatusError = koreanError(error, "앙키 상태를 확인할 수 없습니다. AnkiConnect와 연결 설정을 확인하세요");
+			if (!silent) showMessage("danger", state.ankiStatusError);
+			renderCatalog();
+			return false;
+		} finally {
+			if (id === statusRequestID) {
+				statusPromise = null;
+				state.ankiStatusLoading = false;
+				setLoading(button, false);
+				document.dispatchEvent(new Event("hanja-status-change"));
+			}
+		}
+	})();
+	return statusPromise;
 }
 
 export async function refreshIdiomStatus() {

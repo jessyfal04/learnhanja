@@ -22,6 +22,27 @@ The 사자성어 view combines 247 entries from *꼭 시험에 나오는 고사�
 
 Source: [국립국어원 report page](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800), 공공누리 제4유형 (출처표시, 비상업적 이용, 변경금지).
 
+## Character insights
+
+Open **한자 탐구** (`#insights`) and paste a character, word, or mixed sentence. Click any Hanja spelling in the **어휘** table to open it directly in this tab with the word already filled in. Analyze up to 64 distinct Hanja. The tab shows:
+
+- Compact character cards with Korean 훈음, Unihan kDefinition, level, radical, stroke count, and Anki status shown directly on the colored level badge
+- Related KRDict vocabulary, ordered by frequency, with a simple text search and character buttons to narrow the results
+- Related idioms, with original source and page information available on hover
+- Add one character or all input characters to the existing study selection
+
+Analysis does not require Anki. It does not change the selection until an add button is clicked, and never edits Anki cards. Level badges use AnkiConnect status from the deck, note type, and character field chosen in the connections tab: green for learned (at least one non-new card), blue for new cards, amber for no matching note, and neutral for unverified or unknown card state. Suspensions remain labeled separately. Insights loads status automatically when Anki configuration becomes ready and offers its own refresh button; the connected deck is available on hover. Changing Anki configuration clears the previous overlay and stale in-flight results are ignored. Unicode compatibility forms are matched with NFKC while original input forms remain visible. Simplified/traditional spellings and other distinct variant characters are not automatically merged. This is a reference lookup, not a sentence translator, and missing dictionary entries are not evidence that a word does not exist.
+
+The lazily loaded `client/data/insights.json` focuses on Korean Hanja: local `HanjaLevels` 훈음, radicals, and stroke counts (snapshot 2026-09-19), supplemented by Korean readings, stroke counts, and kDefinition from [Unicode Unihan 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip). Chinese/Japanese readings and foreign study references are excluded. Related vocabulary uses KRDict Korean definitions; the original vocabulary tab retains its English translations. Unihan kDefinition is displayed as the original English gloss. The explicit 旣/既 variant link comes from the [Taiwan Ministry of Education character-variant dictionary](https://dict.variants.moe.edu.tw/dictView.jsp?ID=19555&la=0). Missing reference fields are shown explicitly. Existing source datasets are preserved.
+
+To rebuild the snapshot using your local export and the pinned Unihan archive:
+
+```bash
+python3 scripts/build_insights.py --cjk-data /path/to/learnCJK.dev/backend/data --unihan /path/to/Unihan-17.0.0.zip
+```
+
+The generated asset is self-contained; the running app does not depend on the other checkout or Python. Unicode data is covered by the [Unicode license](client/data/unicode-license.txt).
+
 ## Data sources and processing
 
 ### Hanja levels
@@ -75,7 +96,7 @@ AnkiConnect calls are made directly by browser JavaScript to `http://127.0.0.1:8
 
 ## Server dependency
 
-The Go server only serves the embedded web client and handles `POST /api/vocab`. Hanja levels and idioms are explicit static JSON assets; Anki metadata, fields, Hanja status, idiom status, and selection files stay local to the browser.
+The Go server only serves the embedded web client and handles `POST /api/vocab` and `POST /api/insights/vocab`. The latter returns all dictionary entries containing any supplied character (up to 256 characters), rather than requiring every character to be selected. Hanja levels and idioms are explicit static JSON assets; Anki metadata, fields, Hanja status, idiom status, and selection files stay local to the browser.
 
 ## Test and build
 

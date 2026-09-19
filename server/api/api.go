@@ -12,6 +12,7 @@ import (
 
 type VocabStore interface {
 	Search([]string, int) model.VocabResult
+	Related([]string) model.VocabResult
 }
 
 type Server struct {
@@ -27,8 +28,27 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.logged(s.health))
 	mux.HandleFunc("POST /api/vocab", s.logged(s.vocabulary))
+	mux.HandleFunc("POST /api/insights/vocab", s.logged(s.insightVocabulary))
 	mux.Handle("GET /", s.loggedHandler(s.staticFiles()))
 	return mux
+}
+
+func (s *Server) insightVocabulary(w http.ResponseWriter, r *http.Request) {
+	var request vocabRequest
+	if !readJSON(w, r, &request) {
+		return
+	}
+	if len(request.Characters) == 0 || len(request.Characters) > 256 {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("한자를 1~256자 입력하세요"))
+		return
+	}
+	for _, character := range request.Characters {
+		if len([]rune(character)) != 1 {
+			writeError(w, http.StatusBadRequest, fmt.Errorf("각 항목은 한 글자여야 합니다"))
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, s.vocab.Related(request.Characters))
 }
 
 func (s *Server) staticFiles() http.Handler {

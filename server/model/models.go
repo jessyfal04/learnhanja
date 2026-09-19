@@ -4,6 +4,7 @@ type VocabEntry struct {
 	Hanja       string   `json:"hanja"`
 	Hangul      string   `json:"hangul"`
 	Meanings    []string `json:"meanings"`
+	Definitions []string `json:"definitions"`
 	PokemonRank int      `json:"pokemonRank"`
 	NIKLRank    int      `json:"niklRank"`
 }

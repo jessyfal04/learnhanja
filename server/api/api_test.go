@@ -13,6 +13,10 @@ import (
 
 type fakeVocab struct{}
 
+func (fakeVocab) Related(_ []string) model.VocabResult {
+	return model.VocabResult{Total: 1, Entries: []model.VocabEntry{{Hanja: "人生", Hangul: "인생"}}}
+}
+
 func (fakeVocab) Search(_ []string, _ int) model.VocabResult {
 	return model.VocabResult{Total: 1, Entries: []model.VocabEntry{{Hanja: "人", Hangul: "인"}}}
 }
@@ -82,6 +86,30 @@ func TestRemovedServerAPIs(t *testing.T) {
 		testServer().ServeHTTP(response, httptest.NewRequest(http.MethodGet, path, nil))
 		if response.Code != http.StatusNotFound {
 			t.Fatalf("%s: status=%d body=%q", path, response.Code, response.Body.String())
+		}
+	}
+}
+
+func TestInsightVocabularyRoute(t *testing.T) {
+	for _, test := range []struct {
+		body   string
+		status int
+	}{
+		{`{"characters":["人"]}`, http.StatusOK},
+		{`{"characters":["𠀀"]}`, http.StatusOK},
+		{`{"characters":[]}`, http.StatusBadRequest},
+		{`{"characters":["人生"]}`, http.StatusBadRequest},
+		{`{"characters":["人"],"extra":1}`, http.StatusBadRequest},
+		{`{`, http.StatusBadRequest},
+		{`{"characters":[` + strings.Repeat(`"人",`, 256) + `"人"]}`, http.StatusBadRequest},
+	} {
+		response := httptest.NewRecorder()
+		testServer().ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/api/insights/vocab", strings.NewReader(test.body)))
+		if response.Code != test.status {
+			t.Fatalf("body=%s status=%d want=%d", test.body, response.Code, test.status)
+		}
+		if test.status == http.StatusOK && !strings.Contains(response.Body.String(), `"hanja":"人生"`) {
+			t.Fatalf("missing related word: %s", response.Body.String())
 		}
 	}
 }

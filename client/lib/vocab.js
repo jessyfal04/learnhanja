@@ -3,6 +3,7 @@ import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
 import { showView } from "./views.js";
+import { openInsights } from "./insights.js";
 
 export async function buildVocabulary() {
 	const button = document.getElementById("buildVocabButton");
@@ -33,8 +34,16 @@ export function renderVocabulary() {
 
 function renderRow(entry) {
 	const row = document.createElement("tr");
+	const hanja = cell("", "vocab-hanja");
+	const link = document.createElement("a");
+	link.href = "#insights";
+	link.textContent = entry.hanja;
+	link.title = `${entry.hanja} 한자 탐구`;
+	link.setAttribute("aria-label", `${entry.hanja} 한자 탐구`);
+	link.addEventListener("click", (event) => { event.preventDefault(); openInsights(entry.hanja); });
+	hanja.appendChild(link);
 	row.append(
-		cell(entry.hanja, "vocab-hanja"),
+		hanja,
 		cell(entry.hangul),
 		cell((entry.meanings || []).join(" · ")),
 		cell(entry.pokemonRank || ""),

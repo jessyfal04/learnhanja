@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"hanjavocab/server/model"
 )
@@ -79,6 +82,33 @@ func (s *Store) Search(characters []string, limit int) model.VocabResult {
 	return result
 }
 
+func (s *Store) Related(characters []string) model.VocabResult {
+	wanted := make(map[rune]bool)
+	for _, character := range characters {
+		for _, r := range normalizeHanja(character) {
+			if isHanja(r) {
+				wanted[r] = true
+			}
+		}
+	}
+	entries := make([]model.VocabEntry, 0)
+	for _, entry := range s.entries {
+		for _, r := range entry.Hanja {
+			if wanted[r] {
+				entries = append(entries, entry)
+				break
+			}
+		}
+	}
+	sort.SliceStable(entries, func(i, j int) bool {
+		if bestRank(entries[i]) != bestRank(entries[j]) {
+			return bestRank(entries[i]) < bestRank(entries[j])
+		}
+		return entries[i].Hangul < entries[j].Hangul
+	})
+	return model.VocabResult{Entries: entries, Total: len(entries)}
+}
+
 func loadEntries(path string) ([]model.VocabEntry, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -106,6 +136,7 @@ func loadEntries(path string) ([]model.VocabEntry, error) {
 	entries := make([]model.VocabEntry, 0)
 	byKey := make(map[string]int)
 	meaningSets := make([]map[string]bool, 0)
+	definitionSets := make([]map[string]bool, 0)
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
@@ -117,6 +148,10 @@ func loadEntries(path string) ([]model.VocabEntry, error) {
 		hanja := normalizeHanja(column(row, columns["hanja"]))
 		hangul := strings.TrimSpace(column(row, columns["word"]))
 		meaning := strings.TrimSpace(column(row, columns["meaning_en"]))
+		definition := ""
+		if index, exists := columns["definition_ko"]; exists {
+			definition = strings.TrimSpace(column(row, index))
+		}
 		if hanja == "" || hangul == "" || !hanjaOnly(hanja) {
 			continue
 		}
@@ -127,10 +162,15 @@ func loadEntries(path string) ([]model.VocabEntry, error) {
 			byKey[key] = index
 			entries = append(entries, model.VocabEntry{Hanja: hanja, Hangul: hangul})
 			meaningSets = append(meaningSets, make(map[string]bool))
+			definitionSets = append(definitionSets, make(map[string]bool))
 		}
 		if meaning != "" && !meaningSets[index][meaning] {
 			meaningSets[index][meaning] = true
 			entries[index].Meanings = append(entries[index].Meanings, meaning)
+		}
+		if definition != "" && !definitionSets[index][definition] {
+			definitionSets[index][definition] = true
+			entries[index].Definitions = append(entries[index].Definitions, definition)
 		}
 	}
 	return entries, nil
@@ -197,25 +237,13 @@ func hanjaOnly(value string) bool {
 }
 
 func isHanja(r rune) bool {
-	return r >= 0x3400 && r <= 0x9fff || r >= 0xf900 && r <= 0xfaff
+	return unicode.Is(unicode.Han, r)
 }
 
 func normalizeHanja(value string) string {
-	var builder strings.Builder
-	for _, r := range strings.TrimSpace(value) {
-		builder.WriteRune(unifyRune(r))
-	}
-	return builder.String()
+	return norm.NFKC.String(strings.TrimSpace(value))
 }
 
 func unifyRune(r rune) rune {
-	if unified, ok := compatibilityRunes[r]; ok {
-		return unified
-	}
-	return r
-}
-
-var compatibilityRunes = map[rune]rune{
-	'金': '金', '李': '李', '樂': '樂', '年': '年', '六': '六', '來': '來',
-	'車': '車', '茶': '茶', '蘭': '蘭', '林': '林',
+	return []rune(norm.NFKC.String(string(r)))[0]
 }

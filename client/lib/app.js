@@ -1,4 +1,5 @@
-import { clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=2";
+import { initializeInsights, renderInsights } from "./insights.js";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=2";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
 import { loadIdioms, renderIdioms } from "./idioms.js?v=2";
@@ -9,6 +10,7 @@ document.getElementById("messageClose").addEventListener("click", hideMessage);
 document.getElementById("refreshAnkiButton").addEventListener("click", loadMetadata);
 document.getElementById("deckSelect").addEventListener("change", loadNoteTypes);
 document.getElementById("noteTypeSelect").addEventListener("change", loadFields);
+document.getElementById("characterFieldSelect").addEventListener("change", characterFieldChanged);
 document.getElementById("idiomDeckSelect").addEventListener("change", loadIdiomNoteTypes);
 document.getElementById("idiomNoteTypeSelect").addEventListener("change", loadIdiomFields);
 document.getElementById("refreshStatusButton").addEventListener("click", refreshStatus);
@@ -27,7 +29,11 @@ document.querySelector("#vocabularyTab a").addEventListener("click", (event) => 
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
 for (const id of ["idiomFilter", "idiomSourceFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
 
+document.querySelector("#insightsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("insights"); });
+window.addEventListener("hashchange", () => showView(window.location.hash.slice(1)));
 showView(window.location.hash.slice(1));
+initializeInsights();
 await Promise.all([loadCatalog(), loadIdioms()]);
+renderInsights();
 await loadMetadata();
 await initializeFileSave();
