@@ -147,8 +147,7 @@ export async function refreshIdiomStatus() {
 	setLoading(button, true);
 	try {
 		state.idiomAnkiStatus = await ankiIdiomStatus({deck: idiomDeckSelect.value, noteType: idiomNoteTypeSelect.value, field: idiomFieldSelect.value});
-		const { renderIdioms } = await import("./idioms.js");
-		renderIdioms();
+		document.dispatchEvent(new Event("hanja-idiom-status-change"));
 		showMessage("success", `앙키에서 사자성어 ${state.idiomAnkiStatus.total}개의 상태를 확인했습니다`);
 	} catch (error) {
 		showMessage("danger", koreanError(error, "사자성어 앙키 상태를 확인할 수 없습니다"));

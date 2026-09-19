@@ -2,7 +2,7 @@ import { initializeInsights, renderInsights } from "./insights.js";
 import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=2";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { loadIdioms, renderIdioms } from "./idioms.js?v=2";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=3";
 import { buildVocabulary, renderVocabulary } from "./vocab.js";
 import { showView } from "./views.js";
 
@@ -27,13 +27,15 @@ document.querySelector("#connectionTab a").addEventListener("click", (event) => 
 document.querySelector("#charactersTab a").addEventListener("click", (event) => { event.preventDefault(); showView("characters"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
-for (const id of ["idiomFilter", "idiomSourceFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
+for (const id of ["idiomFilter", "idiomSourceFilter", "idiomLevelFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
+document.addEventListener("hanja-idiom-status-change", renderIdioms);
 
 document.querySelector("#insightsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("insights"); });
 window.addEventListener("hashchange", () => showView(window.location.hash.slice(1)));
 showView(window.location.hash.slice(1));
 initializeInsights();
 await Promise.all([loadCatalog(), loadIdioms()]);
+initializeIdiomLevels();
 renderInsights();
 await loadMetadata();
 await initializeFileSave();

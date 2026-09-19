@@ -7,14 +7,37 @@ export function idiomStatusInfo(idiom, statuses) {
 	return statuses[String(idiom.hanja || "").normalize("NFKC")] || statuses[String(idiom.korean || "").normalize("NFKC")] || null;
 }
 
-export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort, source = "all") {
+export function buildLevelIndex(catalog) {
+	const byCharacter = new Map();
+	const levels = (catalog?.groups || []).map((group, index) => {
+		for (const character of group.characters) byCharacter.set(character.normalize("NFKC"), index);
+		return group.level;
+	});
+	return {byCharacter, levels};
+}
+
+export function idiomLevel(idiom, levelIndex) {
+	if (!levelIndex || idiom.partial || /[-/]/u.test(idiom.hanja || "")) return "unknown";
+	const characters = idiomCharacters(idiom);
+	if (!characters.length) return "unknown";
+	let hardest = -1;
+	for (const character of characters) {
+		const index = levelIndex.byCharacter.get(character);
+		if (index === undefined) return "unknown";
+		hardest = Math.max(hardest, index);
+	}
+	return levelIndex.levels[hardest] || "unknown";
+}
+
+export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort, source = "all", level = "all", levelIndex = null) {
 	const needle = String(query || "").normalize("NFKC").trim().toLocaleLowerCase();
 	const filtered = (entries || []).filter((entry) => {
 		const haystack = `${entry.korean} ${entry.hanja}`.normalize("NFKC").toLocaleLowerCase();
 		const matches = !needle || haystack.includes(needle);
 		const characters = idiomCharacters(entry);
 		const matchesSource = source === "all" || (entry.sources || []).includes(source);
-		return matches && matchesSource && (!selectedOnly || characters.length > 0 && characters.every((character) => selected.has(character)));
+		const matchesLevel = level === "all" || idiomLevel(entry, levelIndex) === level;
+		return matches && matchesSource && matchesLevel && (!selectedOnly || characters.length > 0 && characters.every((character) => selected.has(character)));
 	});
 	const collator = new Intl.Collator(["ko", "zh"]);
 	if (sort === "korean") filtered.sort((a, b) => collator.compare(a.korean, b.korean));

@@ -1,8 +1,17 @@
 import { renderCatalog } from "./anki.js?v=2";
-import { filterAndSortIdioms, idiomCharacters, idiomStatusInfo } from "./idiom-filter.js";
+import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
+
+let levelIndex = null;
+
+export function initializeIdiomLevels() {
+	levelIndex = buildLevelIndex(state.catalog);
+	const filter = document.getElementById("idiomLevelFilter");
+	filter.replaceChildren(option("all", "전체 급수"), ...levelIndex.levels.map((level) => option(level, level)), option("unknown", "급수 미상"));
+	renderIdioms();
+}
 
 export async function loadIdioms() {
 	try {
@@ -19,7 +28,8 @@ export async function loadIdioms() {
 export function renderIdioms() {
 	if (!state.idioms) return;
 	const sourceID = document.getElementById("idiomSourceFilter").value;
-	const visible = filterAndSortIdioms(state.idioms.entries, document.getElementById("idiomFilter").value, state.selected, document.getElementById("idiomSelectedOnly").checked, document.getElementById("idiomSort").value, sourceID);
+	const level = document.getElementById("idiomLevelFilter").value;
+	const visible = filterAndSortIdioms(state.idioms.entries, document.getElementById("idiomFilter").value, state.selected, document.getElementById("idiomSelectedOnly").checked, document.getElementById("idiomSort").value, sourceID, level, levelIndex);
 	const body = document.getElementById("idiomsBody");
 	body.replaceChildren(...visible.map((entry) => renderRow(entry, state.idioms.sources)));
 	const source = state.idioms.sources.find((item) => item.id === sourceID);
@@ -30,7 +40,8 @@ export function renderIdioms() {
 
 function renderRow(entry, sources) {
 	const row = document.createElement("tr");
-	row.append(cell(entry.korean), cell(entry.hanja, "vocab-hanja"));
+	const level = levelIndex ? idiomLevel(entry, levelIndex) : "";
+	row.append(cell(entry.korean), cell(entry.hanja, "vocab-hanja"), cell(level === "unknown" ? "미상" : level || "—"));
 	const labels = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
 	row.append(cell(labels.join(" · ")), cell(entry.page || "—"));
 	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));

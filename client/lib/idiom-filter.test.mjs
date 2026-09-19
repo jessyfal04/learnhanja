@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterAndSortIdioms, idiomCharacters, idiomStatusInfo } from "./idiom-filter.js";
+import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
 
 const entries = [
 	{korean: "각양각색", hanja: "各樣各色", sources: ["nikl"], sourceOrders: {nikl: 1}},
@@ -36,4 +36,22 @@ test("filters and orders entries by source", () => {
 
 test("sorts by page and puts entries without a page last", () => {
 	assert.deepEqual(filterAndSortIdioms(entries, "", new Set(), false, "page", "all").map((entry) => entry.korean), ["각주구검", "각양각색", "안성맞춤"]);
+});
+
+test("classifies idioms by their hardest character and preserves other filters", () => {
+	const index = buildLevelIndex({groups: [
+		{level: "8급", characters: ["一", "金", "枝", "玉", "葉", "安"]},
+		{level: "7급", characters: ["字", "千", "城"]},
+		{level: "6급", characters: ["刻", "舟", "求", "劍"]},
+	]});
+	const cases = [
+		{korean: "일자천금", hanja: "一字千金", sources: ["exam"]},
+		{korean: "금지옥엽", hanja: "金枝玉葉", sources: ["nikl"]},
+		{korean: "각주구검", hanja: "刻舟求劍", sources: ["exam"]},
+		{korean: "안성맞춤", hanja: "安城--", partial: true, sources: ["nikl"]},
+		{korean: "없는 글자", hanja: "未知", sources: ["exam"]},
+	];
+	assert.deepEqual(cases.map((entry) => idiomLevel(entry, index)), ["7급", "8급", "6급", "unknown", "unknown"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "exam", "7급", index).map((entry) => entry.korean), ["일자천금"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "nikl", "unknown", index).map((entry) => entry.korean), ["안성맞춤"]);
 });
