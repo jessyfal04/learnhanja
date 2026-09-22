@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { state } from "./state.js";
-import { loadMetadata, refreshStatus, renderCatalog } from "./anki.js?v=2";
+import { loadMetadata, refreshStatus, renderCatalog } from "./anki.js?v=3";
 import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js";
 import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js";
@@ -21,6 +21,15 @@ export function openInsights(text) {
 	showView("insights");
 	$("insightInput").focus();
 	return analyze();
+}
+
+export function insightLink(text) {
+	const link = element("a", text);
+	link.href = "#insights";
+	link.title = `${text} 한자 탐구`;
+	link.setAttribute("aria-label", `${text} 한자 탐구`);
+	link.addEventListener("click", (event) => { event.preventDefault(); void openInsights(text); });
+	return link;
 }
 
 function element(tag, text, className = "") {
@@ -170,7 +179,9 @@ function renderResults() {
 	$("insightVocabSummary").textContent = busy ? "관련 어휘를 불러오는 중…" : vocabularyError || (words.length ? `${words.length}개 · 자주 쓰는 순서` : "관련 어휘가 없습니다");
 	$("insightVocabBody").replaceChildren(...words.slice(0, visibleLimit).map((entry) => {
 		const row = element("tr");
-		row.append(element("td", entry.hanja, "vocab-hanja"), element("td", entry.hangul), element("td", entry.definitions?.join(" · ") || "뜻 자료 없음"));
+		const hanja = element("td", null, "vocab-hanja");
+		hanja.append(insightLink(entry.hanja));
+		row.append(hanja, element("td", entry.hangul), element("td", entry.definitions?.join(" · ") || "뜻 자료 없음"));
 		return row;
 	}));
 	$("insightMore").classList.toggle("is-hidden", words.length <= visibleLimit);
@@ -178,7 +189,7 @@ function renderResults() {
 	$("insightIdioms").replaceChildren(...idioms.map((entry) => {
 		const row = element("div", null, "insight-idiom");
 		const sources = entry.sources.map((id) => state.idioms.sources.find((s) => s.id === id)?.shortName || id).join(" · ");
-		row.append(element("span", `${entry.korean} · ${entry.hanja}`));
+		row.append(element("span", `${entry.korean} · `), insightLink(entry.hanja));
 		row.title = `${sources}${entry.page ? ` · ${entry.page}쪽` : ""}`;
 		return row;
 	}));

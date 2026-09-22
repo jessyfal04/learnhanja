@@ -6,15 +6,16 @@ const nodes = new Map();
 const events = [];
 globalThis.document = {
 	getElementById(id) {
-		if (!nodes.has(id)) nodes.set(id, {value: "", disabled: false, classList: {toggle() {}}});
+		if (!nodes.has(id)) nodes.set(id, {value: "", disabled: false, classList: {toggle() {}}, replaceChildren() {}});
 		return nodes.get(id);
 	},
 	dispatchEvent(event) { events.push(event.type); },
+	querySelectorAll() { return []; },
 	createElement() {
-		return {content: {textContent: ""}, set innerHTML(value) { this.content.textContent = value; }};
+		return {content: {textContent: ""}, dataset: {}, classList: {toggle() {}}, append() {}, appendChild() {}, addEventListener() {}, setAttribute() {}, set innerHTML(value) { this.content.textContent = value; }};
 	},
 };
-const { refreshStatus, characterFieldChanged } = await import("./anki.js?v=2");
+const { refreshStatus, characterFieldChanged } = await import("./anki.js?v=3");
 document.getElementById("deckSelect").value = "한자";
 document.getElementById("noteTypeSelect").value = "Hanja";
 document.getElementById("characterFieldSelect").value = "Char";
@@ -50,6 +51,17 @@ test("concurrent refreshes share one request and record the chosen Anki source",
 	assert.equal(state.ankiStatusSource.field, "Char");
 	assert.equal(state.ankiStatusLoading, false);
 	assert.ok(events.includes("hanja-status-change"));
+});
+
+test("refresh can select learned characters and update the selected count", async () => {
+	state.catalog = {total: 2, groups: [{level: "8급", characters: ["人", "日"]}]};
+	state.selected = new Set();
+	mockFetch();
+	assert.equal(await refreshStatus({silent: true, autoSelect: true}), true);
+	assert.deepEqual([...state.selected], ["人"]);
+	assert.equal(document.getElementById("knownCount").textContent, "학습함 1");
+	assert.equal(document.getElementById("selectedCount").textContent, "1");
+	state.catalog = null;
 });
 
 test("changing the configured field clears old colors and ignores late results", async () => {

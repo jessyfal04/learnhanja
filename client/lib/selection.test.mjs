@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { selectedByStatus, toggledSelection, withLevelSelection } from "./selection.js";
+import { selectedByStatus, selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js";
 
 test("toggledSelection is immutable", () => {
 	const original = new Set(["人"]);
@@ -17,6 +17,12 @@ test("selectedByStatus collects matching characters", () => {
 		{ value: "日", status: "new" },
 	] }];
 	assert.deepEqual([...selectedByStatus(groups, "known")], ["人"]);
+});
+
+test("automatic Anki selection includes only learned catalog characters", () => {
+	const catalog = {groups: [{characters: ["人", "金", "日", "月"]}]};
+	const statuses = {characters: {人: {status: "known"}, 金: {status: "known"}, 日: {status: "new"}, 山: {status: "known"}}};
+	assert.deepEqual([...selectedFromAnki(catalog, statuses)], ["人", "金"]);
 });
 
 test("withLevelSelection adds and removes a level", () => {

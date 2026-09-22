@@ -1,7 +1,7 @@
 import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=2";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
-import { toggledSelection, withLevelSelection } from "./selection.js";
+import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js";
 import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
 
 const deckSelect = document.getElementById("deckSelect");
@@ -14,6 +14,7 @@ const idiomFieldSelect = document.getElementById("idiomFieldSelect");
 let selectionSignature = "";
 let statusRequestID = 0;
 let statusPromise = null;
+let autoSelectRequest = false;
 
 export async function loadCatalog() {
 	try {
@@ -35,6 +36,7 @@ export async function loadMetadata() {
 		status.className = "tag is-medium is-success is-light";
 		status.textContent = `연결됨 · 규격 ${metadata.version}`;
 		await Promise.all([loadNoteTypes(), loadIdiomNoteTypes()]);
+		await refreshStatus({silent: true, autoSelect: true});
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
@@ -77,6 +79,7 @@ export function characterFieldChanged() {
 function invalidateCharacterStatus() {
 	statusRequestID++;
 	statusPromise = null;
+	autoSelectRequest = false;
 	state.ankiStatus = null;
 	state.ankiStatusLoading = false;
 	state.ankiStatusError = "";
@@ -99,8 +102,11 @@ export async function loadIdiomFields() {
 	setOptions(idiomFieldSelect, fields, ["Char", "Hanja", "한자", "漢字", "Idiom", "Sound"]);
 }
 
-export function refreshStatus({silent = false} = {}) {
-	if (statusPromise) return statusPromise;
+export function refreshStatus({silent = false, autoSelect = false} = {}) {
+	if (statusPromise) {
+		autoSelectRequest ||= autoSelect;
+		return statusPromise;
+	}
 	const config = {deck: deckSelect.value, noteType: noteTypeSelect.value, field: characterFieldSelect.value};
 	if (!config.deck || !config.noteType || !config.field) {
 		state.ankiStatusError = "연결 탭에서 덱, 노트 유형, 한자 필드를 선택하세요";
@@ -108,6 +114,7 @@ export function refreshStatus({silent = false} = {}) {
 		return Promise.resolve(false);
 	}
 	const id = ++statusRequestID;
+	autoSelectRequest = autoSelect;
 	const button = document.getElementById("refreshStatusButton");
 	setLoading(button, true);
 	state.ankiStatusLoading = true;
@@ -119,6 +126,7 @@ export function refreshStatus({silent = false} = {}) {
 			if (id !== statusRequestID) return false;
 			state.ankiStatus = result;
 			state.ankiStatusSource = {...config, checkedAt: Date.now()};
+			if (autoSelectRequest) state.selected = selectedFromAnki(state.catalog, result);
 			renderCatalog();
 			if (!silent) showMessage("success", `앙키에서 한자 ${result.total}자의 상태를 확인했습니다`);
 			return true;
@@ -133,6 +141,7 @@ export function refreshStatus({silent = false} = {}) {
 		} finally {
 			if (id === statusRequestID) {
 				statusPromise = null;
+				autoSelectRequest = false;
 				state.ankiStatusLoading = false;
 				setLoading(button, false);
 				document.dispatchEvent(new Event("hanja-status-change"));

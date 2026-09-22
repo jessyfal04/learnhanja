@@ -6,7 +6,7 @@
 	<title>한자 어휘</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
 	<link rel="stylesheet" href="/style/style.css">
-	<script type="module" src="/lib/app.js?v=6"></script>
+	<script type="module" src="/lib/app.js?v=8"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -116,8 +116,8 @@
 				</div></div>
 				<div class="columns is-multiline is-vcentered">
 					<div class="column is-one-quarter"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
-					<div class="column is-one-quarter"><label class="label" for="idiomSourceFilter">출처</label><div class="select is-fullwidth"><select id="idiomSourceFilter"><option value="exam">불러오는 중…</option></select></div></div>
-					<div class="column is-one-quarter"><label class="label" for="idiomLevelFilter">급수</label><div class="select is-fullwidth"><select id="idiomLevelFilter"><option value="all">전체 급수</option></select></div><p class="help">구성 한자 중 가장 어려운 급수 기준</p></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSourceFilter">출처</label><div class="select is-fullwidth"><select id="idiomSourceFilter"><option value="all">불러오는 중…</option></select></div></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomLevelFilter">급수</label><div class="select is-fullwidth"><select id="idiomLevelFilter"><option value="all">전체 급수</option></select></div><p class="help">선택한 급수까지 포함 · 7급은 8급도 포함 · 가장 어려운 한자 기준</p></div>
 					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="page" selected>쪽순</option><option value="source">출처 수록순</option></select></div></div>
 					<div class="column is-full"><label class="checkbox"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
 				</div>

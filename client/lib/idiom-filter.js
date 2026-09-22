@@ -36,7 +36,10 @@ export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort
 		const matches = !needle || haystack.includes(needle);
 		const characters = idiomCharacters(entry);
 		const matchesSource = source === "all" || (entry.sources || []).includes(source);
-		const matchesLevel = level === "all" || idiomLevel(entry, levelIndex) === level;
+		const entryLevel = idiomLevel(entry, levelIndex);
+		const chosenLevelIndex = levelIndex?.levels.indexOf(level) ?? -1;
+		const entryLevelIndex = levelIndex?.levels.indexOf(entryLevel) ?? -1;
+		const matchesLevel = level === "all" || entryLevel === level || chosenLevelIndex >= 0 && entryLevelIndex >= 0 && entryLevelIndex <= chosenLevelIndex;
 		return matches && matchesSource && matchesLevel && (!selectedOnly || characters.length > 0 && characters.every((character) => selected.has(character)));
 	});
 	const collator = new Intl.Collator(["ko", "zh"]);

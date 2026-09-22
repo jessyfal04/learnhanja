@@ -56,12 +56,14 @@ test("classifies idioms by their hardest character and preserves other filters",
 	]});
 	const cases = [
 		{korean: "일자천금", hanja: "一字千金", sources: ["exam"]},
-		{korean: "금지옥엽", hanja: "金枝玉葉", sources: ["nikl"]},
+		{korean: "금지옥엽", hanja: "金枝玉葉", sources: ["exam", "nikl"]},
 		{korean: "각주구검", hanja: "刻舟求劍", sources: ["exam"]},
 		{korean: "안성맞춤", hanja: "安城--", partial: true, sources: ["nikl"]},
 		{korean: "없는 글자", hanja: "未知", sources: ["exam"]},
 	];
 	assert.deepEqual(cases.map((entry) => idiomLevel(entry, index)), ["7급", "8급", "6급", "unknown", "unknown"]);
-	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "exam", "7급", index).map((entry) => entry.korean), ["일자천금"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "exam", "7급", index).map((entry) => entry.korean), ["금지옥엽", "일자천금"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "exam", "8급", index).map((entry) => entry.korean), ["금지옥엽"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "exam", "6급", index).map((entry) => entry.korean), ["각주구검", "금지옥엽", "일자천금"]);
 	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "korean", "nikl", "unknown", index).map((entry) => entry.korean), ["안성맞춤"]);
 });

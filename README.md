@@ -18,15 +18,17 @@ go run ./server/main -port 8090
 
 The static catalog contains 3,500 characters in 14 어문회 levels. The first tab contains local Anki and file connections; character selection is kept in the second tab. Choose an Anki deck, a compatible note type, and its Hanja field to overlay status.
 
-The 사자성어 view combines 247 entries from *꼭 시험에 나오는 고사성어*, 214 entries in section 4.3 of the National Institute of Korean Language report *한국어 교육 어휘 내용 개발(3단계)*, and 75 entries from the supplied 어문회 6급 TSV. Shared idioms are shown once, producing 430 unique entries. The exam list is the default source; source filtering keeps each original list available, and the exam source's page number is shown in the table. The 어문회 source's Korean meanings appear below its entries. A separate Anki deck, note type, and whole-idiom field can overlay known/new status. Hanja compatibility forms are normalized when matching. The view also supports Hangul/Hanja filtering, page/source-order or alphabetical sorting, selection coverage, and adding an idiom's Hanja to the active selection.
+Connecting to Anki or pressing **한자 상태 새로고침** selects only catalog characters with learned (학습함) cards. Vocabulary for the current selection is calculated in the background and is ready in the 어휘 tab without changing the active tab. Further selection changes recalculate it. Opening a saved selection file restores its selected characters instead of replacing them with the automatic Anki selection.
 
-The idiom level filter assigns each entry the level of its hardest character in the 14-level catalog. Partial spellings, alternate spellings, and entries containing characters outside the catalog appear under **급수 미상**. The level filter combines with the existing source, search, and selection filters; the assigned level is visible in each row.
+The 사자성어 view combines 247 entries from *꼭 시험에 나오는 고사성어*, 214 entries in section 4.3 of the National Institute of Korean Language report *한국어 교육 어휘 내용 개발(3단계)*, and 75 entries from the supplied 어문회 6급 TSV. Shared idioms are shown once, producing 430 unique entries. The combined list is the default source; source filtering keeps each original list available, and the exam source's page number is shown in the table. Click an idiom's Hanja to open 한자 탐구. The 어문회 source's Korean meanings appear below its entries. A separate Anki deck, note type, and whole-idiom field can overlay known/new status. Hanja compatibility forms are normalized when matching. The view also supports Hangul/Hanja filtering, page/source-order or alphabetical sorting, selection coverage, and adding an idiom's Hanja to the active selection.
+
+The idiom level filter assigns each entry the level of its hardest character in the 14-level catalog. A selected level includes all easier levels (7급 includes 8급). Partial spellings, alternate spellings, and entries containing characters outside the catalog appear under **급수 미상**. The level filter combines with the existing source, search, and selection filters; the assigned level is visible in each row.
 
 Source: [국립국어원 report page](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800), 공공누리 제4유형 (출처표시, 비상업적 이용, 변경금지).
 
 ## Character insights
 
-Open **한자 탐구** (`#insights`) and paste a character, word, or mixed sentence. Click any Hanja spelling in the **어휘** table to open it directly in this tab with the word already filled in. Analyze up to 64 distinct Hanja. The tab shows:
+Open **한자 탐구** (`#insights`) and paste a character, word, or mixed sentence. Click a Hanja spelling in the **어휘**, **사자성어**, or 탐구 results to open it directly in this tab with the word already filled in. Analyze up to 64 distinct Hanja. The tab shows:
 
 - Compact character cards with Korean 훈음, Unihan kDefinition, level, radical, stroke count, and Anki status shown directly on the colored level badge
 - Related KRDict vocabulary, ordered by frequency, with a simple text search and character buttons to narrow the results

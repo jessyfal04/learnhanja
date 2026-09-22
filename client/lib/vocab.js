@@ -3,24 +3,44 @@ import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
 import { showView } from "./views.js";
-import { openInsights } from "./insights.js";
+import { insightLink } from "./insights.js";
 
-export async function buildVocabulary() {
+let requestID = 0;
+let scheduledBuild;
+
+export function scheduleVocabulary() {
+	requestID++;
+	clearTimeout(scheduledBuild);
+	scheduledBuild = setTimeout(() => { void buildVocabulary({navigate: false}); }, 250);
+}
+
+export async function buildVocabulary({navigate = true} = {}) {
+	clearTimeout(scheduledBuild);
 	const button = document.getElementById("buildVocabButton");
+	const characters = Array.from(state.selected);
+	const id = ++requestID;
+	if (!characters.length) {
+		setLoading(button, false);
+		state.vocabulary = [];
+		state.vocabularyTotal = 0;
+		renderVocabulary();
+		return;
+	}
 	setLoading(button, true);
 	try {
 		const result = await api("/api/vocab", {
 			method: "POST",
-			body: JSON.stringify({ characters: Array.from(state.selected), limit: 5000 }),
+			body: JSON.stringify({ characters, limit: 5000 }),
 		});
+		if (id !== requestID) return;
 		state.vocabulary = result.entries || [];
 		state.vocabularyTotal = result.total || 0;
 		renderVocabulary();
-		showView("vocabulary");
+		if (navigate) showView("vocabulary");
 	} catch (error) {
-		showMessage("danger", koreanError(error, "관련 어휘를 불러올 수 없습니다"));
+		if (id === requestID) showMessage("danger", koreanError(error, "관련 어휘를 불러올 수 없습니다"));
 	} finally {
-		setLoading(button, false);
+		if (id === requestID) setLoading(button, false);
 	}
 }
 
@@ -35,13 +55,7 @@ export function renderVocabulary() {
 function renderRow(entry) {
 	const row = document.createElement("tr");
 	const hanja = cell("", "vocab-hanja");
-	const link = document.createElement("a");
-	link.href = "#insights";
-	link.textContent = entry.hanja;
-	link.title = `${entry.hanja} 한자 탐구`;
-	link.setAttribute("aria-label", `${entry.hanja} 한자 탐구`);
-	link.addEventListener("click", (event) => { event.preventDefault(); openInsights(entry.hanja); });
-	hanja.appendChild(link);
+	hanja.appendChild(insightLink(entry.hanja));
 	row.append(
 		hanja,
 		cell(entry.hangul),

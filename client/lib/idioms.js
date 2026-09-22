@@ -1,5 +1,6 @@
-import { renderCatalog } from "./anki.js?v=2";
+import { renderCatalog } from "./anki.js?v=3";
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
+import { insightLink } from "./insights.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
@@ -18,7 +19,7 @@ export async function loadIdioms() {
 		state.idioms = await loadStaticJSON("/data/idioms.json");
 		const filter = document.getElementById("idiomSourceFilter");
 		filter.replaceChildren(option("all", `전체 통합 (${state.idioms.total})`), ...state.idioms.sources.map((source) => option(source.id, `${source.shortName} (${source.total})`)));
-		filter.value = "exam";
+		filter.value = "all";
 		renderIdioms();
 	} catch (error) {
 		showMessage("danger", koreanError(error, "사자성어 목록을 불러올 수 없습니다"));
@@ -48,7 +49,9 @@ function renderRow(entry, sources) {
 		meaning.textContent = entry.meaning;
 		korean.appendChild(meaning);
 	}
-	row.append(korean, cell(entry.hanja, "vocab-hanja"), cell(level === "unknown" ? "미상" : level || "—"));
+	const hanja = cell("", "vocab-hanja");
+	hanja.append(insightLink(entry.hanja));
+	row.append(korean, hanja, cell(level === "unknown" ? "미상" : level || "—"));
 	const labels = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
 	row.append(cell(labels.join(" · ")), cell(entry.page || "—"));
 	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));

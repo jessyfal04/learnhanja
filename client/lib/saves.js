@@ -1,4 +1,4 @@
-import { loadFields, loadNoteTypes, refreshStatus, renderCatalog } from "./anki.js?v=2";
+import { loadFields, loadNoteTypes, refreshStatus, renderCatalog } from "./anki.js?v=3";
 import { createSnapshot, validateSnapshot } from "./persistence.js";
 import { state } from "./state.js";
 import { koreanError, showMessage } from "./ui.js";
@@ -126,7 +126,7 @@ async function applySnapshot(snapshot) {
 		setExistingValue(noteTypeSelect, snapshot.noteType, "노트 유형");
 		await loadFields();
 		setExistingValue(characterFieldSelect, snapshot.characterField, "한자 필드");
-		await refreshStatus();
+		await refreshStatus({autoSelect: false});
 	}
 }
 

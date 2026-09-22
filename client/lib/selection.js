@@ -15,6 +15,17 @@ export function selectedByStatus(groups, status) {
 	return selected;
 }
 
+export function selectedFromAnki(catalog, statuses) {
+	const selected = new Set();
+	for (const group of catalog?.groups || []) {
+		for (const character of group.characters) {
+			const status = statuses?.characters?.[character.normalize("NFKC")]?.status;
+			if (status === "known") selected.add(character);
+		}
+	}
+	return selected;
+}
+
 export function withLevelSelection(selected, characters, select) {
 	const next = new Set(selected);
 	for (const character of characters || []) {
