@@ -50,5 +50,7 @@ export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort
 function sourceOrder(entry, source) {
 	if (source !== "all") return entry.sourceOrders?.[source] ?? Number.MAX_SAFE_INTEGER;
 	if (entry.sourceOrders?.exam) return entry.sourceOrders.exam;
-	return 100000 + (entry.sourceOrders?.nikl ?? Number.MAX_SAFE_INTEGER - 100000);
+	if (entry.sourceOrders?.nikl) return 100000 + entry.sourceOrders.nikl;
+	if (entry.sourceOrders?.eomunhoe6) return 200000 + entry.sourceOrders.eomunhoe6;
+	return Number.MAX_SAFE_INTEGER;
 }

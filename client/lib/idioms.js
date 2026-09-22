@@ -41,7 +41,14 @@ export function renderIdioms() {
 function renderRow(entry, sources) {
 	const row = document.createElement("tr");
 	const level = levelIndex ? idiomLevel(entry, levelIndex) : "";
-	row.append(cell(entry.korean), cell(entry.hanja, "vocab-hanja"), cell(level === "unknown" ? "미상" : level || "—"));
+	const korean = cell(entry.korean);
+	if (entry.meaning) {
+		const meaning = document.createElement("p");
+		meaning.className = "help mt-1";
+		meaning.textContent = entry.meaning;
+		korean.appendChild(meaning);
+	}
+	row.append(korean, cell(entry.hanja, "vocab-hanja"), cell(level === "unknown" ? "미상" : level || "—"));
 	const labels = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
 	row.append(cell(labels.join(" · ")), cell(entry.page || "—"));
 	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));

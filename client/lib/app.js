@@ -2,7 +2,7 @@ import { initializeInsights, renderInsights } from "./insights.js";
 import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=2";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=3";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=4";
 import { buildVocabulary, renderVocabulary } from "./vocab.js";
 import { showView } from "./views.js";
 
