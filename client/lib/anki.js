@@ -1,4 +1,5 @@
 import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=2";
+import { preferredDeck } from "./deck-names.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js";
@@ -31,12 +32,17 @@ export async function loadMetadata() {
 	status.textContent = "연결 중…";
 	try {
 		const metadata = await ankiMetadata();
-		setOptions(deckSelect, metadata.decks, ["어문회::A. 독음", "日中韓漢字::A. Reco::A. Reco Hanja", "한자"]);
-		setOptions(idiomDeckSelect, metadata.decks, ["어문회::D. 사자성어", "사자성어"]);
+		setOptions(deckSelect, metadata.decks, []);
+		setOptions(idiomDeckSelect, metadata.decks, []);
+		deckSelect.value = preferredDeck(metadata.decks, ["독음", "dokeum", "dogeum"]) || deckSelect.value;
+		idiomDeckSelect.value = preferredDeck(metadata.decks, ["사자성어", "sajasongon", "sajaseongeo"]) || idiomDeckSelect.value;
 		status.className = "tag is-medium is-success is-light";
 		status.textContent = `연결됨 · 규격 ${metadata.version}`;
 		await Promise.all([loadNoteTypes(), loadIdiomNoteTypes()]);
-		await refreshStatus({silent: true, autoSelect: true});
+		await Promise.all([
+			refreshStatus({silent: true, autoSelect: true}),
+			refreshIdiomStatus({silent: true}),
+		]);
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
@@ -151,15 +157,19 @@ export function refreshStatus({silent = false, autoSelect = false} = {}) {
 	return statusPromise;
 }
 
-export async function refreshIdiomStatus() {
+export async function refreshIdiomStatus({silent = false} = {}) {
 	const button = document.getElementById("refreshIdiomStatusButton");
 	setLoading(button, true);
 	try {
 		state.idiomAnkiStatus = await ankiIdiomStatus({deck: idiomDeckSelect.value, noteType: idiomNoteTypeSelect.value, field: idiomFieldSelect.value});
 		document.dispatchEvent(new Event("hanja-idiom-status-change"));
-		showMessage("success", `앙키에서 사자성어 ${state.idiomAnkiStatus.total}개의 상태를 확인했습니다`);
+		if (!silent) showMessage("success", `앙키에서 사자성어 ${state.idiomAnkiStatus.total}개의 상태를 확인했습니다`);
+		return true;
 	} catch (error) {
-		showMessage("danger", koreanError(error, "사자성어 앙키 상태를 확인할 수 없습니다"));
+		state.idiomAnkiStatus = null;
+		document.dispatchEvent(new Event("hanja-idiom-status-change"));
+		if (!silent) showMessage("danger", koreanError(error, "사자성어 앙키 상태를 확인할 수 없습니다"));
+		return false;
 	} finally {
 		setLoading(button, false);
 	}

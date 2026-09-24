@@ -15,10 +15,13 @@ globalThis.document = {
 		return {content: {textContent: ""}, dataset: {}, classList: {toggle() {}}, append() {}, appendChild() {}, addEventListener() {}, setAttribute() {}, set innerHTML(value) { this.content.textContent = value; }};
 	},
 };
-const { refreshStatus, characterFieldChanged } = await import("./anki.js?v=3");
+const { refreshStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=5");
 document.getElementById("deckSelect").value = "한자";
 document.getElementById("noteTypeSelect").value = "Hanja";
 document.getElementById("characterFieldSelect").value = "Char";
+document.getElementById("idiomDeckSelect").value = "사자성어";
+document.getElementById("idiomNoteTypeSelect").value = "사자성어";
+document.getElementById("idiomFieldSelect").value = "Char";
 
 function responseFor(action, params) {
 	let result;
@@ -86,4 +89,11 @@ test("a failed Anki refresh clears stale learned colors and exposes a retryable 
 	assert.equal(state.ankiStatusSource, null);
 	assert.equal(state.ankiStatusLoading, false);
 	assert.match(state.ankiStatusError, /앙키/);
+});
+
+test("idiom status can refresh silently for automatic startup", async () => {
+	mockFetch();
+	assert.equal(await refreshIdiomStatus({silent: true}), true);
+	assert.equal(state.idiomAnkiStatus.idioms["人"].status, "known");
+	assert.ok(events.includes("hanja-idiom-status-change"));
 });

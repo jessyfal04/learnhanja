@@ -16,6 +16,17 @@ Open `https://local.jessyfal04.dev`. The server listens on all interfaces at por
 go run ./server/main -port 8090
 ```
 
+### Docker
+
+Build and run the default image at `http://127.0.0.1:8004`:
+
+```bash
+make docker-build
+make docker-run
+```
+
+The default image reference is `jessyfal04/hanja:tagname`. Override it with `IMAGE=... TAG=...`, or publish it with `make docker-push`.
+
 The static catalog contains 3,500 characters in 14 어문회 levels. The first tab contains local Anki and file connections; character selection is kept in the second tab. Choose an Anki deck, a compatible note type, and its Hanja field to overlay status.
 
 Connecting to Anki or pressing **한자 상태 새로고침** selects only catalog characters with learned (학습함) cards. Vocabulary for the current selection is calculated in the background and is ready in the 어휘 tab without changing the active tab. Further selection changes recalculate it. Opening a saved selection file restores its selected characters instead of replacing them with the automatic Anki selection.

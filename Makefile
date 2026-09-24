@@ -1,7 +1,9 @@
-.PHONY: run build test fmt
+.PHONY: run build test fmt docker-build docker-push docker-run
 
 PORT ?= 8004
 GOCACHE ?= $(CURDIR)/.cache/go-build
+IMAGE ?= jessyfal04/hanja
+TAG ?= tagname
 
 run:
 	GOCACHE=$(GOCACHE) go run ./server/main -port $(PORT)
@@ -17,3 +19,12 @@ test:
 
 test-smoke:
 	GOCACHE=$(GOCACHE) go test ./server/api -run TestHealthAndStaticClient -count=1
+
+docker-build:
+	docker build --tag $(IMAGE):$(TAG) .
+
+docker-push: docker-build
+	docker push $(IMAGE):$(TAG)
+
+docker-run:
+	docker run --rm --publish $(PORT):8004 $(IMAGE):$(TAG)

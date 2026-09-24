@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { state } from "./state.js";
-import { loadMetadata, refreshStatus, renderCatalog } from "./anki.js?v=3";
+import { loadMetadata, refreshStatus, renderCatalog } from "./anki.js?v=5";
 import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js";
 import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js";
