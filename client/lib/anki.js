@@ -225,9 +225,9 @@ function renderGroup(group) {
 		const info = state.ankiStatus?.characters?.[value] || {status: "unknown"};
 		const button = document.createElement("button");
 		button.type = "button";
-		button.className = `button hanja-button ${statusClass(info.status)}`;
+		button.className = `button hanja-button ${statusClass(info)}`;
 		button.textContent = value;
-		button.title = `${group.level} · ${statusLabel(info.status)}${info.suspended ? " · 일시 중단" : ""}`;
+		button.title = `${group.level} · ${statusLabel(info)}`;
 		button.dataset.character = value;
 		button.classList.toggle("is-suspended", Boolean(info.suspended));
 		button.addEventListener("click", () => { state.selected = toggledSelection(state.selected, value); updateCharacterButtons(); updateSelectionUI(); });
@@ -253,15 +253,17 @@ function updateCharacterButtons() {
 	}
 }
 
-function statusClass(status) {
-	if (status === "known") return "is-success is-light";
-	if (status === "new") return "is-info is-light";
-	return "is-light";
+function statusClass(info) {
+	if (info.suspended) return "is-danger is-light";
+	if (info.status === "known") return "is-success is-light";
+	if (info.status === "new") return "is-warning is-light";
+	return "is-status-unknown";
 }
 
-function statusLabel(status) {
-	if (status === "known") return "학습함";
-	if (status === "new") return "새 카드";
+function statusLabel(info) {
+	if (info.suspended) return "일시 중단";
+	if (info.status === "known") return "학습함";
+	if (info.status === "new") return "새 카드";
 	return "상태 없음";
 }
 

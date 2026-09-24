@@ -19,6 +19,16 @@
 	text-decoration: line-through;
 }
 
+.is-status-unknown {
+	background-color: #f1e2ca !important;
+	border-color: #c49a62 !important;
+	color: #5c3b16 !important;
+}
+
+.has-text-status-unknown {
+	color: #795022 !important;
+}
+
 .selection-bar {
 	bottom: 1rem;
 	position: sticky;

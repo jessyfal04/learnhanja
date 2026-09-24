@@ -50,14 +50,14 @@ test("the requested example has Korean readings and explicit variant matching", 
 test("status distinguishes disconnected, absent, new and suspended compatibility forms", () => {
 	assert.equal(statusFor("金", null), "미확인");
 	assert.equal(statusFor("金", {characters: {}}), "카드 없음");
-	assert.equal(statusFor("金", {characters: {"金": {status: "new", suspended: true}}}), "새 카드 · 일시 중단");
+	assert.equal(statusFor("金", {characters: {"金": {status: "new", suspended: true}}}), "일시 중단");
 });
 
 
 test("level badge colors distinguish learned, new, missing and unverified state", () => {
 	assert.equal(studyInfo("旣", {characters: {"旣": {status: "known"}}}).color, "is-success");
-	assert.equal(studyInfo("出", {characters: {"出": {status: "new"}}}).color, "is-info");
-	assert.equal(studyInfo("族", {characters: {}}).color, "is-warning is-light");
+	assert.equal(studyInfo("出", {characters: {"出": {status: "new"}}}).color, "is-warning is-light");
+	assert.equal(studyInfo("族", {characters: {}}).color, "is-light");
 	assert.equal(studyInfo("譜", null).color, "is-light");
 	assert.equal(studyInfo("譜", {characters: {"譜": {status: "unknown"}}}).label, "상태 없음");
 	assert.equal(studyInfo("既", {characters: {"旣": {status: "known"}}}).status, "absent");

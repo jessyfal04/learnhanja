@@ -76,9 +76,11 @@ function renderRow(entry, sources) {
 function statusCell(info) {
 	if (!state.idiomAnkiStatus) return cell("미확인");
 	const labels = {known: "학습함", new: "새 카드", unknown: "상태 없음"};
-	const element = cell(`${labels[info?.status] || "상태 없음"}${info?.suspended ? " · 일시 중단" : ""}`);
-	if (info?.status === "known") element.className = "has-text-success";
-	if (info?.status === "new") element.className = "has-text-info";
+	const element = cell(info?.suspended ? "일시 중단" : labels[info?.status] || "상태 없음");
+	if (info?.suspended) element.className = "has-text-danger";
+	else if (info?.status === "known") element.className = "has-text-success";
+	else if (info?.status === "new") element.className = "has-text-warning-dark";
+	else if (info?.status === "unknown") element.className = "has-text-status-unknown";
 	return element;
 }
 

@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 어휘</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css">
-	<script type="module" src="/lib/app.js?v=10"></script>
+	<link rel="stylesheet" href="/style/style.css?v=2">
+	<script type="module" src="/lib/app.js?v=11"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -55,7 +55,7 @@
 
 		<div id="charactersView" class="is-hidden">
 			<section id="charactersSection" aria-labelledby="charactersTitle">
-				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">학습함 0</span><span id="newCount" class="tag is-info is-light">새 카드 0</span><span id="unknownCount" class="tag is-light">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-info is-light" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
+				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success is-light">학습함 0</span><span id="newCount" class="tag is-warning is-light">새 카드 0</span><span id="unknownCount" class="tag is-status-unknown">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success is-light" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-warning is-light" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
 				<p class="help mb-4"><strong>출처:</strong> 어문회 Grade 필드 스냅샷 (2026-09-09) · 14개 급수, 3,500자 · 앱에 포함된 정적 목록</p>
 				<div id="levelGroups"></div>
 			</section>
@@ -126,6 +126,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구 · v10</div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구 · v11</div></footer>
 </body>
 </html>

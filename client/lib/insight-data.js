@@ -36,14 +36,15 @@ export function studyInfo(character, statuses) {
 	if (!statuses) return {status: "unverified", label: "미확인", color: "is-light", suspended: false};
 	const entry = Object.entries(statuses.characters || {}).find(([key]) => normalize(key) === normalize(character))?.[1];
 	const status = entry?.status || "absent";
-	const label = {known: "학습함", new: "새 카드", unknown: "상태 없음", absent: "카드 없음"}[status] || "상태 없음";
-	const color = {known: "is-success", new: "is-info", absent: "is-warning is-light"}[status] || "is-light";
-	return {status, label, color, suspended: Boolean(entry?.suspended)};
+	const suspended = Boolean(entry?.suspended);
+	const label = suspended ? "일시 중단" : {known: "학습함", new: "새 카드", unknown: "상태 없음", absent: "카드 없음"}[status] || "상태 없음";
+	const color = suspended ? "is-danger is-light" : {known: "is-success", new: "is-warning is-light", unknown: "is-status-unknown", absent: "is-light"}[status] || "is-status-unknown";
+	return {status, label, color, suspended};
 }
 
 export function statusFor(character, statuses) {
 	const info = studyInfo(character, statuses);
-	return `${info.label}${info.suspended ? " · 일시 중단" : ""}`;
+	return info.label;
 }
 
 export function filterRelated(entries, {text, characters, focus = "", mode = "any", query = "", data, variants = false}) {
