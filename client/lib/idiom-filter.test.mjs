@@ -41,7 +41,7 @@ test("sorts by page and puts entries without a page last", () => {
 test("filters the 어문회 6급 source and keeps shared entries in both lists", () => {
 	const cases = [
 		{korean: "견물생심", hanja: "見物生心", sources: ["exam", "eomunhoe6"], sourceOrders: {exam: 3, eomunhoe6: 4}},
-		{korean: "가정교육", hanja: "家庭教育", sources: ["eomunhoe6"], sourceOrders: {eomunhoe6: 1}},
+		{korean: "가정교육", hanja: "家庭敎育", sources: ["eomunhoe6"], sourceOrders: {eomunhoe6: 1}},
 		{korean: "각주구검", hanja: "刻舟求劍", sources: ["exam"], sourceOrders: {exam: 2}},
 	];
 	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "source", "eomunhoe6").map((entry) => entry.korean), ["가정교육", "견물생심"]);
