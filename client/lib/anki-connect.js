@@ -80,11 +80,11 @@ export function buildIdiomStatus(notes, field, known, newCards, suspended) {
 }
 
 function accumulate(aggregates, key, noteID, known, newCards, suspended) {
-	const value = aggregates.get(key) || {noteCount: 0, known: false, fresh: false, suspended: false};
+	const value = aggregates.get(key) || {noteCount: 0, knownActive: false, newActive: false, knownSuspended: false, newSuspended: false};
+	const isSuspended = suspended.has(noteID);
 	value.noteCount++;
-	value.known ||= known.has(noteID);
-	value.fresh ||= newCards.has(noteID);
-	value.suspended ||= suspended.has(noteID);
+	if (known.has(noteID)) value[isSuspended ? "knownSuspended" : "knownActive"] = true;
+	if (newCards.has(noteID)) value[isSuspended ? "newSuspended" : "newActive"] = true;
 	aggregates.set(key, value);
 }
 
@@ -92,10 +92,20 @@ function finishStatus(aggregates, property) {
 	const values = {};
 	const result = {[property]: values, known: 0, new: 0, unknown: 0, total: 0};
 	for (const [key, aggregate] of aggregates) {
-		const status = aggregate.known ? "known" : aggregate.fresh ? "new" : "unknown";
+		let status = "unknown";
+		let suspended = false;
+		if (aggregate.knownActive) status = "known";
+		else if (aggregate.newActive) status = "new";
+		else if (aggregate.knownSuspended) {
+			status = "known";
+			suspended = true;
+		} else if (aggregate.newSuspended) {
+			status = "new";
+			suspended = true;
+		}
 		result[status]++;
 		result.total++;
-		values[key] = {status, suspended: aggregate.suspended, noteCount: aggregate.noteCount};
+		values[key] = {status, suspended, noteCount: aggregate.noteCount};
 	}
 	return result;
 }

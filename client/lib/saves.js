@@ -1,4 +1,4 @@
-import { loadFields, loadNoteTypes, refreshStatus, renderCatalog } from "./anki.js?v=3";
+import { loadFields, loadNoteTypes, refreshStatus, renderCatalog } from "./anki.js?v=7";
 import { createSnapshot, validateSnapshot } from "./persistence.js";
 import { state } from "./state.js";
 import { koreanError, showMessage } from "./ui.js";

@@ -1,3 +1,5 @@
+import { studyStatusPresentation } from "./study-status.js?v=1";
+
 export const normalize = (value) => String(value || "").normalize("NFKC");
 export const isHanja = (value) => /^\p{Script=Han}$/u.test(value);
 
@@ -33,13 +35,15 @@ export function levelFor(character, catalog) {
 }
 
 export function studyInfo(character, statuses) {
-	if (!statuses) return {status: "unverified", label: "미확인", color: "is-light", suspended: false};
+	if (!statuses) {
+		const presentation = studyStatusPresentation(null, {unverified: true});
+		return {status: "unverified", label: presentation.label, color: presentation.classes, suspended: false, key: presentation.key};
+	}
 	const entry = Object.entries(statuses.characters || {}).find(([key]) => normalize(key) === normalize(character))?.[1];
 	const status = entry?.status || "absent";
 	const suspended = Boolean(entry?.suspended);
-	const label = suspended ? "일시 중단" : {known: "학습함", new: "새 카드", unknown: "상태 없음", absent: "카드 없음"}[status] || "상태 없음";
-	const color = suspended ? "is-danger is-light" : {known: "is-success", new: "is-warning is-light", unknown: "is-status-unknown", absent: "is-light"}[status] || "is-status-unknown";
-	return {status, label, color, suspended};
+	const presentation = studyStatusPresentation(entry, {absent: !entry});
+	return {status, label: presentation.label, color: presentation.classes, suspended, key: presentation.key};
 }
 
 export function statusFor(character, statuses) {

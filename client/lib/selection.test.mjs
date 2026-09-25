@@ -20,8 +20,8 @@ test("selectedByStatus collects matching characters", () => {
 });
 
 test("automatic Anki selection includes only learned catalog characters", () => {
-	const catalog = {groups: [{characters: ["人", "金", "日", "月"]}]};
-	const statuses = {characters: {人: {status: "known"}, 金: {status: "known"}, 日: {status: "new"}, 山: {status: "known"}}};
+	const catalog = {groups: [{characters: ["人", "金", "日", "月", "火"]}]};
+	const statuses = {characters: {人: {status: "known"}, 金: {status: "known"}, 日: {status: "new"}, 月: {status: "known", suspended: true}, 火: {status: "new", suspended: true}, 山: {status: "known"}}};
 	assert.deepEqual([...selectedFromAnki(catalog, statuses)], ["人", "金"]);
 });
 

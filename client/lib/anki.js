@@ -1,9 +1,10 @@
-import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=2";
+import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=3";
 import { preferredDeck } from "./deck-names.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
-import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js";
+import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js?v=2";
 import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
+import { isActiveStudyStatus, studyStatusKey, studyStatusPresentation } from "./study-status.js?v=1";
 
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");
@@ -177,7 +178,7 @@ export async function refreshIdiomStatus({silent = false} = {}) {
 
 export function selectStatus(status) {
 	const selected = new Set();
-	for (const [character, info] of Object.entries(state.ankiStatus?.characters || {})) if (info.status === status) selected.add(character);
+	for (const [character, info] of Object.entries(state.ankiStatus?.characters || {})) if (isActiveStudyStatus(info, status)) selected.add(character);
 	state.selected = selected;
 	updateCharacterButtons();
 	updateSelectionUI();
@@ -193,14 +194,19 @@ export function renderCatalog() {
 	if (!state.catalog) return;
 	let known = 0;
 	let fresh = 0;
+	let suspended = 0;
+	let unknown = 0;
 	for (const group of state.catalog.groups) for (const character of group.characters) {
-		const status = state.ankiStatus?.characters?.[character]?.status;
-		if (status === "known") known++;
-		if (status === "new") fresh++;
+		const key = studyStatusKey(state.ankiStatus?.characters?.[character]);
+		if (key === "known-active") known++;
+		else if (key === "new-active") fresh++;
+		else if (key === "known-suspended" || key === "new-suspended") suspended++;
+		else unknown++;
 	}
 	document.getElementById("knownCount").textContent = `학습함 ${known}`;
 	document.getElementById("newCount").textContent = `새 카드 ${fresh}`;
-	document.getElementById("unknownCount").textContent = `상태 없음 ${state.catalog.total - known - fresh}`;
+	document.getElementById("suspendedCount").textContent = `일시 중단 ${suspended}`;
+	document.getElementById("unknownCount").textContent = `상태 없음 ${unknown}`;
 	const groups = document.getElementById("levelGroups");
 	groups.replaceChildren(...state.catalog.groups.map(renderGroup));
 	updateSelectionUI();
@@ -254,17 +260,11 @@ function updateCharacterButtons() {
 }
 
 function statusClass(info) {
-	if (info.suspended) return "is-danger is-light";
-	if (info.status === "known") return "is-success is-light";
-	if (info.status === "new") return "is-warning is-light";
-	return "is-status-unknown";
+	return studyStatusPresentation(info).classes;
 }
 
 function statusLabel(info) {
-	if (info.suspended) return "일시 중단";
-	if (info.status === "known") return "학습함";
-	if (info.status === "new") return "새 카드";
-	return "상태 없음";
+	return studyStatusPresentation(info).label;
 }
 
 function updateSelectionUI() {

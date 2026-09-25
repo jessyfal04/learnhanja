@@ -19,16 +19,6 @@
 	text-decoration: line-through;
 }
 
-.is-status-unknown {
-	background-color: #f1e2ca !important;
-	border-color: #c49a62 !important;
-	color: #5c3b16 !important;
-}
-
-.has-text-status-unknown {
-	color: #795022 !important;
-}
-
 .selection-bar {
 	bottom: 1rem;
 	position: sticky;
@@ -111,4 +101,22 @@
 	align-items: center;
 	gap: 0.75rem;
 	flex-wrap: wrap;
+}
+
+@media screen and (max-width: 768px) {
+	.tabs ul {
+		display: grid;
+		flex-shrink: 1;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		white-space: normal;
+		width: 100%;
+	}
+
+	.tabs li {
+		min-width: 0;
+	}
+
+	.tabs a {
+		justify-content: center;
+	}
 }

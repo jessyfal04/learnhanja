@@ -1,8 +1,9 @@
-import { renderCatalog } from "./anki.js?v=3";
+import { renderCatalog } from "./anki.js?v=7";
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
-import { insightLink } from "./insights.js";
+import { insightLink } from "./insights.js?v=3";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
+import { studyStatusKey, studyStatusPresentation } from "./study-status.js?v=1";
 import { koreanError, showMessage } from "./ui.js";
 
 let levelIndex = null;
@@ -43,17 +44,10 @@ function renderRow(entry, sources) {
 	const row = document.createElement("tr");
 	const level = levelIndex ? idiomLevel(entry, levelIndex) : "";
 	const korean = cell(entry.korean);
-	if (entry.meaning) {
-		const meaning = document.createElement("p");
-		meaning.className = "help mt-1";
-		meaning.textContent = entry.meaning;
-		korean.appendChild(meaning);
-	}
 	const hanja = cell("", "vocab-hanja");
 	hanja.append(insightLink(entry.hanja));
 	row.append(korean, hanja, cell(level === "unknown" ? "미상" : level || "—"));
-	const labels = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
-	row.append(cell(labels.join(" · ")), cell(entry.page || "—"));
+	row.append(sourceCell(entry.sources, sources), cell(entry.page || "—"));
 	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));
 	const characters = Array.from(new Set(idiomCharacters(entry)));
 	const covered = characters.filter((character) => state.selected.has(character)).length;
@@ -74,26 +68,41 @@ function renderRow(entry, sources) {
 }
 
 function statusCell(info) {
-	if (!state.idiomAnkiStatus) return cell("미확인");
-	const labels = {known: "학습함", new: "새 카드", unknown: "상태 없음"};
-	const element = cell(info?.suspended ? "일시 중단" : labels[info?.status] || "상태 없음");
-	if (info?.suspended) element.className = "has-text-danger";
-	else if (info?.status === "known") element.className = "has-text-success";
-	else if (info?.status === "new") element.className = "has-text-warning-dark";
-	else if (info?.status === "unknown") element.className = "has-text-status-unknown";
+	const presentation = studyStatusPresentation(info, {unverified: !state.idiomAnkiStatus});
+	const element = cell("");
+	element.append(tag(presentation.label, presentation.classes));
 	return element;
 }
 
 function summarizeStatuses(entries) {
 	if (!state.idiomAnkiStatus) return " · 앙키 상태 미확인";
-	let known = 0;
-	let fresh = 0;
+	const counts = {"known-active": 0, "new-active": 0, "known-suspended": 0, "new-suspended": 0, unknown: 0};
 	for (const entry of entries) {
-		const status = idiomStatusInfo(entry, state.idiomAnkiStatus.idioms)?.status;
-		if (status === "known") known++;
-		if (status === "new") fresh++;
+		const key = studyStatusKey(idiomStatusInfo(entry, state.idiomAnkiStatus.idioms));
+		counts[key]++;
 	}
-	return ` · 학습함 ${known} · 새 카드 ${fresh} · 상태 없음 ${entries.length - known - fresh}`;
+	const suspended = counts["known-suspended"] + counts["new-suspended"];
+	return ` · 학습함 ${counts["known-active"]} · 새 카드 ${counts["new-active"]} · 일시 중단 ${suspended} · 상태 없음 ${counts.unknown}`;
+}
+
+function sourceCell(sourceIDs, sources) {
+	const element = cell("");
+	const tags = document.createElement("div");
+	tags.className = "tags mb-0";
+	for (const sourceID of sourceIDs) {
+		const label = sources.find((source) => source.id === sourceID)?.shortName || sourceID;
+		const classes = {exam: "is-link is-light", nikl: "is-info is-light", eomunhoe6: "is-primary is-light"}[sourceID] || "is-light";
+		tags.append(tag(label, classes));
+	}
+	element.append(tags);
+	return element;
+}
+
+function tag(label, classes) {
+	const element = document.createElement("span");
+	element.className = `tag ${classes}`;
+	element.textContent = label;
+	return element;
 }
 
 function renderSourceDetails(source) {

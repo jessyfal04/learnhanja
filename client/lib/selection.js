@@ -1,3 +1,5 @@
+import { isActiveStudyStatus } from "./study-status.js?v=1";
+
 export function toggledSelection(selected, character) {
 	const next = new Set(selected);
 	if (next.has(character)) next.delete(character);
@@ -19,8 +21,8 @@ export function selectedFromAnki(catalog, statuses) {
 	const selected = new Set();
 	for (const group of catalog?.groups || []) {
 		for (const character of group.characters) {
-			const status = statuses?.characters?.[character.normalize("NFKC")]?.status;
-			if (status === "known") selected.add(character);
+			const info = statuses?.characters?.[character.normalize("NFKC")];
+			if (isActiveStudyStatus(info, "known")) selected.add(character);
 		}
 	}
 	return selected;
