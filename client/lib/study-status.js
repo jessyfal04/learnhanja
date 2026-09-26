@@ -1,11 +1,11 @@
 const presentations = {
-	"known-active": {label: "학습함", classes: "is-link is-light"},
-	"new-active": {label: "새 카드", classes: "is-warning"},
-	"known-suspended": {label: "학습함 · 일시 중단", classes: "is-dark"},
-	"new-suspended": {label: "새 카드 · 일시 중단", classes: "is-danger is-light"},
-	unknown: {label: "상태 없음", classes: "is-light"},
-	absent: {label: "카드 없음", classes: "is-light"},
-	unverified: {label: "미확인", classes: "is-light"},
+	"known-active": {label: "학습함", classes: "is-success"},
+	"new-active": {label: "새 카드", classes: "is-info"},
+	"known-suspended": {label: "학습함 · 일시 중단", classes: "is-warning"},
+	"new-suspended": {label: "새 카드 · 일시 중단", classes: "is-danger"},
+	unknown: {label: "상태 없음", classes: "is-dark"},
+	absent: {label: "카드 없음", classes: "is-dark"},
+	unverified: {label: "미확인", classes: "is-dark"},
 };
 
 export function studyStatusKey(info, {absent = false, unverified = false} = {}) {

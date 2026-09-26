@@ -55,10 +55,10 @@ test("status distinguishes disconnected, absent, new and suspended compatibility
 
 
 test("level badge colors distinguish learned, new, missing and unverified state", () => {
-	assert.equal(studyInfo("旣", {characters: {"旣": {status: "known"}}}).color, "is-link is-light");
-	assert.equal(studyInfo("出", {characters: {"出": {status: "new"}}}).color, "is-warning");
-	assert.equal(studyInfo("族", {characters: {}}).color, "is-light");
-	assert.equal(studyInfo("譜", null).color, "is-light");
+	assert.equal(studyInfo("旣", {characters: {"旣": {status: "known"}}}).color, "is-success");
+	assert.equal(studyInfo("出", {characters: {"出": {status: "new"}}}).color, "is-info");
+	assert.equal(studyInfo("族", {characters: {}}).color, "is-dark");
+	assert.equal(studyInfo("譜", null).color, "is-dark");
 	assert.equal(studyInfo("譜", {characters: {"譜": {status: "unknown"}}}).label, "상태 없음");
 	assert.equal(studyInfo("既", {characters: {"旣": {status: "known"}}}).status, "absent");
 });

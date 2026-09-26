@@ -1,4 +1,4 @@
-import { studyStatusPresentation } from "./study-status.js?v=1";
+import { studyStatusPresentation } from "./study-status.js?v=2";
 
 export const normalize = (value) => String(value || "").normalize("NFKC");
 export const isHanja = (value) => /^\p{Script=Han}$/u.test(value);

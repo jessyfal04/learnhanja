@@ -1,9 +1,9 @@
 import { api } from "./api.js";
 import { state } from "./state.js";
-import { loadMetadata, refreshStatus, renderCatalog } from "./anki.js?v=7";
+import { refreshStatus, renderCatalog } from "./anki.js?v=8";
 import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js";
-import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=3";
+import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=4";
 
 const $ = (id) => document.getElementById(id);
 let data;
@@ -58,10 +58,6 @@ function addCharacters(characters) {
 export function initializeInsights() {
 	$("insightForm").addEventListener("submit", (event) => { event.preventDefault(); analyze(); });
 	$("insightAddAll").addEventListener("click", () => addCharacters(analysis.characters.map((c) => c.character)));
-	$("insightRefreshAnki").addEventListener("click", async () => {
-		if (!$("characterFieldSelect").value) await loadMetadata();
-		await refreshStatus({silent: true});
-	});
 	document.addEventListener("hanja-anki-ready", ensureAnkiStatus);
 	$("insightFilter").addEventListener("input", () => { visibleLimit = 40; renderResults(); });
 	$("insightMore").addEventListener("click", () => { visibleLimit += 80; renderResults(); });
@@ -125,12 +121,6 @@ function ensureAnkiStatus() {
 }
 
 export function renderInsights() {
-	const refresh = $("insightRefreshAnki");
-	refresh.disabled = state.ankiStatusLoading;
-	refresh.classList.toggle("is-loading", state.ankiStatusLoading);
-	const source = state.ankiStatusSource;
-	$("insightAnkiSummary").textContent = state.ankiStatusLoading ? "앙키 확인 중…" : state.ankiStatusError ? "앙키 상태 미확인 · 연결 설정을 확인하세요" : source ? "앙키 연결됨 · 파랑: 학습함 / 노랑: 새 카드 / 빨강: 새 카드·일시 중단 / 검정: 학습함·일시 중단" : "앙키 연결 대기";
-	$("insightAnkiSummary").title = state.ankiStatusError || source?.deck || "";
 	if (!analysis) return;
 	const chars = analysis.characters.map((c) => c.character);
 	const sounds = [...normalize(analysis.text)].filter(isHanja).map((character) => {

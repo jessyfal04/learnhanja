@@ -96,13 +96,6 @@
 	color: var(--bulma-text-weak);
 }
 
-.insight-connection {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	flex-wrap: wrap;
-}
-
 @media screen and (max-width: 768px) {
 	.tabs ul {
 		display: grid;

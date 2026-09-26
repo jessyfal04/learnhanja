@@ -1,8 +1,8 @@
-import { initializeInsights, renderInsights } from "./insights.js?v=3";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=7";
+import { initializeInsights, renderInsights } from "./insights.js?v=5";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=8";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=7";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=8";
 import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js";
 import { showView } from "./views.js";
 

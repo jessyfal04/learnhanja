@@ -4,7 +4,7 @@ import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js?v=2";
 import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
-import { isActiveStudyStatus, studyStatusKey, studyStatusPresentation } from "./study-status.js?v=1";
+import { isActiveStudyStatus, studyStatusKey, studyStatusPresentation } from "./study-status.js?v=2";
 
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");
@@ -194,18 +194,21 @@ export function renderCatalog() {
 	if (!state.catalog) return;
 	let known = 0;
 	let fresh = 0;
-	let suspended = 0;
+	let knownSuspended = 0;
+	let newSuspended = 0;
 	let unknown = 0;
 	for (const group of state.catalog.groups) for (const character of group.characters) {
 		const key = studyStatusKey(state.ankiStatus?.characters?.[character]);
 		if (key === "known-active") known++;
 		else if (key === "new-active") fresh++;
-		else if (key === "known-suspended" || key === "new-suspended") suspended++;
+		else if (key === "known-suspended") knownSuspended++;
+		else if (key === "new-suspended") newSuspended++;
 		else unknown++;
 	}
 	document.getElementById("knownCount").textContent = `학습함 ${known}`;
 	document.getElementById("newCount").textContent = `새 카드 ${fresh}`;
-	document.getElementById("suspendedCount").textContent = `일시 중단 ${suspended}`;
+	document.getElementById("knownSuspendedCount").textContent = `학습함 · 일시 중단 ${knownSuspended}`;
+	document.getElementById("newSuspendedCount").textContent = `새 카드 · 일시 중단 ${newSuspended}`;
 	document.getElementById("unknownCount").textContent = `상태 없음 ${unknown}`;
 	const groups = document.getElementById("levelGroups");
 	groups.replaceChildren(...state.catalog.groups.map(renderGroup));

@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 어휘</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=5">
-	<script type="module" src="/lib/app.js?v=12"></script>
+	<link rel="stylesheet" href="/style/style.css?v=6">
+	<script type="module" src="/lib/app.js?v=13"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -55,7 +55,7 @@
 
 		<div id="charactersView" class="is-hidden">
 			<section id="charactersSection" aria-labelledby="charactersTitle">
-				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-link is-light">학습함 0</span><span id="newCount" class="tag is-warning">새 카드 0</span><span id="suspendedCount" class="tag is-dark">일시 중단 0</span><span id="unknownCount" class="tag is-light">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-link is-light" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-warning" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
+				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success">학습함 0</span><span id="newCount" class="tag is-info">새 카드 0</span><span id="knownSuspendedCount" class="tag is-warning">학습함 · 일시 중단 0</span><span id="newSuspendedCount" class="tag is-danger">새 카드 · 일시 중단 0</span><span id="unknownCount" class="tag is-dark">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-info" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
 				<p class="help mb-4"><strong>출처:</strong> 어문회 Grade 필드 스냅샷 (2026-09-09) · 14개 급수, 3,500자 · 앱에 포함된 정적 목록</p>
 				<div id="levelGroups"></div>
 			</section>
@@ -87,7 +87,6 @@
 					<label class="label" for="insightInput">한자 또는 단어</label>
 					<div class="field has-addons"><div class="control is-expanded"><input id="insightInput" class="input is-medium" type="text" maxlength="4096" placeholder="한자 입력"></div><div class="control"><button id="insightSubmit" class="button is-primary is-medium" type="submit">보기</button></div></div>
 				</form>
-				<div class="insight-connection"><p id="insightAnkiSummary" class="help" role="status">앙키 확인 중…</p><button id="insightRefreshAnki" class="button is-small is-ghost" type="button">새로고침</button><a class="is-size-7" href="#connection">연결 설정</a></div>
 				<p id="insightFeedback" class="help has-text-danger" role="status"></p>
 			</section>
 			<div id="insightResults" class="is-hidden">
@@ -126,6 +125,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구 · v12</div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구 · v13 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

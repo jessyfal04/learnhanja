@@ -1,4 +1,4 @@
-import { isActiveStudyStatus } from "./study-status.js?v=1";
+import { isActiveStudyStatus } from "./study-status.js?v=2";
 
 export function toggledSelection(selected, character) {
 	const next = new Set(selected);
