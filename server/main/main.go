@@ -15,23 +15,17 @@ import (
 
 	clientassets "learnhanja/client"
 	"learnhanja/server/api"
-	"learnhanja/server/vocab"
 )
 
 func main() {
 	host := flag.String("host", env("HOST", "::"), "listen host")
 	port := flag.String("port", env("PORT", "8004"), "listen port")
-	dataDir := flag.String("data-dir", env("DATA_DIR", "data"), "data directory")
 	flag.Parse()
 
 	if err := validatePort(*port); err != nil {
 		log.Fatal(err)
 	}
-	store, err := vocab.Load(*dataDir)
-	if err != nil {
-		log.Fatalf("load vocabulary: %v", err)
-	}
-	server := api.NewServer(store, clientassets.Files)
+	server := api.NewServer(clientassets.Files)
 	address := net.JoinHostPort(*host, *port)
 
 	httpServer := &http.Server{

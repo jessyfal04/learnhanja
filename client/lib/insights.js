@@ -1,9 +1,9 @@
-import { api } from "./api.js";
 import { state } from "./state.js";
 import { refreshStatus, renderCatalog } from "./anki.js?v=8";
 import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js";
 import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=4";
+import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=1";
 
 const $ = (id) => document.getElementById(id);
 let data;
@@ -99,9 +99,9 @@ async function analyze() {
 	}
 	try {
 		const characters = parsed.characters.map(({character}) => character);
-		const result = await api("/api/insights/vocab", {method: "POST", body: JSON.stringify({characters})});
+		const catalog = await loadVocabularyCatalog();
 		if (id !== requestID) return;
-		entries = result.entries || [];
+		entries = relatedVocabulary(catalog, characters);
 	} catch {
 		if (id !== requestID) return;
 		vocabularyError = "관련 어휘를 불러오지 못했습니다. 분석 버튼을 눌러 다시 시도하세요";

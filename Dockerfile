@@ -1,8 +1,7 @@
 FROM golang:1.24-alpine AS build
 
 WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
 COPY client ./client
 COPY server ./server
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/learnhanja ./server/main
@@ -14,8 +13,6 @@ RUN apk add --no-cache ca-certificates \
 	&& adduser -S -G app app
 WORKDIR /app
 COPY --from=build /out/learnhanja ./learnhanja
-COPY data/kr-dict_hanja/krdict_hanja.tsv ./data/kr-dict_hanja/krdict_hanja.tsv
-COPY data/freq/NIKL.json data/freq/Pokémon.json ./data/freq/
 USER app
 EXPOSE 8004
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

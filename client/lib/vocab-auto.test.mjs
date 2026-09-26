@@ -16,10 +16,9 @@ globalThis.window = {location: {hash: "#connection"}, clearTimeout, setTimeout};
 const {buildVocabulary, scheduleVocabulary} = await import("./vocab.js");
 
 test("vocabulary calculates after selection and remains on the current tab", async () => {
-	globalThis.fetch = async (path, options) => {
-		assert.equal(path, "/api/vocab");
-		assert.deepEqual(JSON.parse(options.body).characters, ["人"]);
-		return {ok: true, headers: {get: () => "application/json"}, json: async () => ({entries: [{hanja: "人", hangul: "인"}], total: 1})};
+	globalThis.fetch = async (path) => {
+		assert.equal(path, "/data/vocabulary.json");
+		return {ok: true, json: async () => [["人", "인", [], [], 0, 1]]};
 	};
 	state.selected = new Set(["人"]);
 	scheduleVocabulary();

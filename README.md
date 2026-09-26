@@ -1,138 +1,299 @@
 # LearnHanja
 
-Web app for selecting a fixed Hanja level catalog, overlaying local Anki state, and building KRDict vocabulary.
+LearnHanja is a self-hosted web app for studying Korean Hanja.
 
-## Run
+- Select characters from the 3,500-character 어문회 catalog
+- Overlay your local Anki study state
+- Discover KRDict vocabulary made from the selected characters
+- Browse and filter 447 unique 사자성어
+- Explore readings, meanings, radicals, stroke counts, related words, and idioms
+- Save your selection as a local JSON file
 
-Requirements: Go 1.24+. Anki with AnkiConnect is optional and only supplies study state in the browser.
+The interface is in Korean. Anki is optional: the catalogs, vocabulary search, and character exploration work without it.
+
+## Why the client/server split matters
+
+LearnHanja deliberately keeps both personal study state and vocabulary processing on the client side—in your browser. The Go server is only a small static-file host with a health check.
+
+### Done in the browser (client side)
+
+- Render the interface and hold the current selection
+- Lazily load the static Hanja, idiom, character-insight, and vocabulary catalogs
+- Find words made entirely from the selected Hanja
+- Find words containing any Hanja queried in 한자 탐구
+- Rank, filter, and sort vocabulary and idioms
+- Connect directly to AnkiConnect at `http://127.0.0.1:8765`
+- Read deck names, note types, fields, and card states from local Anki
+- Derive learned, new, suspended, and unmatched study states
+- Read and write local JSON selection files
+- Remember an approved file handle in the browser, when supported
+
+### Done by the Go server (server side)
+
+- Serve the embedded HTML, CSS, JavaScript, and static JSON catalogs
+- Expose a health-check endpoint
+
+### Deliberately not sent to the server
+
+- Anki deck names
+- Note-type and field names
+- Note IDs or card states
+- Learned/new/suspended status maps
+- Selection-file contents or file handles
+- AnkiConnect credentials or configuration
+- Selected or queried Hanja
+- Vocabulary searches and results
+
+This design lets a remotely hosted LearnHanja page talk to Anki running on the learner's own computer. AnkiConnect must allow the website's origin, but the LearnHanja server itself never sits between the browser and Anki. Vocabulary searches also remain in the browser after the static catalog has loaded.
+
+The server has no accounts, sessions, user database, or application API. As with any HTTP service, it can log requested static-file paths.
+
+## Quick start
+
+### Requirements
+
+- Go 1.24 or newer
+- Node.js, only for the JavaScript tests
+- Anki plus [AnkiConnect](https://ankiweb.net/shared/info/2055492159), only for the optional study-state overlay
+
+### Run from source
 
 ```bash
 make run
 ```
 
-Open `https://local.jessyfal04.dev`. The server listens on all interfaces at port `8004` so the VPS can reach it through WireGuard. For direct access, use `http://127.0.0.1:8004`.
+Then open <http://127.0.0.1:8004>.
 
-```bash
-go run ./server/main -port 8090
-```
+- The default listen address is `::`, so the app is reachable through any network interface
+- To restrict it to the same machine, run `go run ./server/main -host 127.0.0.1`
+- To change the port, run `go run ./server/main -port 8090`
 
-### Docker
-
-Build and run the default image at `http://127.0.0.1:8004`:
+### Run with Docker
 
 ```bash
 make docker-build
 make docker-run
 ```
 
-The default image reference is `jessyfal04/hanja:tagname`. Override it with `IMAGE=... TAG=...`, or publish it with `make docker-push`.
+Then open <http://127.0.0.1:8004>.
 
-The static catalog contains 3,500 characters in 14 어문회 levels. The first tab contains local Anki and file connections; character selection is kept in the second tab. Choose an Anki deck, a compatible note type, and its Hanja field to overlay status.
+- Default image: `jessyfal04/hanja:tagname`
+- Custom image: `make docker-build IMAGE=example/learnhanja TAG=latest`
+- Custom port: `make docker-run PORT=8090`
 
-Connecting to Anki or pressing **한자 상태 새로고침** selects only catalog characters with learned (학습함) cards. Vocabulary for the current selection is calculated in the background and is ready in the 어휘 tab without changing the active tab. Further selection changes recalculate it. Opening a saved selection file restores its selected characters instead of replacing them with the automatic Anki selection.
+## How to use it
 
-The 사자성어 view combines 247 entries from [*꼭 시험에 나오는 고사성어*](https://product.kyobobook.co.kr/detail/S000215142650), 214 entries in section 4.3 of the National Institute of Korean Language report [*한국어 교육 어휘 내용 개발(3단계)*](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800), 75 entries from Darakwon's [*한자능력검정시험 마스터 6급·6급Ⅱ*](https://product.kyobobook.co.kr/detail/S000000525684), labeled **어문회 6급 (마스터)**, and 76 entries from Sidae Education's [*어문회 한자능력검정시험 6급 한 권으로 끝내기*](https://product.kyobobook.co.kr/detail/S000216865870), labeled **어문회 6급 (한권)**. Shared idioms are shown once, producing 447 unique entries. The combined list is the default source, and source filtering keeps each original list available. Each row has a compact information button for its source links. Click an idiom's Hanja to open 한자 탐구. A separate Anki deck, note type, and whole-idiom field can overlay known/new status. Hanja compatibility forms are normalized when matching. The view also supports Hangul/Hanja filtering, source-order or alphabetical sorting, selection coverage, and adding an idiom's Hanja to the active selection.
+### 1. Connect Anki (optional)
 
-The idiom level filter assigns each entry the level of its hardest character in the 14-level catalog. A selected level includes all easier levels (7급 includes 8급). Partial spellings, alternate spellings, and entries containing characters outside the catalog appear under **급수 미상**. The level filter combines with the existing source, search, and selection filters; the assigned level is visible in each row.
+- Start Anki with AnkiConnect installed
+- Open **연결 및 저장**
+- Choose the Hanja deck, note type, and character field
+- Optionally choose a separate idiom deck, note type, and whole-idiom field
+- Approve the website origin when AnkiConnect asks
+- Press **한자 상태 새로고침** or **사자성어 상태 새로고침**
 
-Source: [국립국어원 report page](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800), 공공누리 제4유형 (출처표시, 비상업적 이용, 변경금지).
+LearnHanja only reads Anki data. It never creates, edits, suspends, or deletes cards.
 
-## Character insights
+Character states mean:
 
-Open **한자 탐구** (`#insights`) and paste a character, word, or mixed sentence. Click a Hanja spelling in the **어휘**, **사자성어**, or 탐구 results to open it directly in this tab with the word already filled in. Analyze up to 64 distinct Hanja. The tab shows:
+- **학습함 / known** — at least one matching card is not new
+- **새 카드 / new** — matching cards are new and none are known
+- **상태 없음 / unknown** — a note exists but no matching card state was returned
+- **일시 중단 / suspended** — shown separately from whether the card is learned or new
 
-- Compact character cards with Korean 훈음, Unihan kDefinition, level, radical, stroke count, and Anki status shown directly on the colored level badge
-- Related KRDict vocabulary, ordered by frequency, with a simple text search and character buttons to narrow the results
-- Related idioms, with original source information available on hover
-- Add one character or all input characters to the existing study selection
+Connecting to Anki or refreshing character state automatically selects only active learned catalog characters. New and suspended cards are not automatically selected. Loading a saved selection restores that file instead of replacing it with the automatic Anki selection.
 
-Analysis does not require Anki. It does not change the selection until an add button is clicked, and never edits Anki cards. Level badges use AnkiConnect status from the deck, note type, and character field chosen in the connections tab: green for learned (at least one non-new card), blue for new cards, amber for no matching note, and neutral for unverified or unknown card state. Suspensions remain labeled separately. Insights loads status automatically when Anki configuration becomes ready and offers its own refresh button; the connected deck is available on hover. Changing Anki configuration clears the previous overlay and stale in-flight results are ignored. Unicode compatibility forms are matched with NFKC while original input forms remain visible. Simplified/traditional spellings and other distinct variant characters are not automatically merged. This is a reference lookup, not a sentence translator, and missing dictionary entries are not evidence that a word does not exist.
+If LearnHanja is served from another origin, add that origin to AnkiConnect's `webCorsOriginList`.
 
-The lazily loaded `client/data/insights.json` focuses on Korean Hanja: local `HanjaLevels` 훈음, radicals, and stroke counts (snapshot 2026-09-19), supplemented by Korean readings, stroke counts, and kDefinition from [Unicode Unihan 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip). Chinese/Japanese readings and foreign study references are excluded. Related vocabulary uses KRDict Korean definitions; the original vocabulary tab retains its English translations. Unihan kDefinition is displayed as the original English gloss. The explicit 旣/既 variant link comes from the [Taiwan Ministry of Education character-variant dictionary](https://dict.variants.moe.edu.tw/dictView.jsp?ID=19555&la=0). Missing reference fields are shown explicitly. Existing source datasets are preserved.
+### 2. Select Hanja
 
-To rebuild the snapshot using your local export and the pinned Unihan archive:
+- Browse characters grouped into 14 어문회 levels
+- Toggle individual characters or an entire level
+- Select all active learned or active new characters reported by Anki
+- Clear the current selection at any time
+- See suspended learned cards and suspended new cards separately
+
+Every selection change schedules a vocabulary refresh in the background, so the result is ready in **어휘** without moving you away from the current tab.
+
+### 3. Discover vocabulary
+
+- See words whose full Hanja spelling can be formed from the selection
+- Search by Hanja, Hangul, or meaning
+- Sort by frequency, Hanja, Hangul, or English meaning
+- Limit results by maximum frequency rank
+- Open a word directly in **한자 탐구**
+
+Two independent rankings stay visible:
+
+- **NIKL rank** — position in the National Institute of Korean Language's *현대 국어 사용 빈도 조사*
+- **Pokémon rank** — frequency in normalized Korean game text from *Pokémon Sword* and *Pokémon Legends: Arceus*
+
+The default frequency sort and rank filter use the better available rank. A blank rank means that the exact Hangul spelling is absent from that source.
+
+### 4. Browse 사자성어
+
+- Browse 447 unique idioms from four source lists
+- Filter by Hangul or Hanja
+- Filter by original source without losing the combined catalog
+- Filter cumulatively by 어문회 level
+- Show only idioms composed of selected characters
+- Sort by Hangul, Hanja, or source order
+- Overlay Anki state from a separately configured idiom field
+- Add an idiom's characters to the current selection
+- Open its Hanja directly in **한자 탐구**
+
+Shared idioms appear once but retain every source label. The assigned level is the hardest character in the idiom; 7급 therefore also includes 8급. Partial spellings, alternate spellings, and entries containing characters outside the catalog appear under **급수 미상**.
+
+### 5. Explore characters
+
+In **한자 탐구**, paste a character, word, or mixed sentence.
+
+- Analyze up to 64 distinct Hanja at once
+- See Korean 훈음, Unihan `kDefinition`, level, radical, and stroke count
+- Overlay the current Anki state on each level badge
+- Find KRDict words containing any analyzed character
+- Narrow results to one character or search the result text
+- See related idioms and their source information
+- Add one character or all analyzed characters to the selection
+
+Lookup does not change the selection until an add button is pressed. Compatibility forms are normalized with NFKC for matching while the original input remains visible. Simplified/traditional forms and other distinct variants are not automatically merged.
+
+### 6. Save a selection
+
+- Chromium-based browsers can connect a JSON file once and update it automatically
+- The approved file handle can be remembered locally with IndexedDB
+- Browsers without the File System Access API fall back to manual JSON download/upload
+- Selection files include the chosen deck, note type, character field, selected Hanja, and save time
+- Files stay on the user's computer and are not uploaded to LearnHanja
+
+## Server routes
+
+- `GET /healthz`
+  - Output: `ok`
+- `GET /`
+  - Serves the embedded client and its static assets
+
+There are no vocabulary or Anki API routes. The app can also be adapted to a static host if the health check and standalone Go binary are not needed.
+
+## Data sources
+
+### Hanja levels and insights
+
+- `client/data/levels.json`
+  - Static snapshot of the 어문회 `Grade` field from 2026-09-09
+  - 3,500 characters across 14 levels
+- `client/data/insights.json`
+  - Korean 훈음, radicals, and stroke counts from local `HanjaLevels` data
+  - Korean readings, stroke counts, and English `kDefinition` from [Unicode Unihan 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip)
+  - Chinese/Japanese readings and foreign study references intentionally excluded
+- 旣/既 variant link
+  - Sourced from the [Taiwan Ministry of Education character-variant dictionary](https://dict.variants.moe.edu.tw/dictView.jsp?ID=19555&la=0)
+- Unicode terms
+  - Included in [`client/data/unicode-license.txt`](client/data/unicode-license.txt)
+
+Rebuild the self-contained insights asset with a local learnCJK data export and the pinned Unihan archive:
 
 ```bash
-python3 scripts/build_insights.py --cjk-data /path/to/learnCJK.dev/backend/data --unihan /path/to/Unihan-17.0.0.zip
+python3 scripts/build_insights.py \
+  --cjk-data /path/to/learnCJK.dev/backend/data \
+  --unihan /path/to/Unihan-17.0.0.zip
 ```
 
-The generated asset is self-contained; the running app does not depend on the other checkout or Python. Unicode data is covered by the [Unicode license](client/data/unicode-license.txt).
-
-## Data sources and processing
-
-### Hanja levels
-
-`client/data/levels.json` is a static snapshot of the 어문회 `Grade` field taken on 2026-09-09. It contains 3,500 characters across 14 levels.
-
-### Idioms
-
-- *꼭 시험에 나오는 고사성어*: 247 entries
-- National Institute of Korean Language (NIKL), *한국어 교육 어휘 내용 개발(3단계)* section 4.3: 214 entries
-- `master_6.tsv`: 75 Hanja and Korean readings from Darakwon's *한자능력검정시험 마스터 6급·6급Ⅱ*
-- `onebook_6.tsv`: 76 Hanja and Korean readings from Sidae Education's *어문회 한자능력검정시험 6급 한 권으로 끝내기*
-- Entries shared by the lists appear once but retain all source labels, resulting in 447 unique entries
-- The original inputs remain in `data/idioms`; the browser reads the merged static `client/data/idioms.json`
-- Run `python3 scripts/merge_idiom_sources.py` to merge both preserved 어문회 TSVs into the browser catalog
+The running app does not depend on the other checkout or on Python.
 
 ### Vocabulary
 
-Vocabulary content and frequency are deliberately separate:
+- Source: the 2025-12-19 XML ZIP from the official [KRDict full-dictionary download](https://krdict.korean.go.kr/download/downloadPopup)
+- The app does not scrape the KRDict website
+- Rows without a pure-Hanja spelling are excluded
+- Identical Hanja/Hangul pairs are deduplicated
+- English meanings and Korean definitions from duplicate rows are merged
+- `scripts/build_vocabulary.py` pre-merges words and ranks into `client/data/vocabulary.json`
+- The compact catalog contains 22,207 entries and is about 2.7 MB uncompressed
+- The browser loads it lazily when vocabulary is first needed, then keeps it in memory
+- Browser JavaScript performs both selection searches and 한자 탐구 related-word searches
 
-1. The word, Hanja spelling, and English meanings come from the 2025-12-19 XML ZIP obtained through the official [KRDict full-dictionary download](https://krdict.korean.go.kr/download/downloadPopup). The app does not scrape the website. Rows without a pure-Hanja spelling are excluded. Rows with the same Hanja and Hangul spelling are deduplicated and their meanings are merged.
-2. Only entries whose complete Hanja spelling can be made from the selected characters are returned.
-3. The Hangul spelling is looked up exactly in two independent ranked lists:
-   - **NIKL rank:** the word index from the National Institute of Korean Language's *현대 국어 사용 빈도 조사*. Null markers and marked duplicate spellings are ignored.
-   - **Pokémon rank:** Korean `common/ko.txt` and `story/ko.txt` from [CPokemon/swsh-text](https://github.com/CPokemon/swsh-text) (*Pokémon Sword* v1.3.0) and [CPokemon/pla-text](https://github.com/CPokemon/pla-text) (*Pokémon Legends: Arceus*), normalized and stemmed with KoNLPy/Okt, restricted to Hangul tokens, counted, and ordered by descending frequency. The upstream dumps credit [kwsch/pkNX](https://github.com/kwsch/pkNX) for extraction.
-4. Both ranks remain visible. A blank means that spelling is absent from that list. The default frequency sort and maximum-rank filter use the smaller available rank; entries absent from both lists come last.
+See [`data/kr-dict_hanja/README.md`](data/kr-dict_hanja/README.md) for conversion details.
 
-The frequency assets and a compact explanation are in `data/freq`; the KRDict conversion command is documented in `data/kr-dict_hanja/README.md`.
+Rebuild the browser catalog with:
+
+```bash
+make data
+```
+
+### Frequency ranks
+
+- **NIKL:** National Institute of Korean Language, *현대 국어 사용 빈도 조사*
+- **Pokémon:** Korean text from [CPokemon/swsh-text](https://github.com/CPokemon/swsh-text) and [CPokemon/pla-text](https://github.com/CPokemon/pla-text)
+- The upstream Pokémon dumps credit [kwsch/pkNX](https://github.com/kwsch/pkNX) for extraction
+- The game text was normalized, stemmed with KoNLPy/Okt, restricted to Hangul tokens, counted, and ranked
+
+See [`data/freq/README.md`](data/freq/README.md) for processing details.
+
+### Idioms
+
+- 247 entries from *꼭 시험에 나오는 고사성어*
+- 214 entries from section 4.3 of NIKL's *한국어 교육 어휘 내용 개발(3단계)*
+- 75 entries from Darakwon's *한자능력검정시험 마스터 6급·6급Ⅱ*
+- 76 entries from Sidae Education's *어문회 한자능력검정시험 6급 한 권으로 끝내기*
+- 447 unique entries after merging shared idioms
+- Original inputs preserved in `data/idioms`
+- Merged browser catalog generated at `client/data/idioms.json`
+
+Rebuild the merged catalog with:
+
+```bash
+python3 scripts/merge_idiom_sources.py
+```
+
+See [`data/idioms/README.md`](data/idioms/README.md) for full provenance. The NIKL report is available from the [National Institute of Korean Language](https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800) under 공공누리 제4유형 (출처표시, 비상업적 이용, 변경금지).
 
 ## Configuration
 
-| Environment | Default |
-|---|---|
-| `HOST` | `::` |
-| `PORT` | `8004` |
-| `DATA_DIR` | `data` |
+- `HOST`
+  - Default: `::`
+  - Server listen address
+- `PORT`
+  - Default: `8004`
+  - Server listen port
 
-Equivalent command-line flags are available. Flags override environment values.
+Equivalent command-line flags are available. Flags override environment variables.
 
-## Study state
+## Development
 
-- `known`: at least one matching card is not new
-- `new`: matching cards are new and none are known
-- `unknown`: a note exists but no matching card state is returned
-- suspended cards are marked separately
-
-AnkiConnect calls are made directly by browser JavaScript to `http://127.0.0.1:8765`. On first use, approve the website origin in Anki's permission dialog. Status reads do not alter the Anki collection.
-
-## Selection file
-
-- In browsers with the File System Access API, connect a JSON file once and every selection change is written to it automatically
-- The file handle is remembered locally when the browser permits it
-- Browsers without file-handle support fall back to manual JSON download and upload
-
-## Server dependency
-
-The Go server only serves the embedded web client and handles `POST /api/vocab` and `POST /api/insights/vocab`. The latter returns all dictionary entries containing any supplied character (up to 256 characters), rather than requiring every character to be selected. Hanja levels and idioms are explicit static JSON assets; Anki metadata, fields, Hanja status, idiom status, and selection files stay local to the browser.
-
-## Test and build
+Run the complete test suite:
 
 ```bash
 make test
+```
+
+This runs:
+
+- Go unit tests
+- Go HTTP and integration tests
+- JavaScript unit tests
+- JavaScript syntax checks
+
+Build the executable:
+
+```bash
 make build
 ```
 
-The test target runs Go unit/integration/HTTP tests, JavaScript unit tests, and JavaScript syntax checks.
+The output is written to `bin/learnhanja`.
 
-## Layout
+## Repository layout
 
-- `server/vocab`: KRDict and frequency data
-- `server/api`: vocabulary API and static hosting
-- `server/model`: vocabulary response models
-- `server/main`: executable entrypoint
-- `client/data`: explicit static Hanja and idiom catalogs
-- `client`: embedded Bulma interface and modular JavaScript, including direct AnkiConnect and local-file handling
-- `data/idioms`: preserved source lists used to build the static idiom catalog
-- `data/freq`: NIKL and Pokémon ranked Hangul lists
-- `data/kr-dict_hanja`: KRDict dump, converter, and generated Hanja vocabulary TSV
+- `client/`
+  - Browser interface and embedded static assets
+  - `client/lib/` contains UI, vocabulary search, filtering, AnkiConnect, status, and persistence modules
+  - `client/data/` contains the Hanja, idiom, insight, and compact vocabulary catalogs
+- `server/`
+  - `server/api/` contains the health check and static-file serving
+  - `server/main/` is the executable entry point
+- `data/`
+  - `data/kr-dict_hanja/` contains the source archive, converter, and generated TSV
+  - `data/freq/` contains ranked Hangul frequency lists
+  - `data/idioms/` preserves the idiom source lists
+- `scripts/`
+  - Static-data build tools

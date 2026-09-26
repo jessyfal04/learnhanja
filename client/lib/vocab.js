@@ -1,9 +1,9 @@
-import { api } from "./api.js";
 import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
 import { showView } from "./views.js";
-import { insightLink } from "./insights.js?v=6";
+import { insightLink } from "./insights.js?v=7";
+import { loadVocabularyCatalog, searchVocabulary } from "./vocabulary-data.js?v=1";
 
 let requestID = 0;
 let scheduledBuild;
@@ -28,10 +28,8 @@ export async function buildVocabulary({navigate = true} = {}) {
 	}
 	setLoading(button, true);
 	try {
-		const result = await api("/api/vocab", {
-			method: "POST",
-			body: JSON.stringify({ characters, limit: 5000 }),
-		});
+		const catalog = await loadVocabularyCatalog();
+		const result = searchVocabulary(catalog, characters, 5000);
 		if (id !== requestID) return;
 		state.vocabulary = result.entries || [];
 		state.vocabularyTotal = result.total || 0;

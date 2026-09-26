@@ -20,5 +20,6 @@ python data/kr-dict_hanja/krdict_hanja_to_tsv.py \
 When a new KRDict ZIP arrives (e.g., `kr-dict-YYYYMMDD.zip`), update the filename in `--input` and rerun the command.
 
 ## Notes
-- The main app consumes only this TSV; no XML parsing occurs elsewhere.
+- `scripts/build_vocabulary.py` combines this TSV with the frequency ranks and generates the compact browser catalog at `client/data/vocabulary.json`.
+- The running app consumes only the generated JSON; no TSV or XML parsing happens at runtime.
 - Only entries with a detected Hanja value are written.

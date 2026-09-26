@@ -1,4 +1,4 @@
-.PHONY: run build test fmt docker-build docker-push docker-run
+.PHONY: run build data test fmt docker-build docker-push docker-run
 
 PORT ?= 8004
 GOCACHE ?= $(CURDIR)/.cache/go-build
@@ -11,6 +11,9 @@ run:
 build:
 	mkdir -p bin
 	GOCACHE=$(GOCACHE) go build -o bin/learnhanja ./server/main
+
+data:
+	python3 scripts/build_vocabulary.py
 
 test:
 	GOCACHE=$(GOCACHE) go test ./...

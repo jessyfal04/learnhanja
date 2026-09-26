@@ -1,9 +1,9 @@
-import { initializeInsights, renderInsights } from "./insights.js?v=6";
+import { initializeInsights, renderInsights } from "./insights.js?v=7";
 import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=8";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=9";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=10";
+import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=1";
 import { showView } from "./views.js";
 
 document.getElementById("messageClose").addEventListener("click", hideMessage);
