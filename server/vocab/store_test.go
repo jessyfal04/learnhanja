@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"hanjavocab/server/model"
+	"learnhanja/server/model"
 )
 
 func TestLoadAndSearchMergesSensesAndFiltersCharacters(t *testing.T) {

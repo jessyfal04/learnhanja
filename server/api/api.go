@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"hanjavocab/server/model"
+	"learnhanja/server/model"
 )
 
 type VocabStore interface {

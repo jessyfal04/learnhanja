@@ -13,9 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	clientassets "hanjavocab/client"
-	"hanjavocab/server/api"
-	"hanjavocab/server/vocab"
+	clientassets "learnhanja/client"
+	"learnhanja/server/api"
+	"learnhanja/server/vocab"
 )
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 		_ = httpServer.Shutdown(ctx)
 	}()
 
-	log.Printf("Hanja Vocab listening on http://%s", address)
+	log.Printf("LearnHanja listening on http://%s", address)
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}

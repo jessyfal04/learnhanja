@@ -8,7 +8,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"hanjavocab/server/model"
+	"learnhanja/server/model"
 )
 
 type fakeVocab struct{}
@@ -23,7 +23,7 @@ func (fakeVocab) Search(_ []string, _ int) model.VocabResult {
 
 func testServer() http.Handler {
 	files := fstest.MapFS{
-		"index.html":       &fstest.MapFile{Data: []byte("Hanja Vocab")},
+		"index.html":       &fstest.MapFile{Data: []byte("LearnHanja")},
 		"data/levels.json": &fstest.MapFile{Data: []byte(`{"total":3500}`)},
 		"data/idioms.json": &fstest.MapFile{Data: []byte(`{"total":383}`)},
 	}
@@ -37,7 +37,7 @@ func TestHealthAndStaticClient(t *testing.T) {
 		body string
 	}{
 		{path: "/healthz", body: "ok\n"},
-		{path: "/", body: "Hanja Vocab"},
+		{path: "/", body: "LearnHanja"},
 		{path: "/data/levels.json", body: `{"total":3500}`},
 		{path: "/data/idioms.json", body: `{"total":383}`},
 	} {

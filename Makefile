@@ -10,7 +10,7 @@ run:
 
 build:
 	mkdir -p bin
-	GOCACHE=$(GOCACHE) go build -o bin/hanja-vocab ./server/main
+	GOCACHE=$(GOCACHE) go build -o bin/learnhanja ./server/main
 
 test:
 	GOCACHE=$(GOCACHE) go test ./...

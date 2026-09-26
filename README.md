@@ -1,4 +1,4 @@
-# Hanja Vocab
+# LearnHanja
 
 Web app for selecting a fixed Hanja level catalog, overlaying local Anki state, and building KRDict vocabulary.
 

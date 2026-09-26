@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/text/unicode/norm"
 
-	"hanjavocab/server/model"
+	"learnhanja/server/model"
 )
 
 const DefaultLimit = 500
