@@ -45,7 +45,6 @@ export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort
 	const collator = new Intl.Collator(["ko", "zh"]);
 	if (sort === "korean") filtered.sort((a, b) => collator.compare(a.korean, b.korean));
 	if (sort === "hanja") filtered.sort((a, b) => collator.compare(a.hanja, b.hanja));
-	if (sort === "page") filtered.sort((a, b) => (a.page || Number.MAX_SAFE_INTEGER) - (b.page || Number.MAX_SAFE_INTEGER) || collator.compare(a.korean, b.korean));
 	if (sort === "source") filtered.sort((a, b) => sourceOrder(a, source) - sourceOrder(b, source));
 	return filtered;
 }
@@ -54,6 +53,7 @@ function sourceOrder(entry, source) {
 	if (source !== "all") return entry.sourceOrders?.[source] ?? Number.MAX_SAFE_INTEGER;
 	if (entry.sourceOrders?.exam) return entry.sourceOrders.exam;
 	if (entry.sourceOrders?.nikl) return 100000 + entry.sourceOrders.nikl;
-	if (entry.sourceOrders?.eomunhoe6) return 200000 + entry.sourceOrders.eomunhoe6;
+	if (entry.sourceOrders?.master_6) return 200000 + entry.sourceOrders.master_6;
+	if (entry.sourceOrders?.onebook_6) return 300000 + entry.sourceOrders.onebook_6;
 	return Number.MAX_SAFE_INTEGER;
 }

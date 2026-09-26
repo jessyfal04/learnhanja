@@ -96,6 +96,26 @@
 	color: var(--bulma-text-weak);
 }
 
+.idiom-info-cell {
+	width: 1%;
+	white-space: nowrap;
+}
+
+.idiom-info-button {
+	font-weight: 700;
+	min-width: 2rem;
+}
+
+.idiom-source-popover {
+	max-width: min(22rem, calc(100vw - 2rem));
+	position: fixed;
+	z-index: 40;
+}
+
+.idiom-source-popover .tags {
+	flex-wrap: wrap;
+}
+
 @media screen and (max-width: 768px) {
 	.tabs ul {
 		display: grid;

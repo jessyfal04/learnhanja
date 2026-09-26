@@ -34,18 +34,16 @@ test("filters and orders entries by source", () => {
 	assert.deepEqual(filterAndSortIdioms(entries, "", new Set(), false, "source", "all").map((entry) => entry.korean), ["각주구검", "각양각색", "안성맞춤"]);
 });
 
-test("sorts by page and puts entries without a page last", () => {
-	assert.deepEqual(filterAndSortIdioms(entries, "", new Set(), false, "page", "all").map((entry) => entry.korean), ["각주구검", "각양각색", "안성맞춤"]);
-});
-
-test("filters the 어문회 6급 source and keeps shared entries in both lists", () => {
+test("filters the 어문회 6급 sources and keeps shared entries in every list", () => {
 	const cases = [
-		{korean: "견물생심", hanja: "見物生心", sources: ["exam", "eomunhoe6"], sourceOrders: {exam: 3, eomunhoe6: 4}},
-		{korean: "가정교육", hanja: "家庭敎育", sources: ["eomunhoe6"], sourceOrders: {eomunhoe6: 1}},
+		{korean: "견물생심", hanja: "見物生心", sources: ["exam", "master_6"], sourceOrders: {exam: 3, master_6: 4}},
+		{korean: "가정교육", hanja: "家庭敎育", sources: ["master_6"], sourceOrders: {master_6: 1}},
+		{korean: "구십춘광", hanja: "九十春光", sources: ["onebook_6"], sourceOrders: {onebook_6: 1}},
 		{korean: "각주구검", hanja: "刻舟求劍", sources: ["exam"], sourceOrders: {exam: 2}},
 	];
-	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "source", "eomunhoe6").map((entry) => entry.korean), ["가정교육", "견물생심"]);
-	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "source", "all").map((entry) => entry.korean), ["각주구검", "견물생심", "가정교육"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "source", "master_6").map((entry) => entry.korean), ["가정교육", "견물생심"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "source", "onebook_6").map((entry) => entry.korean), ["구십춘광"]);
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "source", "all").map((entry) => entry.korean), ["각주구검", "견물생심", "가정교육", "구십춘광"]);
 });
 
 test("classifies idioms by their hardest character and preserves other filters", () => {

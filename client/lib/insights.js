@@ -180,7 +180,7 @@ function renderResults() {
 		const row = element("div", null, "insight-idiom");
 		const sources = entry.sources.map((id) => state.idioms.sources.find((s) => s.id === id)?.shortName || id).join(" · ");
 		row.append(element("span", `${entry.korean} · `), insightLink(entry.hanja));
-		row.title = `${sources}${entry.page ? ` · ${entry.page}쪽` : ""}`;
+		row.title = sources;
 		return row;
 	}));
 }

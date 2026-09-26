@@ -3,7 +3,7 @@ import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
 import { showView } from "./views.js";
-import { insightLink } from "./insights.js?v=5";
+import { insightLink } from "./insights.js?v=6";
 
 let requestID = 0;
 let scheduledBuild;

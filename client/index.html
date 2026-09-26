@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 어휘</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=6">
-	<script type="module" src="/lib/app.js?v=13"></script>
+	<link rel="stylesheet" href="/style/style.css?v=7">
+	<script type="module" src="/lib/app.js?v=14"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -109,22 +109,23 @@
 			<section class="box" aria-labelledby="idiomsTitle">
 				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">사자성어 목록을 불러오는 중…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light is-hidden" target="_blank" rel="noreferrer">공식 출처</a></div></div>
 				<div class="notification is-light py-3 mb-4"><div class="content is-small mb-0">
-					<p><strong>시험 교재:</strong> 《꼭 시험에 나오는 고사성어》 247개 · 표의 쪽수는 교재 원문 기준</p>
-					<p><strong>국립국어원(NIKL):</strong> 《한국어 교육 어휘 내용 개발(3단계)》 4.3절 214개</p>
-					<p><strong>어문회 6급:</strong> 사자성어 목록 75개 · 세 목록의 중복을 하나로 합쳐 총 430개이며 각 항목의 모든 출처를 유지합니다</p>
+					<p><strong>시험 교재:</strong> <a href="https://product.kyobobook.co.kr/detail/S000215142650" target="_blank" rel="noreferrer">《꼭 시험에 나오는 고사성어》</a> 247개</p>
+					<p><strong>국립국어원(NIKL):</strong> <a href="https://www.korean.go.kr/front/reportData/reportDataView.do?report_seq=800" target="_blank" rel="noreferrer">《한국어 교육 어휘 내용 개발(3단계)》</a> 4.3절 214개</p>
+					<p><strong>어문회 6급 (마스터):</strong> 다락원 <a href="https://product.kyobobook.co.kr/detail/S000000525684" target="_blank" rel="noreferrer">《한자능력검정시험 마스터 6급·6급Ⅱ》</a> 75개</p>
+					<p><strong>어문회 6급 (한권):</strong> 시대교육 <a href="https://product.kyobobook.co.kr/detail/S000216865870" target="_blank" rel="noreferrer">《어문회 한자능력검정시험 6급 한 권으로 끝내기》</a> 76개</p>
 				</div></div>
 				<div class="columns is-multiline is-vcentered">
 					<div class="column is-one-quarter"><label class="label" for="idiomFilter">검색</label><input id="idiomFilter" class="input" type="search" placeholder="한글 또는 한자"></div>
 					<div class="column is-one-quarter"><label class="label" for="idiomSourceFilter">출처</label><div class="select is-fullwidth"><select id="idiomSourceFilter"><option value="all">불러오는 중…</option></select></div></div>
 					<div class="column is-one-quarter"><label class="label" for="idiomLevelFilter">급수</label><div class="select is-fullwidth"><select id="idiomLevelFilter"><option value="all">전체 급수</option></select></div><p class="help">선택한 급수까지 포함 · 7급은 8급도 포함 · 가장 어려운 한자 기준</p></div>
-					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="page" selected>쪽순</option><option value="source">출처 수록순</option></select></div></div>
+					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="source" selected>출처 수록순</option></select></div></div>
 					<div class="column is-full"><label class="checkbox"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>급수</th><th>출처</th><th>쪽</th><th>앙키 상태</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>급수</th><th><span class="is-sr-only">정보</span></th><th>앙키 상태</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
 				<p id="idiomsLicense" class="help mt-4"></p>
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구 · v13 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 어휘 학습 도구 · v14 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

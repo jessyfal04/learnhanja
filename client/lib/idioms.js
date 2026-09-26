@@ -1,12 +1,14 @@
 import { renderCatalog } from "./anki.js?v=8";
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
-import { insightLink } from "./insights.js?v=5";
+import { insightLink } from "./insights.js?v=6";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { studyStatusKey, studyStatusPresentation } from "./study-status.js?v=2";
 import { koreanError, showMessage } from "./ui.js";
 
 let levelIndex = null;
+let sourcePopover = null;
+let sourcePopoverCloseTimer = null;
 
 export function initializeIdiomLevels() {
 	levelIndex = buildLevelIndex(state.catalog);
@@ -29,6 +31,7 @@ export async function loadIdioms() {
 
 export function renderIdioms() {
 	if (!state.idioms) return;
+	closeSourcePopover();
 	const sourceID = document.getElementById("idiomSourceFilter").value;
 	const level = document.getElementById("idiomLevelFilter").value;
 	const visible = filterAndSortIdioms(state.idioms.entries, document.getElementById("idiomFilter").value, state.selected, document.getElementById("idiomSelectedOnly").checked, document.getElementById("idiomSort").value, sourceID, level, levelIndex);
@@ -47,7 +50,7 @@ function renderRow(entry, sources) {
 	const hanja = cell("", "vocab-hanja");
 	hanja.append(insightLink(entry.hanja));
 	row.append(korean, hanja, cell(level === "unknown" ? "미상" : level || "—"));
-	row.append(sourceCell(entry.sources, sources), cell(entry.page || "—"));
+	row.append(sourceInfoCell(entry, sources));
 	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));
 	const characters = Array.from(new Set(idiomCharacters(entry)));
 	const covered = characters.filter((character) => state.selected.has(character)).length;
@@ -85,17 +88,92 @@ function summarizeStatuses(entries) {
 	return ` · 학습함 ${counts["known-active"]} · 새 카드 ${counts["new-active"]} · 일시 중단 ${suspended} · 상태 없음 ${counts.unknown}`;
 }
 
-function sourceCell(sourceIDs, sources) {
-	const element = cell("");
+function sourceInfoCell(entry, sources) {
+	const element = cell("", "idiom-info-cell");
+	const button = document.createElement("button");
+	const sourceNames = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
+	button.type = "button";
+	button.className = "button is-small is-light idiom-info-button";
+	button.textContent = "ⓘ";
+	button.title = `출처: ${sourceNames.join(", ")}`;
+	button.setAttribute("aria-label", `${entry.korean} 출처 정보`);
+	button.setAttribute("aria-haspopup", "dialog");
+	button.setAttribute("aria-expanded", "false");
+	button.addEventListener("pointerenter", () => showSourcePopover(button, entry, sources));
+	button.addEventListener("pointerleave", scheduleSourcePopoverClose);
+	button.addEventListener("focus", () => showSourcePopover(button, entry, sources));
+	button.addEventListener("blur", scheduleSourcePopoverClose);
+	button.addEventListener("click", (event) => {
+		event.stopPropagation();
+		showSourcePopover(button, entry, sources);
+	});
+	element.append(button);
+	return element;
+}
+
+function showSourcePopover(button, entry, sources) {
+	cancelSourcePopoverClose();
+	if (sourcePopover?.button === button) return;
+	closeSourcePopover();
+	const popover = document.createElement("div");
+	popover.className = "notification is-light idiom-source-popover p-3";
+	popover.setAttribute("role", "dialog");
+	popover.setAttribute("aria-label", `${entry.korean} 출처`);
+	popover.addEventListener("pointerenter", cancelSourcePopoverClose);
+	popover.addEventListener("pointerleave", scheduleSourcePopoverClose);
 	const tags = document.createElement("div");
 	tags.className = "tags mb-0";
-	for (const sourceID of sourceIDs) {
-		const label = sources.find((source) => source.id === sourceID)?.shortName || sourceID;
-		const classes = {exam: "is-link is-light", nikl: "is-info is-light", eomunhoe6: "is-primary is-light"}[sourceID] || "is-light";
-		tags.append(tag(label, classes));
+	for (const sourceID of entry.sources) {
+		const source = sources.find((item) => item.id === sourceID);
+		if (source?.sourceUrl) {
+			const link = document.createElement("a");
+			link.href = source.sourceUrl;
+			link.target = "_blank";
+			link.rel = "noreferrer";
+			link.className = `tag ${sourceTagClasses(sourceID)}`;
+			link.textContent = source.shortName;
+			link.title = source.name;
+			tags.append(link);
+		} else {
+			tags.append(tag(source?.shortName || sourceID, sourceTagClasses(sourceID)));
+		}
 	}
-	element.append(tags);
-	return element;
+	popover.append(tags);
+	document.body.append(popover);
+	button.setAttribute("aria-expanded", "true");
+	sourcePopover = {button, popover};
+
+	const buttonRect = button.getBoundingClientRect();
+	const popoverRect = popover.getBoundingClientRect();
+	const gap = 6;
+	const left = Math.min(Math.max(gap, buttonRect.right - popoverRect.width), window.innerWidth - popoverRect.width - gap);
+	const below = buttonRect.bottom + gap;
+	const top = below + popoverRect.height <= window.innerHeight - gap ? below : Math.max(gap, buttonRect.top - popoverRect.height - gap);
+	popover.style.left = `${left}px`;
+	popover.style.top = `${top}px`;
+}
+
+function closeSourcePopover() {
+	cancelSourcePopoverClose();
+	if (!sourcePopover) return;
+	sourcePopover.button.setAttribute("aria-expanded", "false");
+	sourcePopover.popover.remove();
+	sourcePopover = null;
+}
+
+function scheduleSourcePopoverClose() {
+	cancelSourcePopoverClose();
+	sourcePopoverCloseTimer = window.setTimeout(closeSourcePopover, 150);
+}
+
+function cancelSourcePopoverClose() {
+	if (sourcePopoverCloseTimer === null) return;
+	window.clearTimeout(sourcePopoverCloseTimer);
+	sourcePopoverCloseTimer = null;
+}
+
+function sourceTagClasses(sourceID) {
+	return {exam: "is-link is-light", nikl: "is-info is-light", master_6: "is-primary is-light", onebook_6: "is-warning is-light"}[sourceID] || "is-light";
 }
 
 function tag(label, classes) {
@@ -113,11 +191,18 @@ function renderSourceDetails(source) {
 		link.textContent = `${source.shortName} 출처`;
 		link.title = source.name;
 	}
-	const details = source ? source.name : state.idioms.sources.map((item) => `${item.name} ${item.total}개`).join(" · ");
-	const pageNote = source?.id === "exam" ? " · 쪽수는 원문 기준" : "";
-	const license = source?.license ? ` · ${source.license}` : "";
-	document.getElementById("idiomsLicense").textContent = `${details}${pageNote}${license}`;
+	document.getElementById("idiomsLicense").textContent = source?.license || "";
 }
+
+document.addEventListener("click", (event) => {
+	if (sourcePopover && !sourcePopover.popover.contains(event.target)) closeSourcePopover();
+});
+
+document.addEventListener("keydown", (event) => {
+	if (event.key === "Escape") closeSourcePopover();
+});
+
+window.addEventListener("scroll", closeSourcePopover, true);
 
 function option(value, label) {
 	const element = document.createElement("option");
