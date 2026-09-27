@@ -1,6 +1,6 @@
 import { renderCatalog } from "./anki.js?v=8";
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
-import { insightLink } from "./insights.js?v=7";
+import { insightLink } from "./insights.js?v=8";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { studyStatusKey, studyStatusPresentation } from "./study-status.js?v=2";

@@ -25,6 +25,93 @@
 	z-index: 20;
 }
 
+.cheonjamun-sentence-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+}
+
+.cheonjamun-text, .cheonjamun-reading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.cheonjamun-text {
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: clamp(2rem, 7vw, 3.5rem);
+	line-height: 1.35;
+}
+
+.cheonjamun-phrase, .cheonjamun-reading-phrase {
+	display: inline-grid;
+	grid-template-columns: repeat(4, 1em);
+	justify-content: center;
+}
+
+.cheonjamun-character {
+	border-radius: 0.15em;
+	color: var(--bulma-text-weak);
+	text-align: center;
+}
+
+.cheonjamun-character:hover, .cheonjamun-character:focus {
+	background: var(--bulma-link-soft);
+	color: var(--bulma-link-text);
+}
+
+.cheonjamun-character.is-success {
+	color: var(--bulma-success);
+}
+
+.cheonjamun-character.is-info {
+	color: var(--bulma-info);
+}
+
+.cheonjamun-character.is-warning {
+	color: var(--bulma-warning-dark);
+}
+
+.cheonjamun-character.is-danger {
+	color: var(--bulma-danger);
+}
+
+.cheonjamun-character.is-selected {
+	background: var(--bulma-link-soft);
+	box-shadow: inset 0 0 0 2px var(--bulma-link);
+}
+
+.cheonjamun-reading {
+	color: var(--bulma-text-weak);
+	font-size: clamp(0.75rem, 2.5vw, 1rem);
+	margin-top: 0.25rem;
+}
+
+.cheonjamun-sound {
+	text-align: center;
+}
+
+.cheonjamun-legend {
+	display: flex;
+	gap: 0.6rem 1.25rem;
+	flex-wrap: wrap;
+}
+
+.cheonjamun-selected-legend {
+	border: 2px solid var(--bulma-link);
+	border-radius: 0.35rem;
+	padding-inline: 0.4rem;
+}
+
+.cheonjamun-source summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
 .vocab-hanja {
 	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
 	font-size: 1.5rem;
@@ -131,5 +218,13 @@
 
 	.tabs a {
 		justify-content: center;
+	}
+
+	.cheonjamun-gap {
+		display: none;
+	}
+
+	.cheonjamun-phrase, .cheonjamun-reading-phrase {
+		flex-basis: 100%;
 	}
 }

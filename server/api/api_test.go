@@ -10,6 +10,7 @@ import (
 func testServer() http.Handler {
 	files := fstest.MapFS{
 		"index.html":           &fstest.MapFile{Data: []byte("LearnHanja")},
+		"data/cheonjamun.json": &fstest.MapFile{Data: []byte(`{"total":1000}`)},
 		"data/levels.json":     &fstest.MapFile{Data: []byte(`{"total":3500}`)},
 		"data/idioms.json":     &fstest.MapFile{Data: []byte(`{"total":447}`)},
 		"data/vocabulary.json": &fstest.MapFile{Data: []byte(`[["人","인",[],[],0,1]]`)},
@@ -25,6 +26,7 @@ func TestHealthAndStaticClient(t *testing.T) {
 	}{
 		{path: "/healthz", body: "ok\n"},
 		{path: "/", body: "LearnHanja"},
+		{path: "/data/cheonjamun.json", body: `{"total":1000}`},
 		{path: "/data/levels.json", body: `{"total":3500}`},
 		{path: "/data/idioms.json", body: `{"total":447}`},
 		{path: "/data/vocabulary.json", body: `[["人","인",[],[],0,1]]`},

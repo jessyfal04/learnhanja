@@ -1,8 +1,8 @@
 import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
-import { showView } from "./views.js";
-import { insightLink } from "./insights.js?v=7";
+import { showView } from "./views.js?v=1";
+import { insightLink } from "./insights.js?v=8";
 import { loadVocabularyCatalog, searchVocabulary } from "./vocabulary-data.js?v=1";
 
 let requestID = 0;

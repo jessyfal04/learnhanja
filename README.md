@@ -5,6 +5,7 @@ LearnHanja is a self-hosted web app for studying Korean Hanja.
 - Select characters from the 3,500-character 어문회 catalog
 - Overlay your local Anki study state
 - Discover KRDict vocabulary made from the selected characters
+- Read the 천자문 as an Anki-aware, ordered learning path
 - Browse and filter 447 unique 사자성어
 - Explore readings, meanings, radicals, stroke counts, related words, and idioms
 - Save your selection as a local JSON file
@@ -130,7 +131,18 @@ Two independent rankings stay visible:
 
 The default frequency sort and rank filter use the better available rank. A blank rank means that the exact Hangul spelling is absent from that source.
 
-### 4. Browse 사자성어
+### 4. Follow the 천자문 learning path
+
+- Read 1,000 source characters as 125 ordered eight-character sentences
+- See Korean readings, current Anki state, selection state, and 어문회-catalog coverage
+- Sort by the original order or by the closest incomplete sentence
+- Filter to incomplete, completed, or currently selected sentences
+- Add all eight characters to the current vocabulary selection
+- Open an individual character or an entire sentence in **한자 탐구**
+
+The displayed source glyph and its Korean study-match glyph are stored separately. Historical, compatibility, and textual variants remain visible instead of being silently rewritten for Anki matching.
+
+### 5. Browse 사자성어
 
 - Browse 447 unique idioms from four source lists
 - Filter by Hangul or Hanja
@@ -144,7 +156,7 @@ The default frequency sort and rank filter use the better available rank. A blan
 
 Shared idioms appear once but retain every source label. The assigned level is the hardest character in the idiom; 7급 therefore also includes 8급. Partial spellings, alternate spellings, and entries containing characters outside the catalog appear under **급수 미상**.
 
-### 5. Explore characters
+### 6. Explore characters
 
 In **한자 탐구**, paste a character, word, or mixed sentence.
 
@@ -158,7 +170,7 @@ In **한자 탐구**, paste a character, word, or mixed sentence.
 
 Lookup does not change the selection until an add button is pressed. Compatibility forms are normalized with NFKC for matching while the original input remains visible. Simplified/traditional forms and other distinct variants are not automatically merged.
 
-### 6. Save a selection
+### 7. Save a selection
 
 - Chromium-based browsers can connect a JSON file once and update it automatically
 - The approved file handle can be remembered locally with IndexedDB
@@ -219,6 +231,20 @@ Rebuild the browser catalog with:
 
 ```bash
 make data
+```
+
+### 천자문
+
+- Original work: Zhou Xingsi's public-domain *Thousand Character Classic*
+- Transcription: [Chinese Wikisource revision 5752664](https://zh.wikisource.org/w/index.php?title=千字文&oldid=5752664), available under CC BY-SA 4.0
+- `data/cheonjamun/wikisource.txt` preserves the 125 source lines and textual-variant markup
+- `scripts/build_cheonjamun.py` validates 1,000 unique displayed characters and generates explicit Korean study matches in `client/data/cheonjamun.json`
+
+Rebuild and verify this self-contained asset with:
+
+```bash
+python3 scripts/build_cheonjamun.py
+python3 scripts/build_cheonjamun.py --check
 ```
 
 ### Frequency ranks

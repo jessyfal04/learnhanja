@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=7">
-	<script type="module" src="/lib/app.js?v=16"></script>
+	<link rel="stylesheet" href="/style/style.css?v=8">
+	<script type="module" src="/lib/app.js?v=17"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -21,6 +21,7 @@
 			<li id="charactersTab"><a href="#characters">한자 선택</a></li>
 			<li id="vocabularyTab"><a href="#vocabulary">어휘</a></li>
 			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
+			<li id="cheonjamunTab"><a href="#cheonjamun">천자문</a></li>
 			<li id="insightsTab"><a href="#insights">한자 탐구</a></li>
 		</ul></div>
 
@@ -60,6 +61,25 @@
 				<div id="levelGroups"></div>
 			</section>
 			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p>한자 <strong id="selectedCount">0</strong>자 선택됨</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>관련 어휘 만들기</button></div></div></section>
+		</div>
+
+		<div id="cheonjamunView" class="is-hidden">
+			<section class="box" aria-labelledby="cheonjamunTitle">
+				<h2 id="cheonjamunTitle" class="title is-4 mb-1">천자문</h2>
+				<p class="subtitle is-6 mb-3">원문을 읽으면서 앙키로 배운 글자와 관련 어휘를 확인합니다</p>
+				<p id="cheonjamunSummary" class="has-text-weight-semibold mb-2">천자문 자료를 불러오는 중…</p>
+				<div id="cheonjamunProgress" class="tags mb-4" aria-label="천자문 전체 진행 상태"></div>
+				<div class="notification is-link is-light py-3 mb-4"><div class="content is-small mb-0">
+					<p><strong>글자를 누르면 뜻과 관련 어휘를 볼 수 있습니다</strong></p>
+					<div class="cheonjamun-legend" aria-label="글자 색 설명"><span class="has-text-success">● 학습함</span><span class="has-text-info">● 새 카드</span><span class="has-text-warning-dark">● 학습함 · 중단</span><span class="has-text-danger">● 새 카드 · 중단</span><span class="has-text-grey">● 카드 없음</span><span class="cheonjamun-selected-legend">파란 상자: 어휘 선택됨</span></div>
+				</div></div>
+				<div class="columns is-multiline">
+					<div class="column is-half-tablet"><label class="label" for="cheonjamunFilter">표시할 문장</label><div class="select is-fullwidth"><select id="cheonjamunFilter"><option value="all">모든 문장</option><option value="incomplete">아직 다 배우지 않은 문장</option><option value="complete">8자를 모두 배운 문장</option><option value="selected">어휘 선택 글자가 포함된 문장</option></select></div></div>
+					<div class="column is-half-tablet"><label class="label" for="cheonjamunSort">문장 순서</label><div class="select is-fullwidth"><select id="cheonjamunSort"><option value="original">천자문 원문 순서</option><option value="frontier">배운 글자가 많은 문장부터</option></select></div><p class="help">두 번째 순서는 아직 완성하지 않은 문장 중에서 다음에 읽기 쉬운 문장을 먼저 보여 줍니다</p></div>
+				</div>
+				<details class="cheonjamun-source mt-2"><summary>저본과 글자 표기에 대하여</summary><div class="content is-small mt-2 mb-0"><p><a href="https://zh.wikisource.org/w/index.php?title=千字文&amp;oldid=5752664" target="_blank" rel="noreferrer">중국어 위키문헌 고정 판본</a>을 사용합니다. 원전은 퍼블릭 도메인이며 전사는 CC BY-SA 4.0입니다. 원문 글자는 그대로 표시하고, 한국 한자 목록 및 앙키와 연결할 글자는 별도로 보관합니다</p></div></details>
+			</section>
+			<div id="cheonjamunList"></div>
 		</div>
 
 		<div id="vocabularyView" class="is-hidden">
@@ -126,6 +146,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v16 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v17 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { refreshStatus, renderCatalog } from "./anki.js?v=8";
 import { loadStaticJSON } from "./static-data.js";
-import { showView } from "./views.js";
+import { showView } from "./views.js?v=1";
 import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=4";
 import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=1";
 

@@ -1,10 +1,11 @@
-import { initializeInsights, renderInsights } from "./insights.js?v=7";
+import { initializeInsights, renderInsights } from "./insights.js?v=8";
+import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=1";
 import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=8";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=10";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=1";
-import { showView } from "./views.js";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=11";
+import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=2";
+import { showView } from "./views.js?v=1";
 
 document.getElementById("messageClose").addEventListener("click", hideMessage);
 document.getElementById("refreshAnkiButton").addEventListener("click", loadMetadata);
@@ -26,17 +27,20 @@ document.getElementById("openFileButton").addEventListener("click", openBrowserF
 document.addEventListener("hanja-selection-change", autoSaveSelection);
 document.querySelector("#connectionTab a").addEventListener("click", (event) => { event.preventDefault(); showView("connection"); });
 document.querySelector("#charactersTab a").addEventListener("click", (event) => { event.preventDefault(); showView("characters"); });
+document.querySelector("#cheonjamunTab a").addEventListener("click", (event) => { event.preventDefault(); showView("cheonjamun"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
 for (const id of ["idiomFilter", "idiomSourceFilter", "idiomLevelFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
 document.addEventListener("hanja-idiom-status-change", renderIdioms);
 
 document.querySelector("#insightsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("insights"); });
+initializeCheonjamun();
 window.addEventListener("hashchange", () => showView(window.location.hash.slice(1)));
 showView(window.location.hash.slice(1));
 initializeInsights();
 await Promise.all([loadCatalog(), loadIdioms()]);
 initializeIdiomLevels();
+renderCheonjamun();
 renderInsights();
 await loadMetadata();
 await initializeFileSave();

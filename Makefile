@@ -14,8 +14,10 @@ build:
 
 data:
 	python3 scripts/build_vocabulary.py
+	python3 scripts/build_cheonjamun.py
 
 test:
+	python3 scripts/build_cheonjamun.py --check
 	GOCACHE=$(GOCACHE) go test ./...
 	node --test client/lib/*.test.mjs
 	find client/lib -name '*.js' -exec node --check {} \;

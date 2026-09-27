@@ -1,7 +1,7 @@
 {
 	"name": "learnhanja",
 	"private": true,
-	"version": "16.0.0",
+	"version": "17.0.0",
 	"type": "module",
 	"scripts": {
 		"test": "node --test client/lib/*.test.mjs"

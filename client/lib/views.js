@@ -1,4 +1,4 @@
-const views = ["connection", "characters", "vocabulary", "idioms", "insights"];
+const views = ["connection", "characters", "cheonjamun", "vocabulary", "idioms", "insights"];
 
 export function showView(name) {
 	const active = views.includes(name) ? name : "connection";
@@ -7,4 +7,5 @@ export function showView(name) {
 		document.getElementById(`${view}Tab`).classList.toggle("is-active", view === active);
 	}
 	window.location.hash = active;
+	document.dispatchEvent(new CustomEvent("hanja-view-change", {detail: {view: active}}));
 }
