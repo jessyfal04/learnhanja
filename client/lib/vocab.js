@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary } from "./vocab-filter.js";
 import { showView } from "./views.js?v=1";
-import { insightLink } from "./insights.js?v=9";
+import { insightLink } from "./insights.js?v=10";
 import { loadVocabularyCatalog, searchVocabulary } from "./vocabulary-data.js?v=1";
 
 let requestID = 0;
