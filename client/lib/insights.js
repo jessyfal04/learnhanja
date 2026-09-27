@@ -150,7 +150,14 @@ function renderCard({character, originals}) {
 	badge.title = `${character} · ${level} · ${statusFor(character, state.ankiStatus)}${info.status === "absent" ? " · 선택한 앙키 덱에 일치하는 노트가 없습니다" : ""}`;
 	header.append(element("h3", originals.join(" / "), "insight-character"), badge);
 	card.append(header, element("p", ref.hun || ref.sound || ref.hangul?.join(" / ") || "훈음 자료 없음", "title is-5 mb-3"));
-	if (ref.definition) card.append(element("p", ref.definition, "insight-definition mb-2"));
+	if (ref.definition) {
+		const definition = element("p", null, "insight-definition mb-2");
+		const english = element("span", ref.definition);
+		english.lang = "en";
+		english.translate = true;
+		definition.append(element("strong", "영어 뜻: "), english);
+		card.append(definition);
+	}
 	card.append(element("p", `${ref.radical || "부수 미상"} · ${ref.strokes || ref.unicodeStrokes || "—"}획`, "help"));
 	const actions = element("div", null, "buttons mt-4");
 	const selected = [...state.selected].some((c) => normalize(c) === character);
