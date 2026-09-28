@@ -1,5 +1,5 @@
 import { renderCatalog } from "./anki.js?v=8";
-import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js";
+import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js?v=1";
 import { insightLink } from "./insights.js?v=10";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
@@ -94,9 +94,9 @@ function sourceInfoCell(entry, sources) {
 	const sourceNames = entry.sources.map((sourceID) => sources.find((source) => source.id === sourceID)?.shortName || sourceID);
 	button.type = "button";
 	button.className = "button is-small is-light idiom-info-button";
-	button.textContent = "ⓘ";
+	button.textContent = `ⓘ ${entry.sources.length}`;
 	button.title = `출처: ${sourceNames.join(", ")}`;
-	button.setAttribute("aria-label", `${entry.korean} 출처 정보`);
+	button.setAttribute("aria-label", `${entry.korean} 출처 ${entry.sources.length}개 정보`);
 	button.setAttribute("aria-haspopup", "dialog");
 	button.setAttribute("aria-expanded", "false");
 	button.addEventListener("pointerenter", () => showSourcePopover(button, entry, sources));

@@ -34,6 +34,16 @@ test("filters and orders entries by source", () => {
 	assert.deepEqual(filterAndSortIdioms(entries, "", new Set(), false, "source", "all").map((entry) => entry.korean), ["각주구검", "각양각색", "안성맞춤"]);
 });
 
+test("sorts idioms by source mentions with a Korean-name tie-break", () => {
+	const cases = [
+		{korean: "하나", hanja: "一", sources: ["exam"]},
+		{korean: "가장 많음", hanja: "二", sources: ["exam", "nikl", "master_6"]},
+		{korean: "가나다", hanja: "三", sources: ["exam", "nikl"]},
+		{korean: "라마바", hanja: "四", sources: ["exam", "nikl"]},
+	];
+	assert.deepEqual(filterAndSortIdioms(cases, "", new Set(), false, "mentions").map((entry) => entry.korean), ["가장 많음", "가나다", "라마바", "하나"]);
+});
+
 test("filters the 어문회 6급 sources and keeps shared entries in every list", () => {
 	const cases = [
 		{korean: "견물생심", hanja: "見物生心", sources: ["exam", "master_6"], sourceOrders: {exam: 3, master_6: 4}},

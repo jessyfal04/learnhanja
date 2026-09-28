@@ -46,6 +46,7 @@ export function filterAndSortIdioms(entries, query, selected, selectedOnly, sort
 	if (sort === "korean") filtered.sort((a, b) => collator.compare(a.korean, b.korean));
 	if (sort === "hanja") filtered.sort((a, b) => collator.compare(a.hanja, b.hanja));
 	if (sort === "source") filtered.sort((a, b) => sourceOrder(a, source) - sourceOrder(b, source));
+	if (sort === "mentions") filtered.sort((a, b) => (b.sources?.length || 0) - (a.sources?.length || 0) || collator.compare(a.korean, b.korean));
 	return filtered;
 }
 

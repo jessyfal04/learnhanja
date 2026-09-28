@@ -15,10 +15,6 @@
 	font-weight: 700;
 }
 
-.hanja-button.is-suspended {
-	text-decoration: line-through;
-}
-
 .selection-bar {
 	bottom: 1rem;
 	position: sticky;

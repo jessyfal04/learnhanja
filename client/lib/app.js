@@ -3,7 +3,7 @@ import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=1";
 import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=8";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=11";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=12";
 import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=2";
 import { showView } from "./views.js?v=1";
 
