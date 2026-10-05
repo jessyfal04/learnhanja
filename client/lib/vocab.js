@@ -75,7 +75,7 @@ function renderRow(entry, knowledge) {
 	row.append(
 		cellWith(badge, "vocab-status"),
 		hanja,
-		cell(entry.hangul),
+		cell(entry.hangul, "vocab-korean"),
 		cell((entry.meanings || []).join(" · ")),
 		cell(entry.pokemonRank || ""),
 		cell(entry.niklRank || ""),

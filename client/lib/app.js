@@ -3,7 +3,7 @@ import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=2";
 import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=8";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=13";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=14";
 import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=4";
 import { showView } from "./views.js?v=1";
 import { initializeKnownWords } from "./known-words.js?v=1";
@@ -63,7 +63,7 @@ document.getElementById("clearSelectionButton").addEventListener("click", clearS
 document.getElementById("buildVocabButton").addEventListener("click", () => buildVocabulary());
 document.addEventListener("hanja-selection-change", scheduleVocabulary);
 document.addEventListener("hanja-known-words-change", renderVocabulary);
-document.addEventListener("hanja-status-change", renderVocabulary);
+document.addEventListener("hanja-status-change", () => { renderVocabulary(); renderIdioms(); });
 document.getElementById("vocabFilter").addEventListener("input", (event) => { renderVocabulary(); updateQueryURL("vocabulary", event.target.value); });
 for (const id of ["vocabKnowledgeFilter", "vocabSort", "maxRank"]) document.getElementById(id).addEventListener("input", renderVocabulary);
 document.getElementById("saveFileButton").addEventListener("click", saveBrowserFile);
