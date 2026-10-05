@@ -1,4 +1,3 @@
-import { renderCatalog } from "./anki.js?v=8";
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js?v=1";
 import { insightLink } from "./insights.js?v=12";
 import { state } from "./state.js";
@@ -45,36 +44,35 @@ export function renderIdioms() {
 
 function renderRow(entry, sources) {
 	const row = document.createElement("tr");
+	const statusKey = studyStatusKey(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms), {unverified: !state.idiomAnkiStatus});
+	row.className = `idiom-status-${statusKey}`;
 	const level = levelIndex ? idiomLevel(entry, levelIndex) : "";
 	const korean = cell(entry.korean, "korean-word");
 	const hanja = cell("", "vocab-hanja");
-	hanja.append(insightLink(entry.hanja));
-	row.append(korean, hanja, cell(level === "unknown" ? "미상" : level || "—"));
-	row.append(sourceInfoCell(entry, sources));
-	row.append(statusCell(idiomStatusInfo(entry, state.idiomAnkiStatus?.idioms)));
-	const characters = Array.from(new Set(idiomCharacters(entry)));
-	const covered = characters.filter((character) => state.selected.has(character)).length;
-	row.append(cell(`${covered}/${characters.length}${entry.partial ? " · 일부 한자 표기" : ""}`));
-	const action = document.createElement("td");
-	const button = document.createElement("button");
-	button.type = "button";
-	button.className = "button is-small is-link is-light";
-	button.textContent = "한자 선택";
-	button.addEventListener("click", () => {
-		for (const character of characters) state.selected.add(character);
-		renderCatalog();
-		renderIdioms();
-	});
-	action.appendChild(button);
-	row.appendChild(action);
+	hanja.append(characterStatusLink(entry));
+	if (entry.partial) hanja.append(" · 일부 한자 표기");
+	row.append(cell(level === "unknown" ? "미상" : level || "—"), sourceInfoCell(entry, sources), hanja, korean);
 	return row;
 }
 
-function statusCell(info) {
-	const presentation = studyStatusPresentation(info, {unverified: !state.idiomAnkiStatus});
-	const element = cell("");
-	element.append(tag(presentation.label, presentation.classes));
-	return element;
+function characterStatusLink(entry) {
+	const link = insightLink(entry.hanja);
+	link.replaceChildren();
+	for (const character of Array.from(entry.hanja || "")) {
+		if (!/[\u3400-\u9fff\uf900-\ufaff]/u.test(character)) {
+			link.append(character);
+			continue;
+		}
+		const info = state.ankiStatus?.characters?.[character.normalize("NFKC")];
+		const presentation = studyStatusPresentation(info, {unverified: !state.ankiStatus, absent: Boolean(state.ankiStatus && !info)});
+		const characterElement = document.createElement("span");
+		characterElement.className = `idiom-status-character ${presentation.classes}`;
+		characterElement.textContent = character;
+		characterElement.title = presentation.label;
+		characterElement.setAttribute("aria-label", `${character} · ${presentation.label}`);
+		link.append(characterElement);
+	}
+	return link;
 }
 
 function summarizeStatuses(entries) {

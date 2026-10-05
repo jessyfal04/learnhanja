@@ -150,7 +150,8 @@
 					<div class="column is-one-quarter"><label class="label" for="idiomSort">정렬</label><div class="select is-fullwidth"><select id="idiomSort"><option value="korean">한글순</option><option value="hanja">한자순</option><option value="source">출처 수록순</option><option value="mentions" selected>출처 많은순</option></select></div></div>
 					<div class="column is-full"><label class="checkbox"><input id="idiomSelectedOnly" type="checkbox"> 선택한 한자로만 구성</label></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한글</th><th>한자 표기</th><th>급수</th><th><span class="is-sr-only">정보</span></th><th>앙키 상태</th><th>선택 현황</th><th></th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
+				<div class="tags idiom-status-legend mb-3" aria-label="사자성어 앙키 상태 범례"><span class="tag is-success">학습함</span><span class="tag is-info">새 카드</span><span class="tag is-warning">학습함 · 일시 중단</span><span class="tag is-danger">새 카드 · 일시 중단</span><span class="tag is-dark">상태 없음 · 미확인</span></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>급수</th><th><span class="is-sr-only">출처 정보</span></th><th>한자 표기</th><th>한글</th></tr></thead><tbody id="idiomsBody"></tbody></table></div>
 				<p id="idiomsLicense" class="help mt-4"></p>
 			</section>
 		</div>

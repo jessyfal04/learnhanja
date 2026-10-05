@@ -63,7 +63,7 @@ document.getElementById("clearSelectionButton").addEventListener("click", clearS
 document.getElementById("buildVocabButton").addEventListener("click", () => buildVocabulary());
 document.addEventListener("hanja-selection-change", scheduleVocabulary);
 document.addEventListener("hanja-known-words-change", renderVocabulary);
-document.addEventListener("hanja-status-change", renderVocabulary);
+document.addEventListener("hanja-status-change", () => { renderVocabulary(); renderIdioms(); });
 document.getElementById("vocabFilter").addEventListener("input", (event) => { renderVocabulary(); updateQueryURL("vocabulary", event.target.value); });
 for (const id of ["vocabKnowledgeFilter", "vocabSort", "maxRank"]) document.getElementById(id).addEventListener("input", renderVocabulary);
 document.getElementById("saveFileButton").addEventListener("click", saveBrowserFile);

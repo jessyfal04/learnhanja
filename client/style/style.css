@@ -232,6 +232,52 @@
 	white-space: nowrap;
 }
 
+.vocab-korean,
+.idiom-korean {
+	font-size: 1.5rem;
+}
+
+.idiom-status-character {
+	color: var(--bulma-text-weak);
+}
+
+.idiom-status-character.is-success {
+	color: var(--bulma-success);
+}
+
+.idiom-status-character.is-info {
+	color: var(--bulma-info);
+}
+
+.idiom-status-character.is-warning {
+	color: var(--bulma-warning-dark);
+}
+
+.idiom-status-character.is-danger {
+	color: var(--bulma-danger);
+}
+
+#idiomsBody tr.idiom-status-known-active > td {
+	background-color: hsla(var(--bulma-success-h), var(--bulma-success-s), var(--bulma-success-l), 0.14);
+}
+
+#idiomsBody tr.idiom-status-new-active > td {
+	background-color: hsla(var(--bulma-info-h), var(--bulma-info-s), var(--bulma-info-l), 0.14);
+}
+
+#idiomsBody tr.idiom-status-known-suspended > td {
+	background-color: hsla(var(--bulma-warning-h), var(--bulma-warning-s), var(--bulma-warning-l), 0.22);
+}
+
+#idiomsBody tr.idiom-status-new-suspended > td {
+	background-color: hsla(var(--bulma-danger-h), var(--bulma-danger-s), var(--bulma-danger-l), 0.14);
+}
+
+#idiomsBody tr.idiom-status-unknown > td,
+#idiomsBody tr.idiom-status-unverified > td {
+	background-color: hsla(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l), 0.08);
+}
+
 .idiom-info-button {
 	font-weight: 700;
 	min-width: 2rem;
