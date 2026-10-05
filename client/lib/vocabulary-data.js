@@ -1,4 +1,5 @@
 import { loadStaticJSON } from "./static-data.js";
+import { frequencyMean } from "./frequency.js";
 
 const defaultLimit = 500;
 const maximumLimit = 5000;
@@ -10,13 +11,14 @@ export function loadVocabularyCatalog() {
 }
 
 export function expandCatalog(rows) {
-	return rows.map(([hanja, hangul, meanings, definitions, pokemonRank, niklRank]) => ({
+	return rows.map(([hanja, hangul, meanings, definitions, pokemonRank, niklRank, hermitDaveRank]) => ({
 		hanja,
 		hangul,
 		meanings,
 		definitions,
 		pokemonRank,
 		niklRank,
+		hermitDaveRank,
 	}));
 }
 
@@ -49,6 +51,5 @@ function sortByFrequency(entries) {
 }
 
 function bestRank(entry) {
-	const ranks = [entry.pokemonRank, entry.niklRank].filter((rank) => rank > 0);
-	return ranks.length ? Math.min(...ranks) : Number.MAX_SAFE_INTEGER;
+	return frequencyMean(entry);
 }

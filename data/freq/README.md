@@ -1,6 +1,6 @@
 # Vocabulary frequency sources
 
-The vocabulary table uses two independent ranked Hangul lists. They rank KRDict entries; they do not supply the vocabulary spelling or meaning.
+The vocabulary table uses three independent ranked Hangul lists. They rank KRDict entries; they do not supply the vocabulary spelling or meaning.
 
 ## NIKL.json
 
@@ -19,6 +19,12 @@ Both upstream dumps credit [kwsch/pkNX](https://github.com/kwsch/pkNX) for text 
 
 The corpus was processed with KoNLPy/Okt normalization and stemming. Non-Hangul tokens were removed, remaining tokens were counted, and unique forms were ordered by descending frequency.
 
+## HermitDave-ko-50k.txt
+
+Source: [HermitDave/FrequencyWords Korean 2018 50K](https://github.com/hermitdave/FrequencyWords/blob/master/content/2018/ko/ko_50k.txt), used under the included `HermitDave-LICENSE.txt` MIT license.
+
+The source contains 50,000 `word count` lines in descending frequency order. The application uses the one-based source position as the exact Hangul spelling's rank.
+
 ## Application rule
 
-The app performs an exact lookup of each KRDict Hangul spelling in both lists and exposes both ranks separately. A missing rank is stored as `0` and displayed as blank. Default frequency ordering and the maximum-rank filter use the smaller available nonzero rank.
+The app performs an exact lookup of each KRDict Hangul spelling in all three lists. A missing rank is stored as `0`. The displayed aggregate is the arithmetic mean of the available positive ranks; its detail popover shows that mean, the median, and each source rank. Default frequency ordering and the maximum-rank filter use the mean.

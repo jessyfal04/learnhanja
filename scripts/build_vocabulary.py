@@ -22,6 +22,15 @@ def load_ranks(path):
     return ranks
 
 
+def load_frequency_words(path):
+    ranks = {}
+    for index, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        word, _, count = line.rpartition(" ")
+        if word and count.isdigit():
+            ranks.setdefault(unicodedata.normalize("NFC", word), index)
+    return ranks
+
+
 def is_hanja(character):
     codepoint = ord(character)
     return codepoint == 0x3007 or any(
@@ -39,6 +48,7 @@ def is_hanja(character):
 def main():
     pokemon = load_ranks(ROOT / "data/freq/Pokémon.json")
     nikl = load_ranks(ROOT / "data/freq/NIKL.json")
+    hermit_dave = load_frequency_words(ROOT / "data/freq/HermitDave-ko-50k.txt")
     entries = []
     indexes = {}
     meaning_sets = []
@@ -55,7 +65,7 @@ def main():
             key = (hanja, hangul)
             if key not in indexes:
                 indexes[key] = len(entries)
-                entries.append([hanja, hangul, [], [], pokemon.get(hangul, 0), nikl.get(hangul, 0)])
+                entries.append([hanja, hangul, [], [], pokemon.get(hangul, 0), nikl.get(hangul, 0), hermit_dave.get(unicodedata.normalize("NFC", hangul), 0)])
                 meaning_sets.append(set())
                 definition_sets.append(set())
             index = indexes[key]

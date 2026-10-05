@@ -17,6 +17,15 @@ test("sorts descending Hanja", () => {
 	assert.deepEqual(descending, ascending.toReversed());
 });
 
+test("sorts and filters by the mean of available frequency ranks", () => {
+	const values = [
+		{hanja: "山", hangul: "산", pokemonRank: 1, niklRank: 100, hermitDaveRank: 100},
+		{hanja: "人", hangul: "인", pokemonRank: 40, niklRank: 40, hermitDaveRank: 40},
+	];
+	assert.deepEqual(filterAndSortVocabulary(values, "", "", "frequency").map((entry) => entry.hangul), ["인", "산"]);
+	assert.deepEqual(filterAndSortVocabulary(values, "", 50, "frequency").map((entry) => entry.hangul), ["인"]);
+});
+
 test("classifies Migaku words and unknown words made only from learned Hanja", () => {
 	const knownWords = new Set(["인"]);
 	const ankiStatus = {characters: {人: {status: "known"}, 月: {status: "known"}, 金: {status: "known"}}};

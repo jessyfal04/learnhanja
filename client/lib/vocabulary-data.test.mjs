@@ -11,11 +11,16 @@ const entries = expandCatalog([
 	["𠀀", "테스트", [], [], 0, 0],
 ]);
 
-test("selection search requires every character and sorts by best rank", () => {
+test("expands the third frequency rank", () => {
+	const [entry] = expandCatalog([["人", "인", [], [], 3, 2, 1]]);
+	assert.equal(entry.hermitDaveRank, 1);
+});
+
+test("selection search requires every character and sorts by mean rank", () => {
 	const result = searchVocabulary(entries, ["人"], 10);
 	assert.equal(result.total, 2);
-	assert.deepEqual(result.entries.map((entry) => entry.hanja), ["人", "人人"]);
-	assert.deepEqual(result.entries[0].meanings, ["person", "name"]);
+	assert.deepEqual(result.entries.map((entry) => entry.hanja), ["人人", "人"]);
+	assert.deepEqual(result.entries[1].meanings, ["person", "name"]);
 });
 
 test("related search matches any character without duplicates", () => {

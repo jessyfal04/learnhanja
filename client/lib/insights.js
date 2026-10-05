@@ -4,7 +4,7 @@ import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js?v=1";
 import { filterRelated, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=4";
 import { urlWithQuery } from "./url-query.js?v=1";
-import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=1";
+import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 let data;

@@ -1,6 +1,7 @@
+import { frequencyMean } from "./frequency.js";
+
 function rank(entry) {
-	const values = [entry.pokemonRank, entry.niklRank].filter((value) => Number(value) > 0);
-	return values.length ? Math.min(...values) : Number.MAX_SAFE_INTEGER;
+	return frequencyMean(entry);
 }
 
 export function vocabularyKnowledge(entry, knownWords, markedWords, ankiStatus) {

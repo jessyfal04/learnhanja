@@ -122,7 +122,7 @@ python3 scripts/extract_migaku_known_korean.py --txt-output known_words.txt --fo
 python3 scripts/extract_migaku_known_korean.py --serve --port 8766
 ```
 
-The bridge reads Migaku's Korean `KNOWN` and marked (`tracked`) words from the latest Chrome IndexedDB blob on each request. Use `--database /path/to/core.db` for an already extracted database and `--allow-origin https://your-site.example` when using a different website origin. The browser keeps the loaded words in memory. The vocabulary table colors known words green, marked words purple, and highlights unknown words whose Hanja are all actively learned in Anki as yellow study recommendations. Filter the table to all, known, or unknown words; marked words and study recommendations count as unknown. The **학습 추천 · 빈도순** sort places yellow targets first, then marked words, each by the best available frequency rank. Reload the source to reflect Migaku changes.
+The bridge reads Migaku's Korean `KNOWN` and marked (`tracked`) words from the latest Chrome IndexedDB blob on each request. Use `--database /path/to/core.db` for an already extracted database and `--allow-origin https://your-site.example` when using a different website origin. The browser keeps the loaded words in memory. The vocabulary table colors known words green, marked words purple, and highlights unknown words whose Hanja are all actively learned in Anki as yellow study recommendations. Filter the table to all, known, or unknown words; marked words and study recommendations count as unknown. The **학습 추천 · 빈도순** sort places yellow targets first, then marked words, each by its aggregate mean frequency rank. Reload the source to reflect Migaku changes.
 
 ### 2. Select Hanja
 
@@ -142,12 +142,13 @@ Every selection change schedules a vocabulary refresh in the background, so the 
 - Limit results by maximum frequency rank
 - Open a word directly in **한자 탐구**
 
-Two independent rankings stay visible:
+Three independent rankings contribute to the aggregate frequency:
 
 - **NIKL rank** — position in the National Institute of Korean Language's *현대 국어 사용 빈도 조사*
 - **Pokémon rank** — frequency in normalized Korean game text from *Pokémon Sword* and *Pokémon Legends: Arceus*
+- **HermitDave rank** — position in the 2018 Korean 50K list from *FrequencyWords*
 
-The default frequency sort and rank filter use the better available rank. A blank rank means that the exact Hangul spelling is absent from that source.
+The table shows the arithmetic mean of available exact-match ranks followed by an ⓘ detail button. Hover or focus the button to see the mean, median, and all three source ranks. The default frequency sort and rank filter use the mean.
 
 ### 4. Follow the 천자문 learning path
 

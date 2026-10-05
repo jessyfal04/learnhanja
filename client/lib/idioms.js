@@ -1,6 +1,6 @@
 import { renderCatalog } from "./anki.js?v=8";
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js?v=1";
-import { insightLink } from "./insights.js?v=11";
+import { insightLink } from "./insights.js?v=12";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { studyStatusKey, studyStatusPresentation } from "./study-status.js?v=2";
@@ -46,7 +46,7 @@ export function renderIdioms() {
 function renderRow(entry, sources) {
 	const row = document.createElement("tr");
 	const level = levelIndex ? idiomLevel(entry, levelIndex) : "";
-	const korean = cell(entry.korean);
+	const korean = cell(entry.korean, "korean-word");
 	const hanja = cell("", "vocab-hanja");
 	hanja.append(insightLink(entry.hanja));
 	row.append(korean, hanja, cell(level === "unknown" ? "미상" : level || "—"));
