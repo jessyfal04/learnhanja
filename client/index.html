@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=10">
-	<script type="module" src="/lib/app.js?v=21"></script>
+	<link rel="stylesheet" href="/style/style.css?v=11">
+	<script type="module" src="/lib/app.js?v=22"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -45,6 +45,13 @@
 					<div class="column is-one-third"><label class="label" for="idiomFieldSelect">사자성어 필드</label><div class="select is-fullwidth"><select id="idiomFieldSelect"></select></div></div>
 				</div>
 				<button id="refreshIdiomStatusButton" class="button is-primary" type="button">사자성어 상태 새로고침</button>
+			</section>
+			<section class="box" aria-labelledby="knownWordsTitle">
+				<h2 id="knownWordsTitle" class="title is-5 mb-1">아는 단어 출처</h2>
+				<p class="subtitle is-6">Migaku에서 추출한 한국어 단어를 TXT 파일 또는 이 컴퓨터의 로컬 포트로 불러옵니다</p>
+				<div class="field"><label class="label" for="knownWordsFile">TXT 파일</label><input id="knownWordsFile" class="input" type="file" accept=".txt,text/plain"></div>
+				<div class="field has-addons"><div class="control"><input id="knownWordsPort" class="input" type="number" min="1" max="65535" value="8766" aria-label="아는 단어 로컬 포트"></div><div class="control"><button id="loadKnownWordsPort" class="button is-link" type="button">포트에서 불러오기</button></div></div>
+				<p id="knownWordsStatus" class="help" role="status">아는 단어 출처가 연결되지 않았습니다</p>
 			</section>
 
 			<section class="box" aria-labelledby="saveTitle">
@@ -85,18 +92,20 @@
 		<div id="vocabularyView" class="is-hidden">
 			<section class="box" aria-labelledby="vocabTitle">
 				<h2 id="vocabTitle" class="title is-4 mb-1">어휘</h2><p id="vocabSummary" class="subtitle is-6"></p>
-				<p class="help mb-3">표의 한자 표기를 누르면 한자 탐구에서 그 단어를 바로 분석합니다</p>
+				<p class="help mb-2">표의 한자 표기를 누르면 한자 탐구에서 그 단어를 바로 분석합니다</p>
+				<div class="tags vocab-legend mb-3" aria-label="어휘 학습 상태 범례"><span class="tag is-success">아는 단어</span><span class="tag is-purple">표시한 단어</span><span class="tag is-warning">학습 추천 · 모르는 단어지만 모든 한자를 배움</span><span class="tag is-light">모르는 단어</span><span class="tag is-light">미확인 · 아는 단어 출처 없음</span></div>
 				<div class="notification is-light py-3 mb-4"><div class="content is-small mb-0">
 					<p><strong>어휘 출처:</strong> 국립국어원 <a href="https://krdict.korean.go.kr/download/downloadPopup" target="_blank" rel="noreferrer">한국어기초사전(KRDict) 전체 XML</a> 2025-12-19 덤프의 한글·한자·영문 뜻 · 웹사이트를 스크레이핑하지 않고 내려받은 ZIP을 변환합니다</p>
 					<p><strong>빈도 출처:</strong> 국립국어원(NIKL) 《현대 국어 사용 빈도 조사》와 <a href="https://github.com/CPokemon/swsh-text" target="_blank" rel="noreferrer">Pokémon Sword v1.3.0</a>·<a href="https://github.com/CPokemon/pla-text" target="_blank" rel="noreferrer">Pokémon Legends: Arceus</a> 한국어 텍스트 덤프 · 추출 도구 <a href="https://github.com/kwsch/pkNX" target="_blank" rel="noreferrer">pkNX</a></p>
 					<p>선택한 한자로만 이루어진 한국어기초사전 항목을 찾고, 같은 한자 표기와 한글 표기의 뜻을 합칩니다. 각 한글 표기를 두 빈도 목록에서 정확히 찾아 순위를 따로 표시하며, 빈도순은 존재하는 두 순위 중 더 높은 순위(작은 숫자)를 사용합니다. 빈칸은 해당 목록에 없다는 뜻입니다</p>
 				</div></div>
 				<div class="columns is-multiline">
-					<div class="column is-half-tablet"><label class="label" for="vocabFilter">검색</label><input id="vocabFilter" class="input" type="search" placeholder="한자, 한글, 뜻"></div>
-					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabSort">정렬</label><div class="select is-fullwidth"><select id="vocabSort"><option value="frequency">빈도순</option><option value="hanja-asc">한자 오름차순</option><option value="hanja-desc">한자 내림차순</option><option value="hangul-asc">한글 오름차순</option><option value="english-asc">뜻 오름차순</option></select></div></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabFilter">검색</label><input id="vocabFilter" class="input" type="search" placeholder="한자, 한글, 뜻"></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabKnowledgeFilter">단어 상태</label><div class="select is-fullwidth"><select id="vocabKnowledgeFilter"><option value="all">모두</option><option value="known">아는 단어만</option><option value="unknown">모르는 단어만</option></select></div></div>
+					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="vocabSort">정렬</label><div class="select is-fullwidth"><select id="vocabSort"><option value="frequency">빈도순</option><option value="unknown-known-hanja">학습 추천 · 빈도순</option><option value="hanja-asc">한자 오름차순</option><option value="hanja-desc">한자 내림차순</option><option value="hangul-asc">한글 오름차순</option><option value="english-asc">뜻 오름차순</option></select></div></div>
 					<div class="column is-half-tablet is-one-quarter-desktop"><label class="label" for="maxRank">최대 빈도 순위</label><input id="maxRank" class="input" type="number" min="1" step="1" placeholder="제한 없음"></div>
 				</div>
-				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>한자</th><th>한글</th><th>뜻</th><th>포켓몬 순위</th><th>국립국어원 순위</th></tr></thead><tbody id="vocabBody"></tbody></table></div>
+				<div class="table-container"><table class="table is-striped is-hoverable is-fullwidth"><thead><tr><th>상태</th><th>한자</th><th>한글</th><th>뜻</th><th>포켓몬 순위</th><th>국립국어원 순위</th></tr></thead><tbody id="vocabBody"></tbody></table></div>
 			</section>
 		</div>
 

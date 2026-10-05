@@ -114,6 +114,31 @@
 	white-space: nowrap;
 }
 
+.vocab-status {
+	white-space: nowrap;
+}
+
+#vocabBody tr.vocab-known > td {
+	background-color: hsl(141deg 53% 96%);
+}
+
+#vocabBody tr.vocab-target > td {
+	background-color: hsl(44deg 100% 93%);
+}
+
+.tag.is-purple {
+	background-color: hsl(271deg 76% 53%);
+	color: white;
+}
+
+#vocabBody tr.vocab-marked > td {
+	background-color: hsl(271deg 76% 96%);
+}
+
+#vocabBody tr.vocab-unknown > td {
+	color: var(--bulma-text-weak);
+}
+
 .insight-input {
 	font-size: 1.5rem;
 }

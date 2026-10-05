@@ -4,8 +4,9 @@ import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdi
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
 import { hideMessage } from "./ui.js";
 import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=13";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=3";
+import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=4";
 import { showView } from "./views.js?v=1";
+import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
 
 let queryRoutingReady = false;
@@ -61,8 +62,10 @@ document.getElementById("selectNewButton").addEventListener("click", () => selec
 document.getElementById("clearSelectionButton").addEventListener("click", clearSelection);
 document.getElementById("buildVocabButton").addEventListener("click", () => buildVocabulary());
 document.addEventListener("hanja-selection-change", scheduleVocabulary);
+document.addEventListener("hanja-known-words-change", renderVocabulary);
+document.addEventListener("hanja-status-change", renderVocabulary);
 document.getElementById("vocabFilter").addEventListener("input", (event) => { renderVocabulary(); updateQueryURL("vocabulary", event.target.value); });
-for (const id of ["vocabSort", "maxRank"]) document.getElementById(id).addEventListener("input", renderVocabulary);
+for (const id of ["vocabKnowledgeFilter", "vocabSort", "maxRank"]) document.getElementById(id).addEventListener("input", renderVocabulary);
 document.getElementById("saveFileButton").addEventListener("click", saveBrowserFile);
 document.getElementById("openFileButton").addEventListener("click", openBrowserFile);
 document.addEventListener("hanja-selection-change", autoSaveSelection);
@@ -78,6 +81,7 @@ document.addEventListener("hanja-idiom-status-change", renderIdioms);
 document.querySelector("#insightsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("insights"); });
 document.getElementById("insightInput").addEventListener("input", (event) => updateQueryURL("insights", event.target.value));
 initializeCheonjamun();
+initializeKnownWords();
 window.addEventListener("hashchange", scheduleLocationRoute);
 window.addEventListener("popstate", scheduleLocationRoute);
 applyLocationQuery();

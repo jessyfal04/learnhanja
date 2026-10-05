@@ -106,6 +106,24 @@ Connecting to Anki or refreshing character state automatically selects only acti
 
 If LearnHanja is served from another origin, add that origin to AnkiConnect's `webCorsOriginList`.
 
+### Known Korean words from Migaku
+
+- In **연결 및 저장 → 아는 단어 출처**, load a UTF-8 TXT file with one Korean word per line, or enter a local port (default `8766`, AnkiConnect's default port plus one)
+- LearnHanja automatically tries port `8766` at startup; the same button can retry the connection later
+- Generate a TXT file from Migaku's Chrome database:
+
+```bash
+python3 scripts/extract_migaku_known_korean.py --txt-output known_words.txt --format text > /dev/null
+```
+
+- Or start its local bridge, then press **포트에서 불러오기**:
+
+```bash
+python3 scripts/extract_migaku_known_korean.py --serve --port 8766
+```
+
+The bridge reads Migaku's Korean `KNOWN` and marked (`tracked`) words from the latest Chrome IndexedDB blob on each request. Use `--database /path/to/core.db` for an already extracted database and `--allow-origin https://your-site.example` when using a different website origin. The browser keeps the loaded words in memory. The vocabulary table colors known words green, marked words purple, and highlights unknown words whose Hanja are all actively learned in Anki as yellow study recommendations. Filter the table to all, known, or unknown words; marked words and study recommendations count as unknown. The **학습 추천 · 빈도순** sort places yellow targets first, then marked words, each by the best available frequency rank. Reload the source to reflect Migaku changes.
+
 ### 2. Select Hanja
 
 - Browse characters grouped into 14 어문회 levels

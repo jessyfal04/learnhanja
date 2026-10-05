@@ -5,7 +5,7 @@ import {state} from "./state.js";
 const nodes = new Map();
 globalThis.document = {
 	getElementById(id) {
-		if (!nodes.has(id)) nodes.set(id, {value: "", classList: {toggle() {}}, replaceChildren(...children) { this.children = children; }, appendChild(child) { this.children.push(child); }});
+		if (!nodes.has(id)) nodes.set(id, {value: id === "vocabKnowledgeFilter" ? "all" : "", classList: {toggle() {}}, replaceChildren(...children) { this.children = children; }, appendChild(child) { this.children.push(child); }});
 		return nodes.get(id);
 	},
 	createElement(tagName) {
