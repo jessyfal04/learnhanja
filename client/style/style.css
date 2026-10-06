@@ -1,3 +1,22 @@
+.hero.is-primary {
+	background-image: linear-gradient(120deg, var(--bulma-primary), color-mix(in srgb, var(--bulma-primary) 72%, var(--bulma-link)));
+}
+
+.box,
+.table-container {
+	border: 1px solid var(--bulma-border-weak);
+}
+
+.table-container {
+	background: var(--bulma-scheme-main);
+	border-radius: var(--bulma-radius);
+}
+
+.table-container .table {
+	background: transparent;
+	margin-bottom: 0;
+}
+
 .hanja-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
@@ -262,29 +281,62 @@
 	font-size: 2rem;
 }
 
+.tag.is-purple {
+	background-color: color-mix(in srgb, hsl(271deg 76% 58%) 82%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
+}
+
 #vocabBody tr.vocab-known > td,
-#insightVocabBody tr.vocab-known > td {
-	background-color: hsl(141deg 53% 96%);
+#insightVocabBody tr.vocab-known > td,
+#idiomsBody tr.idiom-status-known-active > td {
+	background-color: color-mix(in srgb, var(--bulma-success-soft) 68%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
+}
+
+#vocabBody tr.vocab-known > td:first-child,
+#insightVocabBody tr.vocab-known > td:first-child,
+#idiomsBody tr.idiom-status-known-active > td:first-child {
+	box-shadow: inset 0.22rem 0 var(--bulma-success-on-scheme);
 }
 
 #vocabBody tr.vocab-target > td,
-#insightVocabBody tr.vocab-target > td {
-	background-color: hsl(44deg 100% 93%);
+#insightVocabBody tr.vocab-target > td,
+#idiomsBody tr.idiom-status-known-suspended > td {
+	background-color: color-mix(in srgb, var(--bulma-warning-soft) 72%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
 }
 
-.tag.is-purple {
-	background-color: hsl(271deg 76% 53%);
-	color: white;
+#vocabBody tr.vocab-target > td:first-child,
+#insightVocabBody tr.vocab-target > td:first-child,
+#idiomsBody tr.idiom-status-known-suspended > td:first-child {
+	box-shadow: inset 0.22rem 0 var(--bulma-warning-on-scheme);
 }
 
 #vocabBody tr.vocab-marked > td,
 #insightVocabBody tr.vocab-marked > td {
-	background-color: hsl(271deg 76% 96%);
+	background-color: color-mix(in srgb, hsl(271deg 76% var(--bulma-soft-l)) 68%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
+}
+
+#vocabBody tr.vocab-marked > td:first-child,
+#insightVocabBody tr.vocab-marked > td:first-child {
+	box-shadow: inset 0.22rem 0 color-mix(in srgb, hsl(271deg 76% 58%) 72%, var(--bulma-text));
 }
 
 #vocabBody tr.vocab-unknown > td,
-#insightVocabBody tr.vocab-unknown > td {
-	color: var(--bulma-text-weak);
+#vocabBody tr.vocab-unverified > td,
+#insightVocabBody tr.vocab-unknown > td,
+#insightVocabBody tr.vocab-unverified > td,
+#idiomsBody tr.idiom-status-unknown > td,
+#idiomsBody tr.idiom-status-unverified > td {
+	background-color: color-mix(in srgb, var(--bulma-scheme-main-bis) 74%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
+}
+
+#vocabBody tr:hover > td,
+#insightVocabBody tr:hover > td,
+#idiomsBody tr:hover > td {
+	filter: brightness(var(--learn-row-hover-brightness, 0.975));
 }
 
 .insight-input {
@@ -445,43 +497,41 @@
 
 .idiom-status-character {
 	color: var(--bulma-text-weak);
+	font-weight: 650;
 }
 
 .idiom-status-character.is-success {
-	color: var(--bulma-success);
+	color: var(--bulma-success-on-scheme);
 }
 
 .idiom-status-character.is-info {
-	color: var(--bulma-info);
+	color: var(--bulma-info-on-scheme);
 }
 
 .idiom-status-character.is-warning {
-	color: var(--bulma-warning-dark);
+	color: var(--bulma-warning-on-scheme);
 }
 
 .idiom-status-character.is-danger {
-	color: var(--bulma-danger);
-}
-
-#idiomsBody tr.idiom-status-known-active > td {
-	background-color: hsla(var(--bulma-success-h), var(--bulma-success-s), var(--bulma-success-l), 0.14);
+	color: var(--bulma-danger-on-scheme);
 }
 
 #idiomsBody tr.idiom-status-new-active > td {
-	background-color: hsla(var(--bulma-info-h), var(--bulma-info-s), var(--bulma-info-l), 0.14);
+	background-color: color-mix(in srgb, var(--bulma-info-soft) 68%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
 }
 
-#idiomsBody tr.idiom-status-known-suspended > td {
-	background-color: hsla(var(--bulma-warning-h), var(--bulma-warning-s), var(--bulma-warning-l), 0.22);
+#idiomsBody tr.idiom-status-new-active > td:first-child {
+	box-shadow: inset 0.22rem 0 var(--bulma-info-on-scheme);
 }
 
 #idiomsBody tr.idiom-status-new-suspended > td {
-	background-color: hsla(var(--bulma-danger-h), var(--bulma-danger-s), var(--bulma-danger-l), 0.14);
+	background-color: color-mix(in srgb, var(--bulma-danger-soft) 68%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
 }
 
-#idiomsBody tr.idiom-status-unknown > td,
-#idiomsBody tr.idiom-status-unverified > td {
-	background-color: hsla(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l), 0.08);
+#idiomsBody tr.idiom-status-new-suspended > td:first-child {
+	box-shadow: inset 0.22rem 0 var(--bulma-danger-on-scheme);
 }
 
 .idiom-info-button {
@@ -497,6 +547,106 @@
 
 .idiom-source-popover .tags {
 	flex-wrap: wrap;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--learn-row-hover-brightness: 1.12;
+	}
+
+	.hero.is-primary {
+		background-image:
+			radial-gradient(circle at 82% 20%, color-mix(in srgb, var(--bulma-link) 24%, transparent), transparent 38%),
+			linear-gradient(125deg, color-mix(in srgb, var(--bulma-primary) 30%, var(--bulma-scheme-main)), var(--bulma-scheme-main-bis));
+		border-bottom: 1px solid color-mix(in srgb, var(--bulma-primary) 42%, var(--bulma-border));
+	}
+
+	.hero.is-primary .title,
+	.hero.is-primary .subtitle {
+		color: var(--bulma-text);
+	}
+
+	.box {
+		box-shadow: 0 0.75rem 2rem hsla(var(--bulma-scheme-h), 45%, 4%, 0.22);
+	}
+
+	body .notification.is-light {
+		background: var(--bulma-scheme-main-bis);
+		border: 1px solid var(--bulma-border-weak);
+		color: var(--bulma-text);
+	}
+
+	body .notification.is-light a {
+		color: var(--bulma-link-text);
+	}
+
+	body .notification.is-success {
+		background: color-mix(in srgb, var(--bulma-success-soft) 72%, var(--bulma-scheme-main));
+		border: 1px solid color-mix(in srgb, var(--bulma-success-on-scheme) 45%, var(--bulma-border));
+		color: var(--bulma-success-on-scheme);
+	}
+
+	body .notification.is-info {
+		background: color-mix(in srgb, var(--bulma-info-soft) 72%, var(--bulma-scheme-main));
+		border: 1px solid color-mix(in srgb, var(--bulma-info-on-scheme) 45%, var(--bulma-border));
+		color: var(--bulma-info-on-scheme);
+	}
+
+	body .notification.is-warning {
+		background: color-mix(in srgb, var(--bulma-warning-soft) 72%, var(--bulma-scheme-main));
+		border: 1px solid color-mix(in srgb, var(--bulma-warning-on-scheme) 45%, var(--bulma-border));
+		color: var(--bulma-warning-on-scheme);
+	}
+
+	body .notification.is-danger {
+		background: color-mix(in srgb, var(--bulma-danger-soft) 72%, var(--bulma-scheme-main));
+		border: 1px solid color-mix(in srgb, var(--bulma-danger-on-scheme) 45%, var(--bulma-border));
+		color: var(--bulma-danger-on-scheme);
+	}
+
+	body .notification.is-link {
+		background: color-mix(in srgb, var(--bulma-link-soft) 72%, var(--bulma-scheme-main));
+		border: 1px solid color-mix(in srgb, var(--bulma-link-text) 45%, var(--bulma-border));
+		color: var(--bulma-link-text);
+	}
+
+	body .tag.is-success {
+		background-color: var(--bulma-success-soft);
+		color: var(--bulma-success-on-scheme);
+	}
+
+	body .tag.is-info {
+		background-color: var(--bulma-info-soft);
+		color: var(--bulma-info-on-scheme);
+	}
+
+	body .tag.is-warning {
+		background-color: var(--bulma-warning-soft);
+		color: var(--bulma-warning-on-scheme);
+	}
+
+	body .tag.is-danger {
+		background-color: var(--bulma-danger-soft);
+		color: var(--bulma-danger-on-scheme);
+	}
+
+	body .tag.is-light,
+	body .button.is-light {
+		background-color: var(--bulma-scheme-main-ter);
+		border-color: var(--bulma-border);
+		color: var(--bulma-text);
+	}
+
+	body .button.is-light:hover,
+	body .button.is-light:focus {
+		background-color: color-mix(in srgb, var(--bulma-link) 12%, var(--bulma-scheme-main-ter));
+		border-color: var(--bulma-link);
+	}
+
+	.selection-bar {
+		background: color-mix(in srgb, var(--bulma-scheme-main) 88%, transparent);
+		backdrop-filter: blur(12px);
+	}
 }
 
 @media screen and (max-width: 768px) {

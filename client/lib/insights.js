@@ -7,6 +7,7 @@ import { urlWithQuery } from "./url-query.js?v=1";
 import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=2";
 import { vocabularyKnowledge } from "./vocab-filter.js";
 import { fillStatusCharacters } from "./status-characters.js?v=1";
+import { frequencyCell } from "./frequency-display.js?v=1";
 
 const $ = (id) => document.getElementById(id);
 let data;
@@ -296,7 +297,7 @@ function renderResults() {
 			english.translate = true;
 		}
 		hanja.append(fillStatusCharacters(insightLink(entry.hanja), entry.hanja, state.ankiStatus));
-		row.append(hanja, element("td", entry.hangul), element("td", entry.definitions?.join(" · ") || "뜻 자료 없음"), english);
+		row.append(hanja, element("td", entry.hangul), element("td", entry.definitions?.join(" · ") || "뜻 자료 없음"), english, frequencyCell(entry));
 		return row;
 	}));
 	$("insightMore").classList.toggle("is-hidden", words.length <= visibleLimit);

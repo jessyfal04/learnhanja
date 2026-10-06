@@ -1,5 +1,5 @@
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js?v=1";
-import { insightLink } from "./insights.js?v=19";
+import { insightLink } from "./insights.js?v=20";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { studyStatusKey } from "./study-status.js?v=2";

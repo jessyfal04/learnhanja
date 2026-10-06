@@ -1,6 +1,6 @@
 import { renderCatalog } from "./anki.js?v=10";
 import { filterAndSortSentences, normalizedSet, sentenceProgress, sentenceTokens, statusForToken, statusIndex } from "./cheonjamun-data.js?v=1";
-import { openInsights } from "./insights.js?v=19";
+import { openInsights } from "./insights.js?v=20";
 import { referenceFor } from "./insight-data.js?v=6";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
