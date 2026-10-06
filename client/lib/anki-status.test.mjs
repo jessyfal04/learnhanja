@@ -15,7 +15,7 @@ globalThis.document = {
 		return {content: {textContent: ""}, dataset: {}, classList: {toggle() {}}, append() {}, appendChild() {}, addEventListener() {}, setAttribute() {}, set innerHTML(value) { this.content.textContent = value; }};
 	},
 };
-const { refreshStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=8");
+const { refreshStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=10");
 document.getElementById("deckSelect").value = "한자";
 document.getElementById("noteTypeSelect").value = "Hanja";
 document.getElementById("characterFieldSelect").value = "Char";

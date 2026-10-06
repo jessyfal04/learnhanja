@@ -178,7 +178,7 @@ Shared idioms appear once but retain every source label. The assigned level is t
 
 ### 6. Explore characters
 
-In **한자 탐구**, paste a character, word, or mixed sentence.
+In **한자 탐구**, paste a Hanja character, word, or mixed sentence, or enter an exact Hangul word. Hangul searches resolve exact dictionary spellings, offer a choice for homophones, and can combine catalog components such as `인공` + `지능` → `人工知能`.
 
 - Analyze up to 64 distinct Hanja at once
 - See Korean 훈음, Unihan `kDefinition`, level, radical, and stroke count

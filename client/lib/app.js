@@ -1,10 +1,10 @@
-import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=12";
-import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=3";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=8";
-import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=2";
+import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=19";
+import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=6";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=10";
+import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=4";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=14";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=5";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=16";
+import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=7";
 import { showView } from "./views.js?v=2";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";

@@ -232,14 +232,26 @@ function renderGroup(group) {
 	grid.className = "hanja-grid";
 	for (const value of group.characters) {
 		const info = state.ankiStatus?.characters?.[value] || {status: "unknown"};
-		const button = document.createElement("button");
-		button.type = "button";
+		const button = document.createElement("a");
+		button.href = `/?q=${encodeURIComponent(value)}#insights`;
+		button.setAttribute("role", "button");
 		button.className = `button hanja-button ${statusClass(info)}`;
 		button.textContent = value;
-		button.title = `${group.level} · ${statusLabel(info)}`;
+		button.title = `${group.level} · ${statusLabel(info)} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
 		button.dataset.character = value;
 		button.classList.toggle("is-suspended", Boolean(info.suspended));
-		button.addEventListener("click", () => { state.selected = toggledSelection(state.selected, value); updateCharacterButtons(); updateSelectionUI(); });
+		button.addEventListener("click", (event) => {
+			if (event.ctrlKey) {
+				event.preventDefault();
+				window.location.assign(button.href);
+				return;
+			}
+			if (event.metaKey || event.shiftKey || event.altKey) return;
+			event.preventDefault();
+			state.selected = toggledSelection(state.selected, value);
+			updateCharacterButtons();
+			updateSelectionUI();
+		});
 		grid.appendChild(button);
 	}
 	box.appendChild(grid);

@@ -2,9 +2,10 @@ import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary, vocabularyKnowledge } from "./vocab-filter.js";
 import { showView } from "./views.js?v=1";
-import { insightLink } from "./insights.js?v=12";
+import { insightLink } from "./insights.js?v=19";
 import { loadVocabularyCatalog, searchVocabulary } from "./vocabulary-data.js?v=2";
 import { formatFrequencyRank, frequencyMean, frequencyMedian } from "./frequency.js";
+import { fillStatusCharacters } from "./status-characters.js?v=1";
 
 let requestID = 0;
 let scheduledBuild;
@@ -72,7 +73,7 @@ function renderRow(entry, knowledge) {
 	}[status];
 	row.className = presentation[2];
 	const hanja = cell("", "vocab-hanja");
-	hanja.appendChild(insightLink(entry.hanja));
+	hanja.appendChild(fillStatusCharacters(insightLink(entry.hanja), entry.hanja, state.ankiStatus));
 	const badge = document.createElement("span");
 	badge.className = `tag ${presentation[1]}`;
 	badge.textContent = presentation[0];

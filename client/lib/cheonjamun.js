@@ -1,7 +1,7 @@
-import { renderCatalog } from "./anki.js?v=8";
+import { renderCatalog } from "./anki.js?v=10";
 import { filterAndSortSentences, normalizedSet, sentenceProgress, sentenceTokens, statusForToken, statusIndex } from "./cheonjamun-data.js?v=1";
-import { openInsights } from "./insights.js?v=12";
-import { referenceFor } from "./insight-data.js?v=4";
+import { openInsights } from "./insights.js?v=19";
+import { referenceFor } from "./insight-data.js?v=6";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { studyStatusPresentation } from "./study-status.js?v=2";

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { filterRelated, levelFor, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js";
+import { decomposeHanja, filterRelated, hangulCandidates, levelFor, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js";
 
 const data = JSON.parse(readFileSync(new URL("../data/insights.json", import.meta.url)));
 const catalog = JSON.parse(readFileSync(new URL("../data/levels.json", import.meta.url)));
@@ -21,6 +21,44 @@ test("input preserves first occurrence order, counts repeats, normalizes compati
 	assert.deepEqual(parsed.characters[0], {character: "金", originals: ["金", "金"], count: 2});
 	assert.deepEqual(parsed.ignored, ["!", "한", "국"]);
 	assert.equal(parseText("안녕!? ").characters.length, 0);
+});
+
+test("Hangul lookup returns distinct exact vocabulary and idiom spellings", () => {
+	const vocabulary = [
+		{hanja: "價格", hangul: "가격", definitions: ["값"]},
+		{hanja: "加擊", hangul: "가격", definitions: ["때림"]},
+		{hanja: "家族", hangul: "가족"},
+		{hanja: "人工", hangul: "인공", meanings: ["artificial"]},
+		{hanja: "知能", hangul: "지능", meanings: ["intelligence"]},
+	];
+	const idioms = [{hanja: "鶴首苦待", korean: "학수고대"}, {hanja: "價格", korean: "가격"}];
+	assert.deepEqual(hangulCandidates(vocabulary, idioms, "가격").map((entry) => entry.hanja), ["價格", "加擊"]);
+	assert.deepEqual(hangulCandidates(vocabulary, idioms, "학수고대").map((entry) => entry.hanja), ["鶴首苦待"]);
+	const compound = hangulCandidates(vocabulary, idioms, "인공지능");
+	assert.deepEqual(compound.map((entry) => entry.hanja), ["人工知能"]);
+	assert.deepEqual(compound[0].components.map(({hangul, hanja}) => ({hangul, hanja})), [{hangul: "인공", hanja: "人工"}, {hangul: "지능", hanja: "知能"}]);
+	assert.deepEqual(compound[0].components.map(({meaning}) => meaning), ["artificial", "intelligence"]);
+	assert.deepEqual(hangulCandidates(vocabulary, idioms, "가격 정보"), []);
+});
+
+test("decomposes exact words by characters and larger compounds by known words", () => {
+	const vocabulary = [
+		{hanja: "工夫", hangul: "공부", meanings: ["study"]},
+		{hanja: "人工", hangul: "인공", meanings: ["artificial"], definitions: ["사람이 만든 것"]},
+		{hanja: "知能", hangul: "지능", meanings: ["intelligence"], definitions: ["이해하는 능력"]},
+	];
+	const references = {characters: {
+		工: {sound: "공", hun: "장인 공", definition: "labor; work"},
+		夫: {sound: "부", hun: "지아비 부", definition: "man; husband"},
+	}};
+	assert.deepEqual(decomposeHanja(vocabulary, vocabulary[0], references).components, [
+		{hangul: "공", hanja: "工", definition: "장인 공", meaning: "labor; work"},
+		{hangul: "부", hanja: "夫", definition: "지아비 부", meaning: "man; husband"},
+	]);
+	assert.deepEqual(decomposeHanja(vocabulary, {hanja: "人工知能"}, references).components.map(({hangul, hanja}) => ({hangul, hanja})), [
+		{hangul: "인공", hanja: "人工"},
+		{hangul: "지능", hanja: "知能"},
+	]);
 });
 
 test("relationship filters distinguish substring, set membership, exact text, and related forms", () => {

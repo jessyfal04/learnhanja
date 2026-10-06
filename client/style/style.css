@@ -262,11 +262,13 @@
 	font-size: 2rem;
 }
 
-#vocabBody tr.vocab-known > td {
+#vocabBody tr.vocab-known > td,
+#insightVocabBody tr.vocab-known > td {
 	background-color: hsl(141deg 53% 96%);
 }
 
-#vocabBody tr.vocab-target > td {
+#vocabBody tr.vocab-target > td,
+#insightVocabBody tr.vocab-target > td {
 	background-color: hsl(44deg 100% 93%);
 }
 
@@ -275,11 +277,13 @@
 	color: white;
 }
 
-#vocabBody tr.vocab-marked > td {
+#vocabBody tr.vocab-marked > td,
+#insightVocabBody tr.vocab-marked > td {
 	background-color: hsl(271deg 76% 96%);
 }
 
-#vocabBody tr.vocab-unknown > td {
+#vocabBody tr.vocab-unknown > td,
+#insightVocabBody tr.vocab-unknown > td {
 	color: var(--bulma-text-weak);
 }
 
@@ -306,6 +310,86 @@
 	gap: 1rem;
 	flex-wrap: wrap;
 	margin-bottom: 1rem;
+}
+
+.insight-candidate {
+	align-items: flex-start;
+	flex-direction: column;
+	height: auto;
+	padding-block: 0.55rem;
+	white-space: normal;
+}
+
+.insight-candidate .vocab-hanja {
+	font-size: 1.15rem;
+}
+
+.insight-candidate small {
+	max-width: 22rem;
+	text-align: left;
+}
+
+.insight-composition {
+	background: var(--bulma-background);
+	border: 1px solid var(--bulma-border);
+	border-radius: var(--bulma-radius);
+	padding: 1rem;
+}
+
+.insight-composition-expression {
+	align-items: stretch;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+}
+
+.insight-composition-part,
+.insight-composition-result {
+	background: var(--bulma-scheme-main);
+	border-radius: var(--bulma-radius-small);
+	padding: 0.7rem 0.9rem;
+}
+
+.insight-composition-part {
+	flex: 1 1 13rem;
+}
+
+.insight-composition-result {
+	align-items: center;
+	background: var(--bulma-primary-soft);
+	display: flex;
+	flex: 1 1 12rem;
+	gap: 0.65rem;
+	justify-content: center;
+}
+
+.insight-composition-name {
+	align-items: baseline;
+	display: flex;
+	gap: 0.6rem;
+}
+
+.insight-composition-character {
+	color: var(--bulma-link-text);
+	cursor: pointer;
+	font-size: 1.1rem;
+	font-weight: 700;
+	padding: 0.15rem;
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+	text-underline-offset: 0.2em;
+	user-select: text;
+}
+
+.insight-composition-name .vocab-hanja,
+.insight-composition-result .vocab-hanja {
+	font-size: 1.25rem;
+}
+
+.insight-composition-operator {
+	align-self: center;
+	font-size: 1.25rem;
+	font-weight: 700;
 }
 
 .insight-character {

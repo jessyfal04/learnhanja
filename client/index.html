@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=13">
-	<script type="module" src="/lib/app.js?v=24"></script>
+	<link rel="stylesheet" href="/style/style.css?v=15">
+	<script type="module" src="/lib/app.js?v=30"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -115,9 +115,10 @@
 				<h2 id="insightTitle" class="title is-4">한자 탐구</h2>
 				<form id="insightForm">
 					<label class="label" for="insightInput">한자 또는 단어</label>
-					<div class="field has-addons"><div class="control is-expanded"><input id="insightInput" class="input is-medium" type="text" maxlength="4096" placeholder="한자 입력"></div><div class="control"><button id="insightSubmit" class="button is-primary is-medium" type="submit">보기</button></div></div>
+					<div class="field has-addons"><div class="control is-expanded"><input id="insightInput" class="input is-medium" type="text" maxlength="4096" placeholder="한자 또는 한글 단어 입력"></div><div class="control"><button id="insightSubmit" class="button is-primary is-medium" type="submit">보기</button></div></div>
 				</form>
 				<p id="insightFeedback" class="help has-text-danger" role="status"></p>
+				<div id="insightCandidates" class="mt-3 mb-0 is-hidden" aria-label="한자 표기 선택"></div>
 			</section>
 			<div id="insightResults" class="is-hidden">
 				<div class="insight-overview"><h3 id="insightReading" class="title is-4 mb-0"></h3><button id="insightAddAll" class="button is-small is-link is-light" type="button">모두 선택에 추가</button></div>

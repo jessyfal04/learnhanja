@@ -1,8 +1,9 @@
 import { buildLevelIndex, filterAndSortIdioms, idiomCharacters, idiomLevel, idiomStatusInfo } from "./idiom-filter.js?v=1";
-import { insightLink } from "./insights.js?v=12";
+import { insightLink } from "./insights.js?v=19";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
-import { studyStatusKey, studyStatusPresentation } from "./study-status.js?v=2";
+import { studyStatusKey } from "./study-status.js?v=2";
+import { fillStatusCharacters } from "./status-characters.js?v=1";
 import { koreanError, showMessage } from "./ui.js";
 
 let levelIndex = null;
@@ -57,22 +58,7 @@ function renderRow(entry, sources) {
 
 function characterStatusLink(entry) {
 	const link = insightLink(entry.hanja);
-	link.replaceChildren();
-	for (const character of Array.from(entry.hanja || "")) {
-		if (!/[\u3400-\u9fff\uf900-\ufaff]/u.test(character)) {
-			link.append(character);
-			continue;
-		}
-		const info = state.ankiStatus?.characters?.[character.normalize("NFKC")];
-		const presentation = studyStatusPresentation(info, {unverified: !state.ankiStatus, absent: Boolean(state.ankiStatus && !info)});
-		const characterElement = document.createElement("span");
-		characterElement.className = `idiom-status-character ${presentation.classes}`;
-		characterElement.textContent = character;
-		characterElement.title = presentation.label;
-		characterElement.setAttribute("aria-label", `${character} · ${presentation.label}`);
-		link.append(characterElement);
-	}
-	return link;
+	return fillStatusCharacters(link, entry.hanja, state.ankiStatus);
 }
 
 function summarizeStatuses(entries) {
