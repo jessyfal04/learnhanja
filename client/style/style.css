@@ -140,6 +140,128 @@
 	margin-bottom: 0 !important;
 }
 
+.game-menu {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.game-menu-card {
+	appearance: none;
+	background: var(--bulma-scheme-main);
+	border: 1px solid var(--bulma-border);
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	text-align: left;
+	width: 100%;
+}
+
+.game-menu-card:hover,
+.game-menu-card:focus {
+	border-color: var(--bulma-link);
+	box-shadow: 0 0 0 1px var(--bulma-link);
+}
+
+.game-menu-card strong {
+	color: var(--bulma-link-text);
+	font-size: 1.25rem;
+}
+
+.game-menu-card small {
+	color: var(--bulma-text-weak);
+	margin-top: 0.25rem;
+}
+
+.game-settings-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.game-settings-grid .buttons {
+	flex-wrap: nowrap;
+}
+
+.game-question {
+	margin-inline: auto;
+	max-width: 48rem;
+	padding-block: 1rem;
+}
+
+.game-target,
+.game-result-hanja {
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: clamp(2rem, 7vw, 3.5rem);
+	font-weight: 700;
+}
+
+.game-definition {
+	font-size: 1.15rem;
+	margin: 0.75rem auto 1.5rem;
+	max-width: 38rem;
+}
+
+.game-choices {
+	gap: 0.75rem;
+}
+
+.game-hanja-choice {
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: 1.5rem;
+	min-width: 7rem;
+}
+
+.game-match-board.columns {
+	display: grid;
+	gap: 0.75rem;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	margin-bottom: 1.5rem;
+	margin-inline: auto;
+	max-width: 50rem;
+}
+
+.game-match-board.columns > .column {
+	min-width: 0;
+	padding: 0;
+}
+
+.game-match-heading {
+	color: var(--bulma-text-weak);
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	margin-bottom: 0.4rem;
+	text-align: center;
+}
+
+.game-match-column {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.game-match-card {
+	font-size: 1.4rem;
+	height: auto;
+	min-height: 3.25rem;
+	white-space: normal;
+}
+
+.game-match-card[disabled] {
+	opacity: 1;
+}
+
+#matchDiscovery {
+	margin-inline: auto;
+	max-width: 36rem;
+	text-align: center;
+}
+
+#matchDiscovery .game-result-hanja {
+	font-size: 2rem;
+}
+
 #vocabBody tr.vocab-known > td {
 	background-color: hsl(141deg 53% 96%);
 }
@@ -316,5 +438,13 @@
 
 	.cheonjamun-phrase, .cheonjamun-reading-phrase {
 		flex-basis: 100%;
+	}
+
+	.game-settings-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.game-settings-grid .buttons {
+		flex-wrap: wrap;
 	}
 }

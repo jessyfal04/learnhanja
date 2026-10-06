@@ -5,9 +5,10 @@ import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile
 import { hideMessage } from "./ui.js";
 import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=14";
 import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=5";
-import { showView } from "./views.js?v=1";
+import { showView } from "./views.js?v=2";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
+import { initializeGames } from "./games.js?v=1";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
@@ -74,6 +75,7 @@ document.querySelector("#charactersTab a").addEventListener("click", (event) => 
 document.querySelector("#cheonjamunTab a").addEventListener("click", (event) => { event.preventDefault(); showView("cheonjamun"); });
 document.querySelector("#vocabularyTab a").addEventListener("click", (event) => { event.preventDefault(); showView("vocabulary"); });
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
+document.querySelector("#gamesTab a").addEventListener("click", (event) => { event.preventDefault(); showView("games"); });
 document.getElementById("idiomFilter").addEventListener("input", (event) => { renderIdioms(); updateQueryURL("idioms", event.target.value); });
 for (const id of ["idiomSourceFilter", "idiomLevelFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
 document.addEventListener("hanja-idiom-status-change", renderIdioms);
@@ -82,6 +84,7 @@ document.querySelector("#insightsTab a").addEventListener("click", (event) => { 
 document.getElementById("insightInput").addEventListener("input", (event) => updateQueryURL("insights", event.target.value));
 initializeCheonjamun();
 initializeKnownWords();
+initializeGames();
 window.addEventListener("hashchange", scheduleLocationRoute);
 window.addEventListener("popstate", scheduleLocationRoute);
 applyLocationQuery();

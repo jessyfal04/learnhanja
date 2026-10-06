@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=12">
-	<script type="module" src="/lib/app.js?v=23"></script>
+	<link rel="stylesheet" href="/style/style.css?v=13">
+	<script type="module" src="/lib/app.js?v=24"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -23,6 +23,7 @@
 			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
 			<li id="cheonjamunTab"><a href="#cheonjamun">천자문</a></li>
 			<li id="insightsTab"><a href="#insights">한자 탐구</a></li>
+			<li id="gamesTab"><a href="#games">게임</a></li>
 		</ul></div>
 
 		<div id="connectionView">
@@ -134,6 +135,62 @@
 			<p class="help">훈음·급수: 어문회 자료 · 어휘: 한국어기초사전 · 추가 독음·뜻: <a href="https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip" target="_blank" rel="noreferrer">유니코드</a> (<a href="/data/unicode-license.txt" target="_blank" rel="noreferrer">이용 조건</a>)</p>
 		</div>
 
+		<div id="gamesView" class="is-hidden">
+			<section id="gamesIntro" class="box" aria-labelledby="gamesTitle">
+				<h2 id="gamesTitle" class="title is-4 mb-1">게임</h2>
+				<p class="subtitle is-6 mb-2">앙키에서 배운 한자와 Migaku 어휘 상태를 그대로 사용해 연습합니다</p>
+				<p id="gamesPoolStatus" class="help mb-4" role="status">게임 자료를 준비하는 중…</p>
+				<div id="gamesMenu" class="game-menu">
+					<button id="openMixedGame" class="box game-menu-card" type="button"><strong>혼용문</strong><span>한 문제씩 문맥에 맞는 한자를 고르기</span><small>1문제 · 4지선다</small></button>
+					<button id="openMatchGame" class="box game-menu-card" type="button"><strong>어휘 맞추기</strong><span>여러 한글과 한자 표기를 서로 연결하기</span><small>4쌍 또는 6쌍 연결</small></button>
+				</div>
+			</section>
+
+			<section id="mixedGame" class="box is-hidden" aria-labelledby="mixedGameTitle">
+				<div class="level mb-4"><div class="level-left"><div><h3 id="mixedGameTitle" class="title is-4 mb-1">혼용문</h3><p class="subtitle is-6 mb-0">뜻을 보고 정확한 한자 표기를 고르세요</p></div></div><div class="level-right"><button class="button is-light game-back" type="button">게임 선택</button></div></div>
+				<div id="mixedSetup">
+					<div class="game-settings-grid">
+						<div><label class="label" for="mixedSourceMode">출제 자료</label><div class="select is-fullwidth"><select id="mixedSourceMode"><option value="vocabulary">어휘</option><option value="idioms">사자성어</option><option value="all">둘 다 섞기</option></select></div></div>
+						<div><label class="label" for="mixedWordMode">단어 상태</label><div class="select is-fullwidth"><select id="mixedWordMode"><option value="known">아는 단어</option><option value="unknown">모르는 단어</option><option value="all">둘 다 섞기</option></select></div></div>
+						<div><label class="label" for="mixedHanjaMode">한자 상태</label><div class="select is-fullwidth"><select id="mixedHanjaMode"><option value="known">아는 한자만</option><option value="all">모든 한자</option></select></div></div>
+						<div><label class="label">문제 수</label><div class="buttons mb-0"><button class="button is-link mixed-start" data-count="10" type="button">10문제</button><button class="button is-link is-light mixed-start" data-count="20" type="button">20문제</button><button class="button is-light mixed-start" data-count="continue" type="button">계속</button></div></div>
+					</div>
+					<p class="help mt-3">출제 자료, 단어 상태, 한자 상태를 독립적으로 조합합니다</p>
+				</div>
+				<div id="mixedPlay" class="is-hidden">
+					<div class="level is-mobile mb-4"><div class="level-left"><div><p id="mixedProgress" class="has-text-weight-semibold"></p><p id="mixedModeLabel" class="help"></p></div></div><div class="level-right"><div class="tags"><span id="mixedCorrect" class="tag is-success is-light"></span><span id="mixedStreak" class="tag is-info is-light"></span></div></div></div>
+					<div class="game-question has-text-centered">
+						<p id="mixedTarget" class="game-target korean-word"></p>
+						<p id="mixedDefinition" class="game-definition"></p>
+						<div id="mixedChoices" class="buttons is-centered game-choices"></div>
+						<div id="mixedFeedback" class="notification is-light is-hidden" role="status"></div>
+						<button id="mixedNext" class="button is-primary is-hidden" type="button">다음</button>
+					</div>
+				</div>
+				<div id="mixedSummary" class="is-hidden"></div>
+			</section>
+
+			<section id="matchGame" class="box is-hidden" aria-labelledby="matchGameTitle">
+				<div class="level mb-4"><div class="level-left"><div><h3 id="matchGameTitle" class="title is-4 mb-1">어휘 맞추기</h3><p class="subtitle is-6 mb-0">한글과 한자 표기를 연결하세요</p></div></div><div class="level-right"><button class="button is-light game-back" type="button">게임 선택</button></div></div>
+				<div id="matchSetup">
+					<div class="game-settings-grid">
+						<div><label class="label" for="matchSourceMode">출제 자료</label><div class="select is-fullwidth"><select id="matchSourceMode"><option value="vocabulary">어휘</option><option value="idioms">사자성어</option><option value="all">둘 다 섞기</option></select></div></div>
+						<div><label class="label" for="matchWordMode">단어 상태</label><div class="select is-fullwidth"><select id="matchWordMode"><option value="known">아는 단어</option><option value="unknown">모르는 단어</option><option value="all">둘 다 섞기</option></select></div></div>
+						<div><label class="label" for="matchHanjaMode">한자 상태</label><div class="select is-fullwidth"><select id="matchHanjaMode"><option value="known">아는 한자만</option><option value="all">모든 한자</option></select></div></div>
+						<div><label class="label" for="matchSize">한 판</label><div class="select is-fullwidth"><select id="matchSize"><option value="4">4쌍</option><option value="6">6쌍</option></select></div></div>
+					</div>
+					<p class="help mt-3 mb-4">출제 자료, 단어 상태, 한자 상태를 독립적으로 조합합니다</p>
+					<button id="matchStart" class="button is-link" type="button">시작</button>
+				</div>
+				<div id="matchPlay" class="is-hidden">
+					<div class="level is-mobile mb-3"><div class="level-left"><div><p id="matchProgress" class="has-text-weight-semibold"></p><p id="matchModeLabel" class="help"></p></div></div><div class="level-right"><button id="matchNewBoard" class="button is-small is-light" type="button">새 판</button></div></div>
+					<p id="matchUnknownNotice" class="notification is-warning is-light py-2 is-hidden">새로운 어휘입니다. 맞춘 뒤 뜻을 확인하세요</p>
+					<div class="columns game-match-board"><div class="column"><p class="game-match-heading">한글</p><div id="matchHangul" class="game-match-column"></div></div><div class="column"><p class="game-match-heading">한자</p><div id="matchHanja" class="game-match-column"></div></div></div>
+					<div id="matchDiscovery" class="notification is-link is-light is-hidden" role="status"></div>
+				</div>
+			</section>
+		</div>
+
 		<div id="idiomsView" class="is-hidden">
 			<section class="box" aria-labelledby="idiomsTitle">
 				<div class="level mb-4"><div class="level-left"><div><h2 id="idiomsTitle" class="title is-4 mb-1">사자성어</h2><p id="idiomsSummary" class="subtitle is-6 mb-0">사자성어 목록을 불러오는 중…</p></div></div><div class="level-right"><a id="idiomsSource" class="button is-light is-hidden" target="_blank" rel="noreferrer">공식 출처</a></div></div>
@@ -156,6 +213,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v21 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v22 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

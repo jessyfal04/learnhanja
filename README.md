@@ -8,6 +8,7 @@ LearnHanja is a self-hosted web app for studying Korean Hanja.
 - Read the 천자문 as an Anki-aware, ordered learning path
 - Browse and filter 447 unique 사자성어
 - Explore readings, meanings, radicals, stroke counts, related words, and idioms
+- Practice known Hanja and Migaku vocabulary with two browser-only games
 - Save your selection as a local JSON file
 
 The interface is in Korean. Anki is optional: the catalogs, vocabulary search, and character exploration work without it.
@@ -189,7 +190,16 @@ In **한자 탐구**, paste a character, word, or mixed sentence.
 
 Lookup does not change the selection until an add button is pressed. Compatibility forms are normalized with NFKC for matching while the original input remains visible. Simplified/traditional forms and other distinct variants are not automatically merged.
 
-### 7. Save a selection
+### 7. Play games
+
+The **게임** tab derives every round from the current Anki character state and Migaku known, unknown, and marked words. It does not write to Anki or Migaku.
+
+- **혼용문** asks for the exact Hanja spelling of one Korean word from its Korean definition. A first mistake allows another try; a second mistake reveals and requeues the word.
+- **어휘 맞추기** makes four-pair or six-pair Hangul/Hanja boards. Unknown words prioritize Migaku marks and frequency, then reveal Korean and English definitions after a match.
+- Both games independently filter source (`vocabulary`, `idioms`, or mixed), word knowledge (`known`, `unknown`, or mixed), and character knowledge (`known Hanja only` or all Hanja). This supports word-only, character-only, idiom-only, and combined practice.
+- Both games randomize a broad useful pool, hold recent cards back, and balance repeated character exposure in memory for the current page session.
+
+### 8. Save a selection
 
 - Chromium-based browsers can connect a JSON file once and update it automatically
 - The approved file handle can be remembered locally with IndexedDB
