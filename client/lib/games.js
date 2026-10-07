@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=2";
 import { addExposure, buildBalancedMatchRound, buildMatchRound, buildMixedQuestion, entryKey, gameEntries, knownGameEntries, randomizedGameEntries, shuffled, unknownGameEntries, wordIsKnown } from "./game-data.js";
-import { initializeHuneumGame } from "./huneum-game.js?v=1";
+import { initializeHuneumGame, prepareHuneumDeck } from "./huneum-game.js?v=2";
 
 let catalog = null;
 let idiomCatalog = null;
@@ -120,6 +120,7 @@ function refreshGameStatus() {
 
 async function openGame(name) {
 	if (name !== "huneum") await prepareGames();
+	else void prepareHuneumDeck();
 	$("gamesIntro").classList.add("is-hidden");
 	$("gamesMenu").classList.add("is-hidden");
 	$("mixedGame").classList.toggle("is-hidden", name !== "mixed");

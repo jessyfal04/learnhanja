@@ -14,3 +14,7 @@ test("selects the first deck whose normalized name contains the preferred name",
 test("recognizes a romanized idiom deck name", () => {
 	assert.equal(preferredDeck(["General", "Study::Saja Songon"], ["사자성어", "sajasongon"]), "Study::Saja Songon");
 });
+
+test("detects the Huneum deck even with a suffix", () => {
+	assert.equal(preferredDeck(["한자::B. 독음", "한자::C. 훈음 X"], ["훈음", "hun eum", "huneum", "hunum"]), "한자::C. 훈음 X");
+});

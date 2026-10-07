@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildCharacterStatus, buildIdiomStatus } from "./anki-connect.js";
+import { ankiOpenDeck, buildCharacterStatus, buildIdiomStatus } from "./anki-connect.js";
 
 const notes = [
 	{noteId: 1, fields: {Char: {value: "<b>金枝玉葉</b>"}}},
@@ -31,4 +31,20 @@ test("keeps learned-active precedence over duplicate suspended notes", () => {
 	assert.deepEqual(suspended.idioms.金枝玉葉, {status: "known", suspended: true, noteCount: 1});
 	const activeNew = buildIdiomStatus(notes.slice(1), "Char", new Set([3]), new Set([2]), new Set([3]));
 	assert.deepEqual(activeNew.idioms.弱肉強食, {status: "new", suspended: false, noteCount: 2});
+});
+
+test("opens the detected deck overview with its complete name", async () => {
+	const previousFetch = globalThis.fetch;
+	let payload;
+	globalThis.fetch = async (_url, options) => {
+		payload = JSON.parse(options.body);
+		return {ok: true, json: async () => ({result: true, error: null})};
+	};
+	try {
+		await ankiOpenDeck("한자::C. 훈음 X");
+		assert.deepEqual(payload, {action: "guiDeckOverview", version: 6, params: {name: "한자::C. 훈음 X"}});
+		await assert.rejects(ankiOpenDeck(""), /열 앙키 덱이 없습니다/);
+	} finally {
+		globalThis.fetch = previousFetch;
+	}
 });

@@ -28,6 +28,12 @@ export async function ankiFields(noteType) {
 	return invoke("modelFieldNames", {modelName: String(noteType || "").trim()});
 }
 
+export async function ankiOpenDeck(deck) {
+	const name = String(deck || "").trim();
+	if (!name) throw new Error("열 앙키 덱이 없습니다");
+	if (await invoke("guiDeckOverview", {name}) !== true) throw new Error(`앙키에서 '${name}' 덱을 열 수 없습니다`);
+}
+
 export async function ankiCharacterStatus(config) {
 	const data = await loadStatusData(config.deck, config.noteType, config.field, "한자");
 	return buildCharacterStatus(data.notes, config.field, data.known, data.newCards, data.suspended);
