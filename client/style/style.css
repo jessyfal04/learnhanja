@@ -232,6 +232,24 @@
 	min-width: 7rem;
 }
 
+.game-huneum-choices {
+	display: grid;
+	gap: 0.75rem;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.game-huneum-choice {
+	height: auto;
+	min-height: 3.5rem;
+	white-space: normal;
+}
+
+@media (max-width: 480px) {
+	.game-huneum-choices {
+		grid-template-columns: 1fr;
+	}
+}
+
 .game-match-board.columns {
 	display: grid;
 	gap: 0.75rem;

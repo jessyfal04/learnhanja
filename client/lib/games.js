@@ -2,6 +2,7 @@ import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=2";
 import { addExposure, buildBalancedMatchRound, buildMatchRound, buildMixedQuestion, entryKey, gameEntries, knownGameEntries, randomizedGameEntries, shuffled, unknownGameEntries, wordIsKnown } from "./game-data.js";
+import { initializeHuneumGame } from "./huneum-game.js?v=1";
 
 let catalog = null;
 let idiomCatalog = null;
@@ -16,6 +17,8 @@ const $ = (id) => document.getElementById(id);
 export function initializeGames() {
 	$("openMixedGame").addEventListener("click", () => openGame("mixed"));
 	$("openMatchGame").addEventListener("click", () => openGame("match"));
+	$("openHuneumGame").addEventListener("click", () => openGame("huneum"));
+	initializeHuneumGame();
 	for (const button of document.querySelectorAll(".game-back")) button.addEventListener("click", showGameMenu);
 	for (const button of document.querySelectorAll(".mixed-start")) button.addEventListener("click", () => startMixed(button.dataset.count));
 	$("mixedNext").addEventListener("click", nextMixedQuestion);
@@ -116,11 +119,12 @@ function refreshGameStatus() {
 }
 
 async function openGame(name) {
-	await prepareGames();
+	if (name !== "huneum") await prepareGames();
 	$("gamesIntro").classList.add("is-hidden");
 	$("gamesMenu").classList.add("is-hidden");
 	$("mixedGame").classList.toggle("is-hidden", name !== "mixed");
 	$("matchGame").classList.toggle("is-hidden", name !== "match");
+	$("huneumGame").classList.toggle("is-hidden", name !== "huneum");
 }
 
 function showGameMenu() {
@@ -128,11 +132,15 @@ function showGameMenu() {
 	$("gamesMenu").classList.remove("is-hidden");
 	$("mixedGame").classList.add("is-hidden");
 	$("matchGame").classList.add("is-hidden");
+	$("huneumGame").classList.add("is-hidden");
 	$("mixedSetup").classList.remove("is-hidden");
 	$("mixedPlay").classList.add("is-hidden");
 	$("mixedSummary").classList.add("is-hidden");
 	$("matchSetup").classList.remove("is-hidden");
 	$("matchPlay").classList.add("is-hidden");
+	$("huneumSetup").classList.remove("is-hidden");
+	$("huneumPlay").classList.add("is-hidden");
+	$("huneumSummary").classList.add("is-hidden");
 }
 
 function startMixed(count) {

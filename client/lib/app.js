@@ -8,7 +8,7 @@ import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.j
 import { showView } from "./views.js?v=2";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
-import { initializeGames } from "./games.js?v=1";
+import { initializeGames } from "./games.js?v=2";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
