@@ -108,4 +108,5 @@ test("shape and huneum selectors keep independent character status", async () =>
 	assert.equal(state.moyangAnkiStatus.characters.人.status, "known");
 	assert.equal(state.huneumAnkiStatus.characters.人.status, "known");
 	assert.equal(state.huneumAnkiStatusSource, "한자::C. 훈음 X");
+	assert.ok(events.includes("hanja-aux-status-change"));
 });

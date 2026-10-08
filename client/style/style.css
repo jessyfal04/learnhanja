@@ -46,6 +46,122 @@ body .hanja-button.is-danger.is-light {
 	z-index: 20;
 }
 
+.recommendation-panel {
+	overflow: hidden;
+}
+
+.recommendation-heading,
+.recommendation-section-heading,
+.recommendation-character-hero {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.recommendation-heading {
+	border-bottom: 1px solid var(--bulma-border-weak);
+	margin: -0.25rem 0 1.5rem;
+	padding: 0.25rem 0 1.25rem;
+}
+
+.recommendation-kicker {
+	color: var(--bulma-link-text);
+	font-size: 0.68rem;
+	font-weight: 800;
+	letter-spacing: 0.14em;
+	margin-bottom: 0.35rem;
+}
+
+.recommendation-section-heading {
+	margin-bottom: 0.75rem;
+}
+
+.recommendation-table {
+	border-radius: 0.75rem;
+}
+
+.recommendation-table td,
+.recommendation-table th,
+.recommendation-character-table td,
+.recommendation-character-table th {
+	vertical-align: middle;
+}
+
+.recommendation-row > td {
+	transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.recommendation-row:hover > td {
+	background: color-mix(in srgb, var(--bulma-link-soft) 38%, var(--bulma-scheme-main));
+}
+
+.recommendation-row.is-selected > td {
+	background: color-mix(in srgb, var(--bulma-link-soft) 72%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
+}
+
+.recommendation-row.is-selected > td:first-child {
+	box-shadow: inset 0.25rem 0 var(--bulma-link);
+}
+
+.recommendation-chapter-number,
+.recommendation-score {
+	white-space: nowrap;
+}
+
+.recommendation-score {
+	font-variant-numeric: tabular-nums;
+}
+
+.recommendation-ranks {
+	min-width: 18rem;
+}
+
+.recommendation-ranks .tag {
+	margin: 0.15rem 0.2rem 0.15rem 0;
+}
+
+.recommendation-detail {
+	background: color-mix(in srgb, var(--bulma-link-soft) 35%, var(--bulma-scheme-main));
+	border: 1px solid color-mix(in srgb, var(--bulma-link) 22%, var(--bulma-border-weak));
+	border-radius: 0.9rem;
+	padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.recommendation-character-hero {
+	margin-bottom: 1rem;
+}
+
+.recommended-character-display {
+	color: var(--bulma-link-text);
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: clamp(3.5rem, 8vw, 5rem);
+	font-weight: 700;
+	line-height: 1;
+	margin: 0;
+}
+
+.recommendation-character-table {
+	border-radius: 0.7rem;
+}
+
+.recommendation-character-row:first-child > td {
+	background: color-mix(in srgb, var(--bulma-primary-soft) 65%, var(--bulma-scheme-main));
+	color: var(--bulma-text);
+}
+
+.recommendation-character-row:first-child > td:first-child {
+	box-shadow: inset 0.22rem 0 var(--bulma-primary);
+}
+
+.recommendation-character-row td:first-child a {
+	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
+	font-size: 1.35rem;
+	font-weight: 700;
+}
+
 .cheonjamun-sentence-header {
 	display: flex;
 	align-items: center;
@@ -503,6 +619,11 @@ body .hanja-button.is-danger.is-light {
 	padding-block: 0.25rem;
 }
 
+body .tag.insight-level.is-danger.is-light {
+	background-color: color-mix(in srgb, var(--bulma-danger-soft) 55%, var(--bulma-scheme-main));
+	color: var(--bulma-danger-on-scheme);
+}
+
 .insight-definition {
 	font-size: 0.9rem;
 	line-height: 1.4;
@@ -704,5 +825,13 @@ body .hanja-button.is-danger.is-light {
 
 	.game-settings-grid .buttons {
 		flex-wrap: wrap;
+	}
+
+	.recommendation-heading .tags {
+		margin-top: 0.25rem;
+	}
+
+	.recommended-character-display {
+		font-size: 3.5rem;
 	}
 }

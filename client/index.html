@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=18">
-	<script type="module" src="/lib/app.js?v=34"></script>
+	<link rel="stylesheet" href="/style/style.css?v=19">
+	<script type="module" src="/lib/app.js?v=35"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -19,6 +19,7 @@
 		<div class="tabs is-boxed mb-5" aria-label="화면 선택"><ul>
 			<li id="connectionTab" class="is-active"><a href="#connection">연결 및 저장</a></li>
 			<li id="charactersTab"><a href="#characters">한자 선택</a></li>
+			<li id="recommendationsTab"><a href="#recommendations">추천</a></li>
 			<li id="vocabularyTab"><a href="#vocabulary">어휘</a></li>
 			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
 			<li id="cheonjamunTab"><a href="#cheonjamun">천자문</a></li>
@@ -71,6 +72,24 @@
 				<div id="levelGroups"></div>
 			</section>
 			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p>한자 <strong id="selectedCount">0</strong>자 선택됨</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>관련 어휘 만들기</button></div></div></section>
+		</div>
+
+		<div id="recommendationsView" class="is-hidden">
+			<section class="box recommendation-panel" aria-labelledby="recommendationsTitle">
+				<div class="recommendation-heading">
+					<div><p class="recommendation-kicker">SMART STUDY PATH</p><h2 id="recommendationsTitle" class="title is-4 mb-1">암기박사 추천</h2><p class="subtitle is-6 mb-0">앙키 학습 상태와 Migaku KNOWN 어휘로 다음 암기박사 장과 한자를 추천합니다</p></div>
+					<div class="tags mb-0"><span class="tag is-link is-light">4개 기준</span><span class="tag is-light">각 25%</span></div>
+				</div>
+				<div id="recommendationsStatus" class="notification is-light py-3" role="status">추천 자료를 확인하는 중…</div>
+				<div id="recommendationsContent" class="is-hidden">
+					<div class="recommendation-section-heading"><div><p class="recommendation-kicker">TOP 5</p><h3 class="title is-5 mb-1">추천 장</h3></div><p class="help mb-0">행을 눌러 한자 추천을 확인하세요</p></div>
+					<div class="table-container recommendation-table mb-5"><table class="table is-hoverable is-fullwidth"><thead><tr><th>추천</th><th>장</th><th>종합</th><th>진행</th><th>어휘</th><th>기준별 순위</th></tr></thead><tbody id="recommendationChapterBody"></tbody></table></div>
+					<section class="recommendation-detail" aria-labelledby="recommendationDetailTitle">
+						<div class="recommendation-character-hero"><div><p class="recommendation-kicker">NEXT HANJA</p><h3 id="recommendationDetailTitle" class="title is-5 mb-1">추천 한자</h3><p id="recommendationCharacterSummary" class="subtitle is-6 mb-0"></p></div><p id="recommendedCharacter" class="recommended-character-display"></p></div>
+						<div class="table-container recommendation-character-table"><table class="table is-hoverable is-fullwidth"><thead><tr><th>한자</th><th>급수</th><th>새로 읽을 수 있는 KNOWN 어휘</th></tr></thead><tbody id="recommendationCharacterBody"></tbody></table></div>
+					</section>
+				</div>
+			</section>
 		</div>
 
 		<div id="cheonjamunView" class="is-hidden">
@@ -240,6 +259,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v26 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v27 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

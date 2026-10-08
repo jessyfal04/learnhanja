@@ -69,11 +69,22 @@ async function loadStatusData(deck, noteType, field, fieldLabel) {
 export function buildCharacterStatus(notes, field, known, newCards, suspended) {
 	const aggregates = new Map();
 	for (const note of notes || []) {
+		const chapter = parseChapter(note.fields?.amgi1?.value);
 		for (const character of extractHanja(note.fields?.[field]?.value || "")) {
 			accumulate(aggregates, character, note.noteId, known, newCards, suspended);
+			const aggregate = aggregates.get(character);
+			if (chapter && (!aggregate.chapter || chapter < aggregate.chapter)) aggregate.chapter = chapter;
 		}
 	}
-	return finishStatus(aggregates, "characters");
+	const result = finishStatus(aggregates, "characters");
+	const chapters = new Map();
+	for (const [character, info] of Object.entries(result.characters)) {
+		if (!info.chapter) continue;
+		if (!chapters.has(info.chapter)) chapters.set(info.chapter, new Set());
+		chapters.get(info.chapter).add(character);
+	}
+	result.chapters = [...chapters].sort(([left], [right]) => left - right).map(([chapter, characters]) => ({chapter, characters: [...characters]}));
+	return result;
 }
 
 export function buildIdiomStatus(notes, field, known, newCards, suspended) {
@@ -112,6 +123,7 @@ function finishStatus(aggregates, property) {
 		result[status]++;
 		result.total++;
 		values[key] = {status, suspended, noteCount: aggregate.noteCount};
+		if (aggregate.chapter) values[key].chapter = aggregate.chapter;
 	}
 	return result;
 }
@@ -153,6 +165,13 @@ function cleanField(value) {
 		return (element.content.textContent || "").trim();
 	}
 	return String(value || "").replace(/<[^>]*>/gu, "").trim();
+}
+
+function parseChapter(value) {
+	const cleaned = cleanField(value);
+	if (!/^\d+$/u.test(cleaned)) return null;
+	const chapter = Number(cleaned);
+	return Number.isSafeInteger(chapter) && chapter > 0 ? chapter : null;
 }
 
 function extractHanja(value) {

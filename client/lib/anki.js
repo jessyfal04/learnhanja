@@ -1,4 +1,4 @@
-import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=3";
+import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=4";
 import { preferredDeck } from "./deck-names.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
@@ -199,6 +199,7 @@ export async function refreshAuxiliaryStatus(kind) {
 	state[statusKey] = null;
 	if (kind === "huneum") state.huneumAnkiStatusSource = "";
 	renderCatalog();
+	document.dispatchEvent(new Event("hanja-aux-status-change"));
 	statusElement.textContent = deck ? "상태를 불러오는 중…" : "덱을 선택하세요";
 	if (!deck) return false;
 	try {
@@ -214,11 +215,13 @@ export async function refreshAuxiliaryStatus(kind) {
 		if (kind === "huneum") state.huneumAnkiStatusSource = deck;
 		statusElement.textContent = `학습함 ${result.known}자 · ${deck}`;
 		renderCatalog();
+		document.dispatchEvent(new Event("hanja-aux-status-change"));
 		return true;
 	} catch (error) {
 		if (requestID !== auxiliaryRequests[kind]) return false;
 		statusElement.textContent = koreanError(error, "앙키 상태를 불러올 수 없습니다");
 		renderCatalog();
+		document.dispatchEvent(new Event("hanja-aux-status-change"));
 		return false;
 	}
 }
@@ -229,6 +232,7 @@ function clearAuxiliaryStatus(kind) {
 	if (kind === "huneum") state.huneumAnkiStatusSource = "";
 	document.getElementById(kind === "moyang" ? "moyangDeckStatus" : "huneumSelectStatus").textContent = "앙키 연결 필요";
 	renderCatalog();
+	document.dispatchEvent(new Event("hanja-aux-status-change"));
 }
 
 export function selectStatus(status) {
@@ -298,7 +302,8 @@ function renderGroup(group) {
 		button.setAttribute("role", "button");
 		button.className = `button hanja-button ${deckPresentation.classes}`;
 		button.textContent = value;
-		button.title = `${group.level} · ${deckPresentation.label} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
+		const chapter = info.chapter ? ` · 암기박사 ${info.chapter}장` : "";
+		button.title = `${group.level} · ${deckPresentation.label}${chapter} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
 		button.dataset.character = value;
 		button.classList.toggle("is-suspended", Boolean(info.suspended));
 		button.addEventListener("click", (event) => {

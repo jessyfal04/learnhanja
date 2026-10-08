@@ -15,6 +15,25 @@ test("builds character status with compatibility normalization", () => {
 	assert.equal(result.characters.強.noteCount, 2);
 });
 
+test("builds sorted chapter metadata from optional amgi1 fields", () => {
+	const chapterNotes = [
+		{noteId: 1, fields: {Char: {value: "<b>一三</b>"}, amgi1: {value: "<i>013</i>"}}},
+		{noteId: 2, fields: {Char: {value: "三"}, amgi1: {value: "014"}}},
+		{noteId: 3, fields: {Char: {value: "二"}, amgi1: {value: "2"}}},
+		{noteId: 4, fields: {Char: {value: "四"}, amgi1: {value: "0"}}},
+		{noteId: 5, fields: {Char: {value: "五"}, amgi1: {value: "chapter 5"}}},
+		{noteId: 6, fields: {Char: {value: "六"}, amgi1: {value: ""}}},
+	];
+	const result = buildCharacterStatus(chapterNotes, "Char", new Set(), new Set(), new Set());
+	assert.equal(result.characters.一.chapter, 13);
+	assert.equal(result.characters.三.chapter, 13);
+	assert.equal(result.characters.四.chapter, undefined);
+	assert.deepEqual(result.chapters, [
+		{chapter: 2, characters: ["二"]},
+		{chapter: 13, characters: ["一", "三"]},
+	]);
+});
+
 test("builds whole-idiom status and gives known precedence", () => {
 	const result = buildIdiomStatus(notes, "Char", new Set([1, 3]), new Set([2]), new Set([2]));
 	assert.equal(result.total, 2);

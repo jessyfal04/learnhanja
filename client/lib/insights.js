@@ -1,13 +1,14 @@
 import { state } from "./state.js";
 import { refreshStatus, renderCatalog } from "./anki.js?v=11";
 import { loadStaticJSON } from "./static-data.js";
-import { showView } from "./views.js?v=1";
+import { showView } from "./views.js?v=3";
 import { decomposeHanja, filterRelated, hangulCandidates, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=6";
 import { urlWithQuery } from "./url-query.js?v=1";
 import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=2";
 import { vocabularyKnowledge } from "./vocab-filter.js";
 import { fillStatusCharacters } from "./status-characters.js?v=1";
 import { frequencyCell } from "./frequency-display.js?v=1";
+import { characterDeckPresentation } from "./character-deck-status.js?v=1";
 
 const $ = (id) => document.getElementById(id);
 let data;
@@ -68,6 +69,7 @@ export function initializeInsights() {
 	$("insightMore").addEventListener("click", () => { visibleLimit += 80; renderResults(); });
 	document.addEventListener("hanja-selection-change", renderInsights);
 	document.addEventListener("hanja-status-change", renderInsights);
+	document.addEventListener("hanja-aux-status-change", renderInsights);
 	document.addEventListener("hanja-known-words-change", renderInsights);
 
 }
@@ -264,10 +266,20 @@ function renderCard({character, originals}) {
 	const header = element("div", null, "insight-card-header");
 	const info = studyInfo(character, state.ankiStatus);
 	const level = levelFor(character, state.catalog) || (state.catalog ? "급수 목록 밖" : "급수 미확인");
-	const badge = element("span", `${level} · ${statusFor(character, state.ankiStatus)}`, `tag insight-level ${info.color}`);
+	const deckPresentation = characterDeckPresentation(
+		deckStatus(character, state.ankiStatus),
+		deckStatus(character, state.moyangAnkiStatus),
+		deckStatus(character, state.huneumAnkiStatus),
+		{moyangReady: Boolean(state.moyangAnkiStatus), huneumReady: Boolean(state.huneumAnkiStatus)},
+	);
+	const badge = element("span", `${level} · ${statusFor(character, state.ankiStatus)}`, `tag insight-level ${deckPresentation.classes}`);
 	badge.dataset.studyStatus = info.status;
-	badge.title = `${character} · ${level} · ${statusFor(character, state.ankiStatus)}${info.status === "absent" ? " · 선택한 앙키 덱에 일치하는 노트가 없습니다" : ""}`;
-	header.append(element("h3", originals.join(" / "), "insight-character"), badge);
+	badge.title = `${character} · ${level} · ${deckPresentation.label}${info.status === "absent" ? " · 선택한 앙키 덱에 일치하는 노트가 없습니다" : ""}`;
+	const badges = element("div", null, "tags mb-0");
+	badges.append(badge);
+	const chapter = Object.entries(state.ankiStatus?.characters || {}).find(([value]) => normalize(value) === character)?.[1]?.chapter;
+	if (chapter) badges.append(element("span", `암기박사 ${chapter}장`, "tag is-link is-light"));
+	header.append(element("h3", originals.join(" / "), "insight-character"), badges);
 	card.append(header, element("p", ref.hun || ref.sound || ref.hangul?.join(" / ") || "훈음 자료 없음", "title is-5 mb-3"));
 	if (ref.definition) card.append(element("p", ref.definition, "insight-definition mb-2"));
 	card.append(element("p", `${ref.radical || "부수 미상"} · ${ref.strokes || ref.unicodeStrokes || "—"}획`, "help"));
@@ -278,6 +290,10 @@ function renderCard({character, originals}) {
 	actions.append(add, button("관련 어휘", () => { focus = character; visibleLimit = 40; renderInsights(); $("insightRelatedTitle").scrollIntoView({block: "start", behavior: "smooth"}); }));
 	card.append(actions);
 	return card;
+}
+
+function deckStatus(character, statuses) {
+	return Object.entries(statuses?.characters || {}).find(([value]) => normalize(value) === character)?.[1];
 }
 
 function renderResults() {
