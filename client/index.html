@@ -6,7 +6,7 @@
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
 	<link rel="stylesheet" href="/style/style.css?v=21">
-	<script type="module" src="/lib/app.js?v=38"></script>
+	<script type="module" src="/lib/app.js?v=39"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -257,7 +257,29 @@
 					<div class="box mock-question"><div class="tags mb-2"><span id="mockSectionBadge" class="tag is-link is-light"></span><span id="mockTypeBadge" class="tag is-info is-light"></span></div><p id="mockInstruction" class="has-text-weight-semibold"></p><div id="mockStimulus" class="mock-stimulus"></div><div id="mockChoices" class="mock-choices"></div><div id="mockFeedback" class="notification is-light is-hidden mt-4" role="status"></div></div>
 					<div class="buttons mock-play-actions"><button id="mockPrevious" class="button is-light" type="button">← 이전</button><button id="mockFinish" class="button is-light" type="button"><span class="mock-hold-fill" aria-hidden="true"></span><span class="mock-hold-label">지금 제출하고 채점</span></button><button id="mockNext" class="button is-link" type="button">다음 →</button></div>
 				</div>
-				<div id="mockResult" class="mock-panel is-hidden"><div class="level is-mobile mock-result-head mb-5"><div class="level-left"><div><p class="mock-kicker">SESSION COMPLETE</p><h3 class="title is-4 mb-2">연습 결과</h3><p id="mockResultMeta" class="subtitle is-6 mb-2"></p><p id="mockPass" class="tag is-medium is-light is-hidden"></p></div></div><div class="level-right"><div id="mockScoreRing" class="mock-score-ring"><span id="mockPercent">0%</span></div></div></div><div id="mockStats" class="columns is-multiline mock-stats"></div><section class="box mock-weakness" aria-label="약점 요약"><h4 class="is-size-6 has-text-weight-bold mb-2">약점 요약</h4><div id="mockWeakness"></div></section><div class="buttons mb-2"><button id="mockDownload" class="button is-link" type="button">컬러 리포트 HTML 다운로드</button><button id="mockAgain" class="button is-light" type="button"><span class="mock-hold-fill" aria-hidden="true"></span><span class="mock-hold-label">길게 눌러 다시 하기</span></button></div><p id="mockDownloadStatus" class="help mb-5" role="status">브라우저에서 인쇄하여 PDF로도 저장할 수 있습니다</p><div class="mock-section-heading"><div><span class="mock-step">02</span><h3>문항별 확인</h3></div><p>오답과 미응답을 색으로 구분했습니다</p></div><div id="mockReview" class="mock-review"></div></div>
+				<div id="mockResult" class="mock-panel is-hidden">
+					<div class="level is-mobile mock-result-head mb-5">
+						<div class="level-left"><div>
+							<p class="mock-kicker">SESSION COMPLETE</p>
+							<h3 class="title is-4 mb-2">연습 결과</h3>
+							<p id="mockResultMeta" class="subtitle is-6 mb-2"></p>
+							<p id="mockPass" class="tag is-medium is-light is-hidden"></p>
+						</div></div>
+						<div class="level-right"><div id="mockScoreRing" class="mock-score-ring"><span id="mockPercent">0%</span></div></div>
+					</div>
+					<div id="mockStats" class="columns is-multiline mock-stats"></div>
+					<section class="box mock-weakness" aria-label="약점 요약">
+						<h4 class="is-size-6 has-text-weight-bold mb-2">약점 요약</h4>
+						<div id="mockWeakness"></div>
+					</section>
+					<div class="buttons mb-2">
+						<button id="mockDownload" class="button is-link" type="button">컬러 리포트 HTML 다운로드</button>
+						<button id="mockAgain" class="button is-light" type="button"><span class="mock-hold-fill" aria-hidden="true"></span><span class="mock-hold-label">길게 눌러 다시 하기</span></button>
+					</div>
+					<p id="mockDownloadStatus" class="help mb-5" role="status">브라우저에서 인쇄하여 PDF로도 저장할 수 있습니다</p>
+					<div class="mock-section-heading"><div><span class="mock-step">02</span><h3>문항별 확인</h3></div><p>오답과 미응답을 색으로 구분했습니다</p></div>
+					<div id="mockReview" class="mock-review"></div>
+				</div>
 			</section>
 		</div>
 
@@ -283,6 +305,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v29 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v30 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

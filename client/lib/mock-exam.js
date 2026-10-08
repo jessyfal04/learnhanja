@@ -90,10 +90,10 @@ async function start() {
 		const level = mockExamLevel($("mockLevel").value);
 		if (!level) throw new Error("시험 급수를 선택하세요");
 		const levelData = await prepareLevel();
-		data = {...levelData, words: examWordsForLevel(await loadVocabularyCatalog(), levelData.characters)};
+		data = {...levelData, groups: examGroups(levelData), words: examWordsForLevel(await loadVocabularyCatalog(), levelData.characters)};
 		if (data.level !== level.label || !data.characters?.length || !data.words?.length || !data.format.sections.length || !data.format.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
 		const trainingType = $("mockType").value;
-		const trainingPosition = trainingType === "all" ? 0 : examGroups(data).find((group) => group.type === trainingType)?.startIndex;
+		const trainingPosition = trainingType === "all" ? 0 : data.groups.find((group) => group.type === trainingType)?.startIndex;
 		const questions = mode === "full" ? makeExam(data) : [newTrainingQuestion([], trainingType, trainingPosition)];
 		session = {mode, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0};
 		$("mockSetup").classList.add("is-hidden");
@@ -113,7 +113,7 @@ async function start() {
 }
 
 function newTrainingQuestion(previous, selected, position) {
-	const groups = examGroups(data);
+	const groups = data.groups;
 	const type = selected === "all" ? groups.find((group) => group.startIndex <= position && position <= group.endIndex)?.type : selected;
 	if (!groups.some((group) => group.type === type)) throw new Error("선택한 유형의 문항 자료가 없습니다");
 	const excluded = new Set(previous.slice(-12).filter((entry) => entry.type === type).map((entry) => entry.source));
@@ -140,7 +140,7 @@ function renderQuestion() {
 	const answer = answers[index];
 	const full = session.mode === "full";
 	const showTypeMap = full || session.trainingType === "all";
-	const groups = examGroups(data);
+	const groups = data.groups;
 	const position = full ? index : session.trainingPosition;
 	const groupIndex = groups.findIndex((entry) => entry.startIndex <= position && position <= entry.endIndex);
 	const group = groups[groupIndex];
@@ -267,7 +267,7 @@ function move(direction) {
 		else if (direction > 0 && session.index < session.questions.length - 1) session.index++;
 		else if (direction > 0 && session.index === session.questions.length - 1) return finish();
 	} else if (direction > 0 && session.answers[session.index] !== null) {
-		if (session.trainingType === "all") session.trainingPosition = (session.trainingPosition + 1) % examGroups(data).reduce((total, group) => total + group.count, 0);
+		if (session.trainingType === "all") session.trainingPosition = (session.trainingPosition + 1) % data.groups.reduce((total, group) => total + group.count, 0);
 		session.questions.push(newTrainingQuestion(session.questions, session.trainingType, session.trainingPosition));
 		session.answers.push(null);
 		session.index++;
