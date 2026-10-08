@@ -1,4 +1,4 @@
-import { insightLink } from "./insights.js?v=21";
+import { insightLink } from "./insights.js?v=22";
 import { rankChapters } from "./recommendations.js?v=1";
 import { state } from "./state.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=2";

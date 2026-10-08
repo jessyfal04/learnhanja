@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
 import { filterAndSortVocabulary, vocabularyKnowledge } from "./vocab-filter.js";
 import { showView } from "./views.js?v=3";
-import { insightLink } from "./insights.js?v=21";
+import { insightLink } from "./insights.js?v=22";
 import { loadVocabularyCatalog, searchVocabulary } from "./vocabulary-data.js?v=2";
 import { fillStatusCharacters } from "./status-characters.js?v=1";
 import { closeFrequencyPopover, frequencyCell } from "./frequency-display.js?v=1";

@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { refreshStatus, renderCatalog } from "./anki.js?v=11";
+import { refreshStatus, renderCatalog } from "./anki.js?v=12";
 import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js?v=3";
 import { decomposeHanja, filterRelated, hangulCandidates, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=6";

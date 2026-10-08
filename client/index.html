@@ -6,7 +6,7 @@
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
 	<link rel="stylesheet" href="/style/style.css?v=19">
-	<script type="module" src="/lib/app.js?v=35"></script>
+	<script type="module" src="/lib/app.js?v=36"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -68,7 +68,8 @@
 		<div id="charactersView" class="is-hidden">
 			<section id="charactersSection" aria-labelledby="charactersTitle">
 				<div class="level mb-3"><div class="level-left"><div><h2 id="charactersTitle" class="title is-4 mb-2">한자</h2><div class="tags"><span id="knownCount" class="tag is-success">학습함 0</span><span id="newCount" class="tag is-info">새 카드 0</span><span id="knownSuspendedCount" class="tag is-warning">학습함 · 일시 중단 0</span><span id="newSuspendedCount" class="tag is-danger">새 카드 · 일시 중단 0</span><span id="unknownCount" class="tag is-dark">상태 없음 0</span></div></div></div><div class="level-right"><div class="buttons are-small"><button id="selectKnownButton" class="button is-success" type="button">학습한 한자 선택</button><button id="selectNewButton" class="button is-info" type="button">새 한자 선택</button><button id="clearSelectionButton" class="button is-light" type="button">선택 해제</button></div></div></div>
-				<p class="help mb-4"><strong>출처:</strong> 어문회 Grade 필드 스냅샷 (2026-09-09) · 14개 급수, 3,500자 · 앱에 포함된 정적 목록</p>
+				<div class="field mb-3"><label class="label" for="examSchemeSelect">시험 기관</label><div class="select"><select id="examSchemeSelect"><option value="eomunhoe">한국어문회</option><option value="sangong">상공회의소</option></select></div></div>
+				<p id="catalogSource" class="help mb-4"></p>
 				<div id="levelGroups"></div>
 			</section>
 			<section id="selectionBar" class="box selection-bar"><div class="level mb-0"><div class="level-left"><p>한자 <strong id="selectedCount">0</strong>자 선택됨</p></div><div class="level-right"><button id="buildVocabButton" class="button is-link" type="button" disabled>관련 어휘 만들기</button></div></div></section>

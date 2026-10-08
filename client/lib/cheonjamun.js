@@ -1,6 +1,6 @@
-import { renderCatalog } from "./anki.js?v=11";
+import { renderCatalog } from "./anki.js?v=12";
 import { filterAndSortSentences, normalizedSet, sentenceProgress, sentenceTokens, statusForToken, statusIndex } from "./cheonjamun-data.js?v=1";
-import { openInsights } from "./insights.js?v=21";
+import { openInsights } from "./insights.js?v=22";
 import { referenceFor } from "./insight-data.js?v=6";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
@@ -63,7 +63,7 @@ export function renderCheonjamun() {
 	progress.replaceChildren(
 		element("span", overall.verified ? `앙키 학습 ${overall.known} / ${overall.total}` : "앙키 상태 미확인", `tag ${overall.verified ? "is-success is-light" : "is-dark is-light"}`),
 		element("span", `어휘 선택 ${overall.selected} / ${overall.total}`, "tag is-link is-light"),
-		element("span", `어문회 급수 포함 ${overall.cataloged} / ${overall.total}`, "tag is-light"),
+		element("span", `${state.catalog?.officialTotal ? "상공회의소" : "어문회"} 급수 포함 ${overall.cataloged} / ${overall.total}`, "tag is-light"),
 	);
 	$("cheonjamunList").replaceChildren(...visible.map(({sentence, progress}) => renderSentence(sentence, progress)));
 }

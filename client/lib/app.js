@@ -1,15 +1,15 @@
-import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=21";
-import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=8";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=11";
-import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=5";
+import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=22";
+import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=9";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=12";
+import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=6";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=18";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=9";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=19";
+import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=10";
 import { showView } from "./views.js?v=3";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
 import { initializeGames } from "./games.js?v=4";
-import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=1";
+import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=2";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
@@ -64,6 +64,16 @@ document.getElementById("refreshIdiomStatusButton").addEventListener("click", re
 document.getElementById("selectKnownButton").addEventListener("click", () => selectStatus("known"));
 document.getElementById("selectNewButton").addEventListener("click", () => selectStatus("new"));
 document.getElementById("clearSelectionButton").addEventListener("click", clearSelection);
+document.getElementById("examSchemeSelect").addEventListener("change", () => {
+	try { localStorage.setItem("learnhanja-exam-scheme", document.getElementById("examSchemeSelect").value); } catch {}
+	void loadCatalog();
+});
+document.addEventListener("hanja-catalog-change", () => {
+	initializeIdiomLevels();
+	renderCheonjamun();
+	renderInsights();
+	void renderRecommendations();
+});
 document.getElementById("buildVocabButton").addEventListener("click", () => buildVocabulary());
 document.addEventListener("hanja-selection-change", scheduleVocabulary);
 document.addEventListener("hanja-known-words-change", renderVocabulary);
@@ -95,6 +105,10 @@ window.addEventListener("popstate", scheduleLocationRoute);
 applyLocationQuery();
 showView(currentView());
 initializeInsights();
+try {
+	const savedScheme = localStorage.getItem("learnhanja-exam-scheme");
+	if (["eomunhoe", "sangong"].includes(savedScheme)) document.getElementById("examSchemeSelect").value = savedScheme;
+} catch {}
 await Promise.all([loadCatalog(), loadIdioms()]);
 void renderRecommendations();
 initializeIdiomLevels();

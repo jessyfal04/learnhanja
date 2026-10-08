@@ -15,17 +15,30 @@ const huneumDeckSelect = document.getElementById("huneumDeckSelect");
 const idiomDeckSelect = document.getElementById("idiomDeckSelect");
 const idiomNoteTypeSelect = document.getElementById("idiomNoteTypeSelect");
 const idiomFieldSelect = document.getElementById("idiomFieldSelect");
+const examSchemeSelect = document.getElementById("examSchemeSelect");
+const catalogPaths = {eomunhoe: "/data/levels.json", sangong: "/data/levels-sangong.json"};
 
 let selectionSignature = "";
+let catalogRequestID = 0;
 let statusRequestID = 0;
 let statusPromise = null;
 let autoSelectRequest = false;
 const auxiliaryRequests = {moyang: 0, huneum: 0};
 
 export async function loadCatalog() {
+	const requestID = ++catalogRequestID;
 	try {
-		state.catalog = await loadStaticJSON("/data/levels.json");
+		const scheme = examSchemeSelect?.value in catalogPaths ? examSchemeSelect.value : "eomunhoe";
+		const catalog = await loadStaticJSON(catalogPaths[scheme]);
+		if (requestID !== catalogRequestID) return;
+		state.catalog = catalog;
+		if (scheme === "sangong") {
+			document.getElementById("catalogSource").textContent = "출처: 앙키 상공회의소 태그 스냅샷 (2026-10-09) · 9급~3급 정규 1,800자 + 별도 이체자 3자 · 앱에 포함된 정적 목록";
+		} else {
+			document.getElementById("catalogSource").textContent = "출처: 어문회 Grade 필드 스냅샷 (2026-09-09) · 14개 급수, 3,500자 · 앱에 포함된 정적 목록";
+		}
 		renderCatalog();
+		document.dispatchEvent(new Event("hanja-catalog-change"));
 	} catch (error) {
 		showMessage("danger", koreanError(error, "급수별 한자 목록을 불러올 수 없습니다"));
 	}
@@ -303,7 +316,8 @@ function renderGroup(group) {
 		button.className = `button hanja-button ${deckPresentation.classes}`;
 		button.textContent = value;
 		const chapter = info.chapter ? ` · 암기박사 ${info.chapter}장` : "";
-		button.title = `${group.level} · ${deckPresentation.label}${chapter} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
+		const variant = state.catalog.variants?.[value] ? ` · 이체자 (${state.catalog.variants[value]})` : "";
+		button.title = `${group.level}${variant} · ${deckPresentation.label}${chapter} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
 		button.dataset.character = value;
 		button.classList.toggle("is-suspended", Boolean(info.suspended));
 		button.addEventListener("click", (event) => {

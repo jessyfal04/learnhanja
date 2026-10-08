@@ -223,6 +223,10 @@ There are no vocabulary or Anki API routes. The app can also be adapted to a sta
 - `client/data/levels.json`
   - Static snapshot of the 어문회 `Grade` field from 2026-09-09
   - 3,500 characters across 14 levels
+- `client/data/levels-sangong.json`
+  - Static snapshot of Anki `상공회의소::9` through `상공회의소::3` tags from 2026-10-09
+  - 1,800 official characters in 7 exclusive grade groups; the Anki grade tags are cumulative
+  - Three additional `info::variant` forms (`豊`, `鍾`, `隣`) are listed beside their tagged counterparts (`豐`, `鐘`, `鄰`), for 1,803 selectable forms in total
 - `client/data/insights.json`
   - Korean 훈음, radicals, and stroke counts from local `HanjaLevels` data
   - Korean readings, stroke counts, and English `kDefinition` from [Unicode Unihan 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip)
