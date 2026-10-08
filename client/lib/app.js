@@ -1,14 +1,14 @@
-import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=20";
-import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=7";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=10";
-import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=4";
+import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=21";
+import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=8";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=11";
+import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=5";
 import { hideMessage } from "./ui.js";
 import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=17";
 import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=8";
 import { showView } from "./views.js?v=2";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
-import { initializeGames } from "./games.js?v=3";
+import { initializeGames } from "./games.js?v=4";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
@@ -56,7 +56,9 @@ document.getElementById("noteTypeSelect").addEventListener("change", loadFields)
 document.getElementById("characterFieldSelect").addEventListener("change", characterFieldChanged);
 document.getElementById("idiomDeckSelect").addEventListener("change", loadIdiomNoteTypes);
 document.getElementById("idiomNoteTypeSelect").addEventListener("change", loadIdiomFields);
-document.getElementById("refreshStatusButton").addEventListener("click", () => refreshStatus({autoSelect: true}));
+document.getElementById("refreshStatusButton").addEventListener("click", () => { void refreshStatus({autoSelect: true}); void refreshAuxiliaryStatuses(); });
+document.getElementById("moyangDeckSelect").addEventListener("change", () => { void refreshAuxiliaryStatus("moyang"); });
+document.getElementById("huneumDeckSelect").addEventListener("change", () => { void refreshAuxiliaryStatus("huneum"); });
 document.getElementById("refreshIdiomStatusButton").addEventListener("click", refreshIdiomStatus);
 document.getElementById("selectKnownButton").addEventListener("click", () => selectStatus("known"));
 document.getElementById("selectNewButton").addEventListener("click", () => selectStatus("new"));

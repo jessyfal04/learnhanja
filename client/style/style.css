@@ -29,6 +29,12 @@
 	min-height: 3rem;
 }
 
+body .hanja-button.is-danger.is-light {
+	background-color: var(--bulma-danger-soft);
+	border-color: color-mix(in srgb, var(--bulma-danger) 35%, var(--bulma-border));
+	color: var(--bulma-danger-on-scheme);
+}
+
 .hanja-button.is-selected {
 	box-shadow: 0 0 0 3px hsl(var(--bulma-link-h), var(--bulma-link-s), var(--bulma-link-l));
 	font-weight: 700;

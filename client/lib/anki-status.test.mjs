@@ -15,7 +15,7 @@ globalThis.document = {
 		return {content: {textContent: ""}, dataset: {}, classList: {toggle() {}}, append() {}, appendChild() {}, addEventListener() {}, setAttribute() {}, set innerHTML(value) { this.content.textContent = value; }};
 	},
 };
-const { refreshStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=10");
+const { refreshStatus, refreshAuxiliaryStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=11");
 document.getElementById("deckSelect").value = "한자";
 document.getElementById("noteTypeSelect").value = "Hanja";
 document.getElementById("characterFieldSelect").value = "Char";
@@ -26,6 +26,7 @@ document.getElementById("idiomFieldSelect").value = "Char";
 function responseFor(action, params) {
 	let result;
 	if (action === "modelFieldNames") result = ["Char", "Alternate"];
+	if (action === "modelNames") result = ["Hanja"];
 	if (action === "findNotes") result = /is:new|is:suspended/.test(params.query) && !params.query.includes("-is:new") ? [] : [1];
 	if (action === "notesInfo") result = [{noteId: 1, fields: {Char: {value: "人"}, Alternate: {value: "山"}}}];
 	return {ok: true, json: async () => ({result, error: null})};
@@ -96,4 +97,15 @@ test("idiom status can refresh silently for automatic startup", async () => {
 	assert.equal(await refreshIdiomStatus({silent: true}), true);
 	assert.equal(state.idiomAnkiStatus.idioms["人"].status, "known");
 	assert.ok(events.includes("hanja-idiom-status-change"));
+});
+
+test("shape and huneum selectors keep independent character status", async () => {
+	document.getElementById("moyangDeckSelect").value = "한자::A. 모양";
+	document.getElementById("huneumDeckSelect").value = "한자::C. 훈음 X";
+	mockFetch();
+	assert.equal(await refreshAuxiliaryStatus("moyang"), true);
+	assert.equal(await refreshAuxiliaryStatus("huneum"), true);
+	assert.equal(state.moyangAnkiStatus.characters.人.status, "known");
+	assert.equal(state.huneumAnkiStatus.characters.人.status, "known");
+	assert.equal(state.huneumAnkiStatusSource, "한자::C. 훈음 X");
 });

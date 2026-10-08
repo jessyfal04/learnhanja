@@ -4,11 +4,14 @@ import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js?v=2";
 import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
-import { isActiveStudyStatus, studyStatusKey, studyStatusPresentation } from "./study-status.js?v=2";
+import { isActiveStudyStatus, studyStatusKey } from "./study-status.js?v=2";
+import { characterDeckPresentation } from "./character-deck-status.js?v=1";
 
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");
 const characterFieldSelect = document.getElementById("characterFieldSelect");
+const moyangDeckSelect = document.getElementById("moyangDeckSelect");
+const huneumDeckSelect = document.getElementById("huneumDeckSelect");
 const idiomDeckSelect = document.getElementById("idiomDeckSelect");
 const idiomNoteTypeSelect = document.getElementById("idiomNoteTypeSelect");
 const idiomFieldSelect = document.getElementById("idiomFieldSelect");
@@ -17,6 +20,7 @@ let selectionSignature = "";
 let statusRequestID = 0;
 let statusPromise = null;
 let autoSelectRequest = false;
+const auxiliaryRequests = {moyang: 0, huneum: 0};
 
 export async function loadCatalog() {
 	try {
@@ -34,8 +38,12 @@ export async function loadMetadata() {
 	try {
 		const metadata = await ankiMetadata();
 		setOptions(deckSelect, metadata.decks, []);
+		setOptions(moyangDeckSelect, metadata.decks, []);
+		setOptions(huneumDeckSelect, metadata.decks, []);
 		setOptions(idiomDeckSelect, metadata.decks, []);
 		deckSelect.value = preferredDeck(metadata.decks, ["독음", "dokeum", "dogeum"]) || deckSelect.value;
+		moyangDeckSelect.value = preferredDeck(metadata.decks, ["모양", "moyang", "moyung", "shape"]);
+		huneumDeckSelect.value = preferredDeck(metadata.decks, ["훈음", "hun eum", "huneum", "hunum"]);
 		idiomDeckSelect.value = preferredDeck(metadata.decks, ["사자성어", "sajasongon", "sajaseongeo"]) || idiomDeckSelect.value;
 		status.className = "tag is-medium is-success is-light";
 		status.textContent = `연결됨 · 규격 ${metadata.version}`;
@@ -43,11 +51,13 @@ export async function loadMetadata() {
 		await Promise.all([
 			refreshStatus({silent: true, autoSelect: true}),
 			refreshIdiomStatus({silent: true}),
+			refreshAuxiliaryStatuses(),
 		]);
 	} catch (error) {
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
 		invalidateCharacterStatus();
+		for (const kind of ["moyang", "huneum"]) clearAuxiliaryStatus(kind);
 		state.ankiStatusError = "앙키에 연결할 수 없습니다. AnkiConnect와 연결 설정을 확인하세요";
 		document.dispatchEvent(new Event("hanja-status-change"));
 		showMessage("warning", koreanError(error, "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다"));
@@ -176,6 +186,51 @@ export async function refreshIdiomStatus({silent = false} = {}) {
 	}
 }
 
+export function refreshAuxiliaryStatuses() {
+	return Promise.all([refreshAuxiliaryStatus("moyang"), refreshAuxiliaryStatus("huneum")]);
+}
+
+export async function refreshAuxiliaryStatus(kind) {
+	const select = kind === "moyang" ? moyangDeckSelect : huneumDeckSelect;
+	const statusElement = document.getElementById(kind === "moyang" ? "moyangDeckStatus" : "huneumSelectStatus");
+	const statusKey = kind === "moyang" ? "moyangAnkiStatus" : "huneumAnkiStatus";
+	const deck = select.value;
+	const requestID = ++auxiliaryRequests[kind];
+	state[statusKey] = null;
+	if (kind === "huneum") state.huneumAnkiStatusSource = "";
+	renderCatalog();
+	statusElement.textContent = deck ? "상태를 불러오는 중…" : "덱을 선택하세요";
+	if (!deck) return false;
+	try {
+		const noteTypes = await ankiNoteTypes(deck);
+		const noteType = noteTypes.includes("Hanja") ? "Hanja" : noteTypes[0];
+		if (!noteType) throw new Error("한자 노트를 찾지 못했습니다");
+		const fields = await ankiFields(noteType);
+		const field = ["Char", "Hanja", "漢字", "Character"].find((name) => fields.includes(name));
+		if (!field) throw new Error("한자 필드를 찾지 못했습니다");
+		const result = await ankiCharacterStatus({deck, noteType, field});
+		if (requestID !== auxiliaryRequests[kind]) return false;
+		state[statusKey] = result;
+		if (kind === "huneum") state.huneumAnkiStatusSource = deck;
+		statusElement.textContent = `학습함 ${result.known}자 · ${deck}`;
+		renderCatalog();
+		return true;
+	} catch (error) {
+		if (requestID !== auxiliaryRequests[kind]) return false;
+		statusElement.textContent = koreanError(error, "앙키 상태를 불러올 수 없습니다");
+		renderCatalog();
+		return false;
+	}
+}
+
+function clearAuxiliaryStatus(kind) {
+	auxiliaryRequests[kind]++;
+	state[kind === "moyang" ? "moyangAnkiStatus" : "huneumAnkiStatus"] = null;
+	if (kind === "huneum") state.huneumAnkiStatusSource = "";
+	document.getElementById(kind === "moyang" ? "moyangDeckStatus" : "huneumSelectStatus").textContent = "앙키 연결 필요";
+	renderCatalog();
+}
+
 export function selectStatus(status) {
 	const selected = new Set();
 	for (const [character, info] of Object.entries(state.ankiStatus?.characters || {})) if (isActiveStudyStatus(info, status)) selected.add(character);
@@ -232,12 +287,18 @@ function renderGroup(group) {
 	grid.className = "hanja-grid";
 	for (const value of group.characters) {
 		const info = state.ankiStatus?.characters?.[value] || {status: "unknown"};
+		const deckPresentation = characterDeckPresentation(
+			info,
+			state.moyangAnkiStatus?.characters?.[value],
+			state.huneumAnkiStatus?.characters?.[value],
+			{moyangReady: Boolean(state.moyangAnkiStatus), huneumReady: Boolean(state.huneumAnkiStatus)},
+		);
 		const button = document.createElement("a");
 		button.href = `/?q=${encodeURIComponent(value)}#insights`;
 		button.setAttribute("role", "button");
-		button.className = `button hanja-button ${statusClass(info)}`;
+		button.className = `button hanja-button ${deckPresentation.classes}`;
 		button.textContent = value;
-		button.title = `${group.level} · ${statusLabel(info)} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
+		button.title = `${group.level} · ${deckPresentation.label} · Ctrl+클릭하면 이 탭에서 한자 탐구를 엽니다`;
 		button.dataset.character = value;
 		button.classList.toggle("is-suspended", Boolean(info.suspended));
 		button.addEventListener("click", (event) => {
@@ -272,14 +333,6 @@ function updateCharacterButtons() {
 		button.classList.toggle("is-selected", selected);
 		button.setAttribute("aria-pressed", String(selected));
 	}
-}
-
-function statusClass(info) {
-	return studyStatusPresentation(info).classes;
-}
-
-function statusLabel(info) {
-	return studyStatusPresentation(info).label;
 }
 
 function updateSelectionUI() {

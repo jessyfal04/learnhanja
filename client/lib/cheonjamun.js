@@ -1,4 +1,4 @@
-import { renderCatalog } from "./anki.js?v=10";
+import { renderCatalog } from "./anki.js?v=11";
 import { filterAndSortSentences, normalizedSet, sentenceProgress, sentenceTokens, statusForToken, statusIndex } from "./cheonjamun-data.js?v=1";
 import { openInsights } from "./insights.js?v=20";
 import { referenceFor } from "./insight-data.js?v=6";

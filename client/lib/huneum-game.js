@@ -20,15 +20,24 @@ export function initializeHuneumGame() {
 
 export function prepareHuneumDeck() {
 	if (deckPromise) return deckPromise;
+	huneumDeck = "";
+	huneumAnkiStatus = null;
+	$("huneumOpenDeck").disabled = true;
 	$("huneumDeckStatus").textContent = "앙키 훈음 덱을 찾는 중…";
 	deckPromise = (async () => {
 		try {
 			const metadata = await ankiMetadata();
-			const deck = preferredDeck(metadata.decks, ["훈음", "hun eum", "huneum", "hunum"]);
+			const selected = $("huneumDeckSelect")?.value;
+			const deck = metadata.decks.includes(selected) ? selected : preferredDeck(metadata.decks, ["훈음", "hun eum", "huneum", "hunum"]);
 			if (!deck) throw new Error("훈음 덱을 찾지 못했습니다");
 			huneumDeck = deck;
 			$("huneumOpenDeck").disabled = false;
 			$("huneumDeckStatus").textContent = `앙키 덱: ${deck}`;
+			if (state.huneumAnkiStatus && state.huneumAnkiStatusSource === deck) {
+				huneumAnkiStatus = state.huneumAnkiStatus;
+				$("huneumDeckStatus").textContent += ` · 학습한 한자 ${huneumAnkiStatus.known}자`;
+				return true;
+			}
 			const noteTypes = await ankiNoteTypes(deck);
 			const noteType = noteTypes.includes("Hanja") ? "Hanja" : noteTypes[0];
 			if (!noteType) throw new Error("훈음 덱에서 한자 노트를 찾지 못했습니다");
@@ -63,7 +72,7 @@ async function start(count) {
 	for (const button of startButtons) button.disabled = true;
 	try {
 		const mode = $("huneumMode").value;
-		if (mode === "known" && !huneumAnkiStatus && !await prepareHuneumDeck()) return;
+		if (mode === "known" && (!huneumAnkiStatus || !state.huneumAnkiStatus || huneumDeck !== $("huneumDeckSelect")?.value) && !await prepareHuneumDeck()) return;
 		const [levels, insights] = await Promise.all([
 			state.catalog ? Promise.resolve(state.catalog) : loadStaticJSON("/data/levels.json"),
 			references ? Promise.resolve({characters: references}) : loadStaticJSON("/data/insights.json"),
