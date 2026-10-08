@@ -1,4 +1,4 @@
-const views = ["connection", "characters", "recommendations", "cheonjamun", "vocabulary", "idioms", "insights", "games"];
+const views = ["connection", "characters", "recommendations", "cheonjamun", "vocabulary", "idioms", "insights", "games", "mockExam"];
 
 export function showView(name) {
 	const active = views.includes(name) ? name : "connection";

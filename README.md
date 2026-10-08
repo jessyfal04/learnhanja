@@ -227,6 +227,14 @@ There are no vocabulary or Anki API routes. The app can also be adapted to a sta
   - Static snapshot of Anki `상공회의소::9` through `상공회의소::3` tags from 2026-10-09
   - 1,800 official characters in 7 exclusive grade groups; the Anki grade tags are cumulative
   - Three additional `info::variant` forms (`豊`, `鍾`, `隣`) are listed beside their tagged counterparts (`豐`, `鐘`, `鄰`), for 1,803 selectable forms in total
+- `client/data/mock-exam-9.json`
+  - 9급 question material: all 50 tagged characters with Anki stroke, radical, sound, and meaning fields, plus 60 two-character words from the Korean vocabulary catalog and the two supplied exam papers
+  - The 2013년 2회 and 2017년 1회 papers share a 30-question, 30-minute order across ten question types; `sections` stores that level's counts
+  - 9급 scoring follows the [KCCI guide](https://license.korcham.net/co/examguide.do?cd=0401&mm=53): 20 한자 questions at 4 points, 10 어휘 questions at 6 points, and a passing score of 84/140; each level can define its own `scoring` map
+  - The 모의시험 tab provides immediate-feedback single-question practice and a timed full exam, then a colored standalone HTML report with date, score, answers, and errors
+  - The compact question map shows the configured types in paper order with number ranges and answer counts, and supports direct jumps; it stays hidden when practice is limited to one type. Practice ends after holding the red stop button for 1.2 seconds
+  - The 9급 bank's 50 characters match the [KCCI grade list](https://license.korcham.net/co/examguide02Sub.do?cd=0401&mm=53&num=2948011) after normalizing its compatibility glyph 車 to 車; generation tests cover every character and word in every applicable question type and reject multiple valid choices within the bank
+  - To add a level, provide another static `mock-exam-<level>.json` with `level`, `durationSeconds`, `sections`, `characters`, and `words`, then add its path to `client/lib/mock-exam-levels.js`. The question engine, timer, and report are shared
 - `client/data/insights.json`
   - Korean 훈음, radicals, and stroke counts from local `HanjaLevels` data
   - Korean readings, stroke counts, and English `kDefinition` from [Unicode Unihan 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip)

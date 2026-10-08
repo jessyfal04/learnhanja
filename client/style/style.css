@@ -835,3 +835,187 @@ body .tag.insight-level.is-danger.is-light {
 		font-size: 3.5rem;
 	}
 }
+
+
+.mock-shell {
+	border-color: var(--bulma-border-weak);
+}
+
+.mock-hero {
+	border-bottom: 1px solid var(--bulma-border-weak);
+	padding-bottom: 1.35rem;
+}
+
+.mock-kicker {
+	color: var(--bulma-link-text);
+	font-size: 0.7rem;
+	font-weight: 800;
+	letter-spacing: 0.13em;
+	margin-bottom: 0.35rem;
+}
+
+.mock-section-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.mock-section-heading > div {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+}
+
+.mock-section-heading h3 {
+	font-size: 1.05rem;
+	font-weight: 750;
+	margin: 0;
+}
+
+.mock-section-heading p {
+	color: var(--bulma-text-weak);
+	font-size: 0.8rem;
+	margin: 0;
+}
+
+.mock-step {
+	display: grid;
+	place-items: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: var(--bulma-radius-small);
+	background: var(--bulma-link-soft);
+	color: var(--bulma-link-text);
+	font-size: 0.75rem;
+	font-weight: 800;
+}
+
+.mock-mode.button {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+	width: 100%;
+	height: 100%;
+	min-height: 9rem;
+	padding: 1.15rem;
+	border: 1px solid var(--bulma-border);
+	border-radius: var(--bulma-radius-large);
+	white-space: normal;
+	text-align: left;
+	line-height: 1.45;
+}
+
+.mock-mode.is-selected {
+	border-color: var(--bulma-link);
+	box-shadow: inset 0 0 0 1px var(--bulma-link);
+	background: color-mix(in srgb, var(--bulma-link-soft) 45%, var(--bulma-scheme-main));
+}
+
+.mock-mode-icon {
+	margin-bottom: 0.6rem;
+}
+
+.mock-mode strong,
+.mock-mode > span:last-child {
+	display: block;
+}
+
+.mock-mode strong {
+	color: var(--bulma-text);
+	font-size: 1rem;
+	margin-bottom: 0.25rem;
+}
+
+.mock-mode > span:last-child {
+	color: var(--bulma-text-weak);
+	font-size: 0.83rem;
+}
+
+.mock-source-note {
+	padding: 0.85rem 1rem;
+	font-size: 0.82rem;
+}
+
+.mock-source-note p {margin: 0}
+.mock-timer {font-variant-numeric: tabular-nums; font-weight: 800}
+.mock-map {padding: 0.7rem 0.8rem; background: var(--bulma-scheme-main-bis); border-color: var(--bulma-border-weak)}
+.mock-map-heading, .mock-type-context {display: flex; align-items: center; justify-content: space-between; gap: 0.75rem}
+.mock-map-heading {margin-bottom: 0.45rem; font-size: 0.78rem}
+.mock-group-nav {display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.3rem}
+.mock-group-button.button {display: flex; align-items: center; justify-content: flex-start; gap: 0.3rem; height: auto; min-height: 2rem; padding: 0.3rem 0.42rem; border: 1px solid var(--bulma-border); border-radius: var(--bulma-radius); text-align: left; white-space: normal; line-height: 1.1}
+.mock-group-button.is-answered {border-color: color-mix(in srgb, var(--bulma-link) 55%, var(--bulma-border)); background: color-mix(in srgb, var(--bulma-link-soft) 40%, var(--bulma-scheme-main))}
+.mock-group-button.is-complete {background: var(--bulma-link-soft)}
+.mock-group-button.is-current {border-color: var(--bulma-link); box-shadow: inset 0 0 0 1px var(--bulma-link)}
+.mock-group-range {color: var(--bulma-link-text); font-size: 0.6rem; font-weight: 800; font-variant-numeric: tabular-nums}
+.mock-group-name {color: var(--bulma-text); font-size: 0.68rem; font-weight: 800}
+.mock-group-count {margin-left: auto; color: var(--bulma-text-weak); font-size: 0.6rem; font-variant-numeric: tabular-nums}
+.mock-map-legend {display: flex; flex-wrap: wrap; gap: 0.6rem; color: var(--bulma-text-weak); font-size: 0.64rem}
+.mock-map-legend span {display: inline-flex; align-items: center; gap: 0.3rem}
+.mock-legend-dot {display: inline-block; width: 0.6rem; height: 0.6rem; border: 1px solid var(--bulma-border); border-radius: 50%; background: var(--bulma-scheme-main)}
+.mock-legend-dot.is-answered {background: var(--bulma-link); border-color: var(--bulma-link)}
+.mock-legend-dot.is-current {border: 2px solid var(--bulma-link)}
+.mock-type-context {justify-content: flex-start; flex-wrap: wrap; padding: 0.15rem 0}
+.mock-type-context .help {margin: 0}
+.mock-jump {display: flex; flex-wrap: wrap; gap: 0.35rem}
+.mock-jump-button {width: 2rem; min-width: 2rem; padding: 0; font-size: 0.72rem}
+.mock-jump-button.is-answered {background: var(--bulma-link-soft); color: var(--bulma-link-text)}
+.mock-jump-button.is-current {border-color: var(--bulma-link); box-shadow: 0 0 0 2px color-mix(in srgb, var(--bulma-link) 25%, transparent)}
+
+.mock-question {
+	background: var(--bulma-scheme-main-bis);
+	border-color: var(--bulma-border-weak);
+}
+
+#mockInstruction {font-size: 1.02rem; margin-bottom: 0.4rem}
+.mock-stimulus {font-family: "Noto Serif CJK KR", "Noto Serif KR", serif; font-size: clamp(2.1rem, 6vw, 3.1rem); font-weight: 700; line-height: 1.3; margin: 0.2rem 0 1.25rem}
+.mock-choices {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem}
+.mock-choice.button {justify-content: flex-start; height: auto; min-height: 3.3rem; padding: 0.65rem 0.75rem; text-align: left; white-space: normal}
+.mock-shell .mock-choice.button.is-selected {border-color: var(--bulma-link); background: var(--bulma-link-soft); color: var(--bulma-link-text)}
+.mock-shell .mock-choice.button.is-correct {border-color: var(--bulma-success); background: var(--bulma-success-soft); color: var(--bulma-success-on-scheme)}
+.mock-shell .mock-choice.button.is-wrong {border-color: var(--bulma-danger); background: var(--bulma-danger-soft); color: var(--bulma-danger-on-scheme)}
+.mock-shell .mock-choice.button:disabled {opacity: 1}
+.mock-shell .mock-choice.button:disabled:not(.is-correct):not(.is-wrong) {background: var(--bulma-scheme-main-ter); color: var(--bulma-text-weak); opacity: 0.8}
+.mock-choice-number {display: grid; place-items: center; flex: 0 0 1.5rem; width: 1.5rem; height: 1.5rem; margin-right: 0.7rem; border-radius: 50%; background: var(--bulma-scheme-main-ter); font-size: 0.72rem; font-weight: 800}
+.mock-choice-text {font-size: 0.9rem; overflow-wrap: anywhere}
+.mock-feedback {font-size: 0.88rem}
+.mock-play-actions {justify-content: flex-end; flex-wrap: wrap}
+.mock-play-actions #mockPrevious, .mock-play-actions #mockFinish.is-training {margin-right: auto}
+.mock-play-actions #mockFinish.is-training {overflow: hidden; touch-action: none}
+.mock-hold-fill {position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: rgb(255 255 255 / 30%); pointer-events: none}
+#mockFinish.is-training.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
+.mock-hold-label {position: relative}
+
+.mock-score-ring {--mock-score: 0%; --mock-ring-color: var(--bulma-link); --mock-ring-text: var(--bulma-link-text); display: grid; place-items: center; width: 7rem; height: 7rem; flex: 0 0 7rem; border-radius: 50%; background: conic-gradient(var(--mock-ring-color) var(--mock-score), var(--bulma-border) var(--mock-score)); position: relative; color: var(--mock-ring-text); font-size: 1.5rem; font-weight: 800}
+.mock-score-ring.is-pass {--mock-ring-color: var(--bulma-success); --mock-ring-text: var(--bulma-success-on-scheme)}
+.mock-score-ring.is-fail {--mock-ring-color: var(--bulma-danger); --mock-ring-text: var(--bulma-danger-on-scheme)}
+.mock-score-ring::before {content: ""; position: absolute; inset: 0.65rem; border-radius: 50%; background: var(--bulma-scheme-main)}
+.mock-score-ring span {position: relative}
+#mockPass.is-success {background: var(--bulma-success-soft); border: 1px solid var(--bulma-success); color: var(--bulma-success-on-scheme)}
+#mockPass.is-danger {background: var(--bulma-danger-soft); border: 1px solid var(--bulma-danger); color: var(--bulma-danger-on-scheme)}
+.mock-stat {height: 100%; padding: 0.95rem}
+.mock-stat-value, .mock-stat-label {display: block}
+.mock-stat-value {font-size: 1.2rem; font-weight: 800}
+.mock-stat-label {color: var(--bulma-text-weak); font-size: 0.77rem}
+.mock-review {display: grid; gap: 0.75rem}
+.mock-review-card {border-left: 4px solid var(--bulma-border); margin-bottom: 0 !important; padding: 1rem}
+.mock-review-card.is-correct {border-left-color: var(--bulma-success)}
+.mock-review-card.is-wrong {border-left-color: var(--bulma-danger)}
+.mock-review-card.is-unanswered {border-left-color: var(--bulma-warning)}
+.mock-review-head {display: flex; justify-content: space-between; gap: 1rem; color: var(--bulma-text-weak); font-size: 0.8rem; font-weight: 750}
+.mock-review-card.is-correct .mock-review-status {color: var(--bulma-success-on-scheme)}
+.mock-review-card.is-wrong .mock-review-status {color: var(--bulma-danger-on-scheme)}
+.mock-review-card.is-unanswered .mock-review-status {color: var(--bulma-warning-on-scheme)}
+.mock-review-prompt {display: block; font-weight: 700; margin: 0.65rem 0}
+.mock-review-choices {display: flex; flex-wrap: wrap; gap: 0.3rem}
+.mock-review-explanation {display: block; color: var(--bulma-text-weak); font-size: 0.8rem; margin-top: 0.6rem}
+
+@media screen and (max-width: 700px) {
+	.mock-group-nav {grid-template-columns: repeat(2, minmax(0, 1fr))}
+	.mock-choices {grid-template-columns: 1fr}
+	.mock-section-heading {align-items: flex-start; flex-direction: column}
+	.mock-score-ring {width: 5.5rem; height: 5.5rem; flex-basis: 5.5rem; font-size: 1.1rem}
+}
