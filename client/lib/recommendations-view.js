@@ -1,7 +1,7 @@
-import { insightLink } from "./insights.js?v=22";
+import { insightLink } from "./insights.js?v=23";
 import { rankChapters } from "./recommendations.js?v=1";
 import { state } from "./state.js";
-import { loadVocabularyCatalog } from "./vocabulary-data.js?v=2";
+import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
 
 const $ = (id) => document.getElementById(id);
 let vocabulary;

@@ -35,3 +35,8 @@ test("selection search applies its result limit after counting all matches", () 
 	assert.equal(result.total, 2);
 	assert.equal(result.entries.length, 1);
 });
+
+test("exam selection can use every matching word beyond the table limit", () => {
+	const many = Array.from({length: 5001}, (_, index) => ({hanja: "人人", hangul: `인${index}`, definitions: ["사람"]}));
+	assert.equal(searchVocabulary(many, ["人"], Infinity).entries.length, 5001);
+});

@@ -27,7 +27,7 @@ export function searchVocabulary(entries, characters, limit = defaultLimit) {
 	if (!allowed.size) return {entries: [], total: 0};
 	const matches = entries.filter((entry) => [...entry.hanja].every((character) => allowed.has(normalize(character))));
 	sortByFrequency(matches);
-	const boundedLimit = Math.min(Math.max(Number(limit) || defaultLimit, 1), maximumLimit);
+	const boundedLimit = limit === Infinity ? matches.length : Math.min(Math.max(Number(limit) || defaultLimit, 1), maximumLimit);
 	return {entries: matches.slice(0, boundedLimit), total: matches.length};
 }
 

@@ -1,3 +1,5 @@
+import { searchVocabulary } from "./vocabulary-data.js?v=3";
+
 export const examSections = [
 	{type: "strokes", title: "획수", section: "한자", count: 1, instruction: "다음 한자의 획수는 모두 몇 획입니까?"},
 	{type: "radical", title: "부수", section: "한자", count: 1, instruction: "다음 한자의 부수는 무엇입니까?"},
@@ -13,13 +15,25 @@ export const examSections = [
 
 export function examGroups(data) {
 	let startIndex = 0;
-	return data.sections.map(({type, count}) => {
+	return data.format.sections.map(({type, count}) => {
 		const section = examSections.find((entry) => entry.type === type);
 		if (!section || !Number.isInteger(count) || count < 1) throw new Error("시험 유형 구성이 올바르지 않습니다");
 		const group = {...section, count, startIndex, endIndex: startIndex + count - 1};
 		startIndex += count;
 		return group;
 	});
+}
+
+export function examWordsForLevel(catalog, characters) {
+	const selected = searchVocabulary(catalog, characters.map((entry) => entry.hanja), Infinity).entries;
+	const eligible = selected.filter((entry) => [...entry.hanja].length > 1 && entry.hangul && entry.definitions?.some((definition) => definition.trim()));
+	const spellings = new Map();
+	for (const entry of eligible) spellings.set(entry.hanja, (spellings.get(entry.hanja) || 0) + 1);
+	return eligible.filter((entry) => spellings.get(entry.hanja) === 1).map((entry) => ({
+		hanja: entry.hanja,
+		reading: entry.hangul,
+		meaning: entry.definitions.find((definition) => definition.trim()).trim().replace(/[.!?]$/u, ""),
+	}));
 }
 
 export function secureRandom() {

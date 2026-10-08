@@ -4,7 +4,7 @@ import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js?v=3";
 import { decomposeHanja, filterRelated, hangulCandidates, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=6";
 import { urlWithQuery } from "./url-query.js?v=1";
-import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=2";
+import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=3";
 import { vocabularyKnowledge } from "./vocab-filter.js";
 import { fillStatusCharacters } from "./status-characters.js?v=1";
 import { frequencyCell } from "./frequency-display.js?v=1";

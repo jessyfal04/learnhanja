@@ -1,17 +1,19 @@
-import { examGroups, makeExam, makeQuestion, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=1";
-import { answerStatus, buildReportHTML, formatDuration } from "./mock-exam-report.js?v=1";
-import { mockExamLevel, mockExamLevels } from "./mock-exam-levels.js?v=1";
+import { examGroups, examWordsForLevel, makeExam, makeQuestion, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=2";
+import { answerStatus, buildReportHTML, formatDuration, weaknessLines } from "./mock-exam-report.js?v=2";
+import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=2";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
+import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
+import { bindHoldButton } from "./hold-button.js?v=1";
 
 const $ = (id) => document.getElementById(id);
 let data = null;
-const levelCache = new Map();
+let examConfigsPromise = null;
 let mode = "single";
 let session = null;
 let clock = null;
-let stopHold = null;
-const stopHoldDuration = 1200;
+let cancelStopHold = () => {};
+let cancelRestartHold = () => {};
 
 const rangeLabel = (group) => `${group.startIndex + 1}${group.count > 1 ? `–${group.endIndex + 1}` : ""}번`;
 
@@ -26,35 +28,9 @@ export function initializeMockExam() {
 	$("mockStart").addEventListener("click", start);
 	$("mockPrevious").addEventListener("click", () => move(-1));
 	$("mockNext").addEventListener("click", () => move(1));
-	const finishButton = $("mockFinish");
-	finishButton.addEventListener("click", () => { if (session?.mode === "full") finish(); });
-	finishButton.addEventListener("pointerdown", (event) => {
-		if (session?.mode !== "single" || event.button !== 0) return;
-		startStopHold("pointer", event.pointerId);
-		finishButton.setPointerCapture(event.pointerId);
-	});
-	finishButton.addEventListener("pointermove", (event) => {
-		if (stopHold?.source !== "pointer" || stopHold.pointerId !== event.pointerId) return;
-		const bounds = finishButton.getBoundingClientRect();
-		if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) cancelStopHold();
-	});
-	finishButton.addEventListener("pointerup", (event) => { if (stopHold?.pointerId === event.pointerId) cancelStopHold(); });
-	finishButton.addEventListener("pointercancel", cancelStopHold);
-	finishButton.addEventListener("keydown", (event) => {
-		if (session?.mode !== "single" || ![" ", "Enter"].includes(event.key)) return;
-		event.preventDefault();
-		if (!event.repeat) startStopHold("keyboard");
-	});
-	finishButton.addEventListener("keyup", (event) => {
-		if (session?.mode !== "single" || ![" ", "Enter"].includes(event.key)) return;
-		event.preventDefault();
-		if (stopHold?.source === "keyboard") cancelStopHold();
-	});
-	finishButton.addEventListener("blur", cancelStopHold);
-	finishButton.addEventListener("contextmenu", (event) => { if (session?.mode === "single") event.preventDefault(); });
-	window.addEventListener("blur", cancelStopHold);
+	cancelStopHold = bindHoldButton($("mockFinish"), () => session?.mode === "single", finish);
+	cancelRestartHold = bindHoldButton($("mockAgain"), () => true, showSetup);
 	$("mockDownload").addEventListener("click", downloadReport);
-	$("mockAgain").addEventListener("click", showSetup);
 	document.addEventListener("keydown", (event) => {
 		if (!session || session.finishedAt || $("mockExamView").classList.contains("is-hidden") || ["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
 		if (/^[1-5]$/.test(event.key)) {
@@ -69,9 +45,10 @@ export function initializeMockExam() {
 async function prepareLevel() {
 	const level = mockExamLevel($("mockLevel").value);
 	if (!level) throw new Error("시험 급수를 선택하세요");
-	if (!levelCache.has(level.path)) levelCache.set(level.path, loadStaticJSON(level.path).catch((error) => { levelCache.delete(level.path); throw error; }));
-	const levelData = await levelCache.get(level.path);
-	if (!Array.isArray(levelData.sections)) throw new Error("시험 유형 구성이 없습니다");
+	examConfigsPromise ||= loadStaticJSON(mockExamPath).catch((error) => { examConfigsPromise = null; throw error; });
+	const levelData = (await examConfigsPromise)[level.value];
+	if (!levelData) throw new Error("선택한 급수의 시험 자료가 없습니다");
+	if (!Array.isArray(levelData.format?.sections)) throw new Error("시험 유형 구성이 없습니다");
 	if ($("mockLevel").value === level.value) {
 		data = levelData;
 		$("mockSetupStatus").textContent = "";
@@ -80,12 +57,12 @@ async function prepareLevel() {
 		$("mockDescription").textContent = `기출 문항 유형과 순서를 바탕으로, ${level.label} 한자와 한자어에서 새 문제를 만듭니다.`;
 		const groups = examGroups(levelData);
 		const count = groups.reduce((total, group) => total + group.count, 0);
-		const maxPoints = groups.reduce((total, group) => total + group.count * levelData.scoring?.pointsBySection?.[group.section], 0);
-		if (!Number.isFinite(maxPoints) || !Number.isFinite(levelData.scoring?.passingScore) || levelData.scoring.passingScore <= 0 || levelData.scoring.passingScore > maxPoints) throw new Error("시험 배점 정보가 올바르지 않습니다");
-		const minutes = Math.round(levelData.durationSeconds / 60);
+		const maxPoints = groups.reduce((total, group) => total + group.count * levelData.format.scoring?.pointsBySection?.[group.section], 0);
+		if (!Number.isFinite(maxPoints) || !Number.isFinite(levelData.format.scoring?.passingScore) || levelData.format.scoring.passingScore <= 0 || levelData.format.scoring.passingScore > maxPoints) throw new Error("시험 배점 정보가 올바르지 않습니다");
+		const minutes = Math.round(levelData.format.durationSeconds / 60);
 		$("mockModeFullTitle").textContent = `${count}문제 실전`;
 		$("mockModeFullDescription").textContent = `기출 순서 그대로, ${minutes}분 안에 풀어요. 결과는 제출 후 공개됩니다.`;
-		$("mockSource").textContent = `출제 기준 · ${levelData.sourceLabel || levelData.source} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.scoring.passingScore}/${maxPoints}점`;
+		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
 		const typeSelect = $("mockType");
 		const selected = typeSelect.value;
 		typeSelect.replaceChildren(new Option("전체 유형 · 시험지 순서", "all"), ...groups.map((group) =>
@@ -112,12 +89,13 @@ async function start() {
 	try {
 		const level = mockExamLevel($("mockLevel").value);
 		if (!level) throw new Error("시험 급수를 선택하세요");
-		data = await prepareLevel();
-		if (data.level !== level.label || !data.characters?.length || !data.words?.length || !data.sections?.length || !data.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
+		const levelData = await prepareLevel();
+		data = {...levelData, words: examWordsForLevel(await loadVocabularyCatalog(), levelData.characters)};
+		if (data.level !== level.label || !data.characters?.length || !data.words?.length || !data.format.sections.length || !data.format.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
 		const trainingType = $("mockType").value;
 		const trainingPosition = trainingType === "all" ? 0 : examGroups(data).find((group) => group.type === trainingType)?.startIndex;
 		const questions = mode === "full" ? makeExam(data) : [newTrainingQuestion([], trainingType, trainingPosition)];
-		session = {mode, level: data.level, scoring: data.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0};
+		session = {mode, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0};
 		$("mockSetup").classList.add("is-hidden");
 		$("mockResult").classList.add("is-hidden");
 		$("mockPlay").classList.remove("is-hidden");
@@ -145,7 +123,7 @@ function newTrainingQuestion(previous, selected, position) {
 function tick() {
 	if (!session || session.finishedAt) return;
 	const elapsed = Math.floor((Date.now() - session.startedAt.getTime()) / 1000);
-	const remaining = data.durationSeconds - elapsed;
+	const remaining = data.format.durationSeconds - elapsed;
 	if (session.mode === "full" && remaining <= 0) {
 		$("mockTimer").textContent = "00:00";
 		finish();
@@ -167,7 +145,7 @@ function renderQuestion() {
 	const groupIndex = groups.findIndex((entry) => entry.startIndex <= position && position <= entry.endIndex);
 	const group = groups[groupIndex];
 	const totalAnswered = answers.filter((value) => value !== null).length;
-	$("mockSessionLabel").textContent = full ? `${questions.length}문제 실전 · ${formatDuration(data.durationSeconds)}` : "한 문제씩 연습 · 바로 확인";
+	$("mockSessionLabel").textContent = full ? `${questions.length}문제 실전 · ${formatDuration(data.format.durationSeconds)}` : "한 문제씩 연습 · 바로 확인";
 	$("mockProgress").textContent = full ? `답함 ${totalAnswered} / ${questions.length} · 현재 ${index + 1}번` : `${index + 1}번째 문제 · ${totalAnswered}문제 답함`;
 	$("mockProgressBar").classList.toggle("is-hidden", !full);
 	$("mockProgressBar").value = totalAnswered / questions.length * 100;
@@ -274,7 +252,7 @@ function label(text, className) {
 
 function chooseAnswer(choice) {
 	if (!session || session.finishedAt) return;
-	if (session.mode === "full" && Date.now() - session.startedAt.getTime() >= data.durationSeconds * 1000) return finish();
+	if (session.mode === "full" && Date.now() - session.startedAt.getTime() >= data.format.durationSeconds * 1000) return finish();
 	const index = session.index;
 	if (!session.questions[index].choices.includes(choice)) return;
 	if (session.mode === "single" && session.answers[index] !== null) return;
@@ -302,31 +280,11 @@ function finish() {
 	cancelStopHold();
 	session.finishedAt = new Date();
 	session.elapsedSeconds = Math.floor((session.finishedAt - session.startedAt) / 1000);
-	if (session.mode === "full") session.elapsedSeconds = Math.min(data.durationSeconds, session.elapsedSeconds);
+	if (session.mode === "full") session.elapsedSeconds = Math.min(data.format.durationSeconds, session.elapsedSeconds);
 	clearInterval(clock);
 	$("mockPlay").classList.add("is-hidden");
 	$("mockResult").classList.remove("is-hidden");
 	renderResult();
-}
-
-function startStopHold(source, pointerId = null) {
-	if (stopHold || session?.mode !== "single" || session.finishedAt) return;
-	const currentSession = session;
-	const timer = setTimeout(() => {
-		if (stopHold?.timer !== timer) return;
-		stopHold = null;
-		$("mockFinish").classList.remove("is-holding");
-		if (session === currentSession) finish();
-	}, stopHoldDuration);
-	stopHold = {source, pointerId, timer};
-	$("mockFinish").classList.add("is-holding");
-}
-
-function cancelStopHold() {
-	if (!stopHold) return;
-	clearTimeout(stopHold.timer);
-	stopHold = null;
-	$("mockFinish").classList.remove("is-holding");
 }
 
 function renderResult() {
@@ -358,6 +316,11 @@ function renderResult() {
 		card.append(label(value, "mock-stat-value"), label(caption, "mock-stat-label"));
 		column.appendChild(card);
 		return column;
+	}));
+	$("mockWeakness").replaceChildren(...weaknessLines(session.questions, session.answers).map(([title, value]) => {
+		const row = document.createElement("p");
+		row.append(label(title, "mock-weakness-label"), label(value, "mock-weakness-value"));
+		return row;
 	}));
 	$("mockReview").replaceChildren(...session.questions.map((question, index) => {
 		const status = answerStatus(question, session.answers[index]);
@@ -395,6 +358,7 @@ function downloadReport() {
 }
 
 function showSetup() {
+	cancelRestartHold();
 	session = null;
 	clearInterval(clock);
 	$("mockResult").classList.add("is-hidden");

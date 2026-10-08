@@ -984,9 +984,10 @@ body .tag.insight-level.is-danger.is-light {
 .mock-feedback {font-size: 0.88rem}
 .mock-play-actions {justify-content: flex-end; flex-wrap: wrap}
 .mock-play-actions #mockPrevious, .mock-play-actions #mockFinish.is-training {margin-right: auto}
-.mock-play-actions #mockFinish.is-training {overflow: hidden; touch-action: none}
+.mock-play-actions #mockFinish.is-training, #mockAgain {overflow: hidden; touch-action: none}
 .mock-hold-fill {position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: rgb(255 255 255 / 30%); pointer-events: none}
-#mockFinish.is-training.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
+#mockAgain .mock-hold-fill {background: color-mix(in srgb, var(--bulma-link) 28%, transparent)}
+#mockFinish.is-training.is-holding .mock-hold-fill, #mockAgain.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
 .mock-hold-label {position: relative}
 
 .mock-score-ring {--mock-score: 0%; --mock-ring-color: var(--bulma-link); --mock-ring-text: var(--bulma-link-text); display: grid; place-items: center; width: 7rem; height: 7rem; flex: 0 0 7rem; border-radius: 50%; background: conic-gradient(var(--mock-ring-color) var(--mock-score), var(--bulma-border) var(--mock-score)); position: relative; color: var(--mock-ring-text); font-size: 1.5rem; font-weight: 800}
@@ -1000,6 +1001,10 @@ body .tag.insight-level.is-danger.is-light {
 .mock-stat-value, .mock-stat-label {display: block}
 .mock-stat-value {font-size: 1.2rem; font-weight: 800}
 .mock-stat-label {color: var(--bulma-text-weak); font-size: 0.77rem}
+.mock-weakness {border: 1px solid var(--bulma-border-weak); box-shadow: none; padding: 1rem 1.25rem}
+.mock-weakness p {display: flex; gap: 0.8rem; margin: 0.35rem 0; font-size: 0.8rem}
+.mock-weakness-label {flex: 0 0 5.5rem; color: var(--bulma-text-weak); font-weight: 700}
+.mock-weakness-value {overflow-wrap: anywhere}
 .mock-review {display: grid; gap: 0.75rem}
 .mock-review-card {border-left: 4px solid var(--bulma-border); margin-bottom: 0 !important; padding: 1rem}
 .mock-review-card.is-correct {border-left-color: var(--bulma-success)}

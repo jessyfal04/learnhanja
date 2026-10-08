@@ -1,5 +1,7 @@
+export const mockExamPath = "/data/mock-exam.json?v=1";
+
 export const mockExamLevels = [
-	{value: "9", label: "9급", path: "/data/mock-exam-9.json"},
+	{value: "9", label: "9급"},
 ];
 
 export function mockExamLevel(value) {
