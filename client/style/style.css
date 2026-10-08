@@ -982,12 +982,12 @@ body .tag.insight-level.is-danger.is-light {
 .mock-choice-number {display: grid; place-items: center; flex: 0 0 1.5rem; width: 1.5rem; height: 1.5rem; margin-right: 0.7rem; border-radius: 50%; background: var(--bulma-scheme-main-ter); font-size: 0.72rem; font-weight: 800}
 .mock-choice-text {font-size: 0.9rem; overflow-wrap: anywhere}
 .mock-feedback {font-size: 0.88rem}
-.mock-play-actions {justify-content: flex-end; flex-wrap: wrap}
-.mock-play-actions #mockPrevious, .mock-play-actions #mockFinish.is-training {margin-right: auto}
-.mock-play-actions #mockFinish.is-training, #mockAgain {overflow: hidden; touch-action: none}
+.mock-play-actions {justify-content: flex-start; flex-wrap: wrap}
+.mock-play-actions #mockNext {margin-left: auto}
+.mock-play-actions #mockFinish, #mockAgain {overflow: hidden; touch-action: none}
 .mock-hold-fill {position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: rgb(255 255 255 / 30%); pointer-events: none}
 #mockAgain .mock-hold-fill {background: color-mix(in srgb, var(--bulma-link) 28%, transparent)}
-#mockFinish.is-training.is-holding .mock-hold-fill, #mockAgain.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
+#mockFinish.is-holding .mock-hold-fill, #mockAgain.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
 .mock-hold-label {position: relative}
 
 .mock-score-ring {--mock-score: 0%; --mock-ring-color: var(--bulma-link); --mock-ring-text: var(--bulma-link-text); display: grid; place-items: center; width: 7rem; height: 7rem; flex: 0 0 7rem; border-radius: 50%; background: conic-gradient(var(--mock-ring-color) var(--mock-score), var(--bulma-border) var(--mock-score)); position: relative; color: var(--mock-ring-text); font-size: 1.5rem; font-weight: 800}

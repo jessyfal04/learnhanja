@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { examGroups, examSections, examWordsForLevel, makeExam, makeQuestion, scoreExam, scoreQuestions } from "./mock-exam-data.js";
-import { answerStatus, buildReportHTML, weaknessLines } from "./mock-exam-report.js";
+import { examGroups, examSections, examWordsForLevel, makeExam, makeQuestion, partialExamData, scoreExam, scoreQuestions } from "./mock-exam-data.js";
+import { answerStatus, buildReportHTML, reportFilename, weaknessLines } from "./mock-exam-report.js";
 import { expandCatalog } from "./vocabulary-data.js";
 
 const levelData = JSON.parse(readFileSync(new URL("../data/mock-exam.json", import.meta.url)))["9"];
@@ -120,6 +120,52 @@ test("9급 passing grade uses 4-point character and 6-point vocabulary questions
 	assert.match(report, /합격 · 합격 기준 84\/140점/);
 	assert.match(report, /84 \/ 140/);
 	assert.match(report, /<div class="stat pass">/);
+});
+
+test("partial paper uses active known 독음 targets, scales sections and preserves five choices", () => {
+	const known = data.characters.slice(0, 3);
+	const statuses = {characters: Object.fromEntries(known.map((entry) => [entry.hanja.normalize("NFKC"), {status: "known", suspended: false}]))};
+	statuses.characters[known[0].hanja] = {status: "known", suspended: true};
+	const partial = partialExamData(data, statuses);
+	const targetCharacters = new Set(known.slice(1).map((entry) => entry.hanja));
+	assert.deepEqual(new Set(partial.targets.characters.map((entry) => entry.hanja)), targetCharacters);
+	assert.ok(partial.targets.words.every((entry) => [...entry.hanja].every((character) => targetCharacters.has(character))));
+	assert.ok(partial.format.sections.every((section) => section.count <= data.format.sections.find((full) => full.type === section.type).count));
+	assert.ok(partial.format.durationSeconds < data.format.durationSeconds);
+	const paper = makeExam(partial, randomSequence(33));
+	assert.equal(paper.length, partial.format.sections.reduce((sum, section) => sum + section.count, 0));
+	for (const question of paper) {
+		assert.ok((question.section === "한자" ? targetCharacters : new Set(partial.targets.words.map((entry) => entry.hanja))).has(question.source));
+		assert.equal(question.choices.length, 5);
+		assert.equal(new Set(question.choices).size, 5);
+	}
+	const maxPoints = paper.reduce((sum, question) => sum + partial.format.scoring.pointsBySection[question.section], 0);
+	assert.equal(partial.format.scoring.passingScore, Math.ceil(84 / 140 * maxPoints));
+	const report = buildReportHTML({questions: paper, answers: paper.map((question) => question.correct), scoring: partial.format.scoring, mode: "full", partial: true, level: "9급", startedAt: new Date("2026-10-09T00:00:00Z"), finishedAt: new Date("2026-10-09T00:05:00Z"), elapsedSeconds: 300});
+	assert.match(report, /독음 부분 연습/);
+	assert.match(report, /연습 통과 · 연습 기준/);
+});
+
+test("single-question partial practice reuses a small known pool instead of stopping", () => {
+	const target = data.characters[0];
+	const partial = partialExamData(data, {characters: {[target.hanja]: {status: "known", suspended: false}}});
+	assert.equal(partial.targets.characters.length, 1);
+	assert.equal(partial.targets.words.length, 0);
+	assert.equal(partial.format.sections.length, 6);
+	assert.equal(partial.format.durationSeconds, 360);
+	const first = makeQuestion(partial, "characterSound", randomSequence(1));
+	const again = makeQuestion(partial, "characterSound", randomSequence(2), new Set([target.hanja]));
+	assert.equal(first.source, target.hanja);
+	assert.equal(again.source, target.hanja);
+	assert.equal(again.choices.length, 5);
+});
+
+test("report filenames include scope, score, exact time and repeat count", () => {
+	const questions = makeExam(data, randomSequence(7));
+	const session = {level: "9급", mode: "full", partial: false, questions, answers: questions.map((question) => question.correct), scoring: data.format.scoring, finishedAt: new Date(2026, 9, 9, 5, 1, 7, 123)};
+	assert.equal(reportFilename(session), "상공회의소-9급-실전모의시험-전체-140점-2026-10-09_05-01-07-123-01.html");
+	assert.equal(reportFilename(session, 2), "상공회의소-9급-실전모의시험-전체-140점-2026-10-09_05-01-07-123-02.html");
+	assert.match(reportFilename({...session, mode: "single", partial: true}), /유형연습-독음부분-100퍼센트/);
 });
 
 test("score and downloadable report distinguish correct, wrong and unanswered questions", () => {

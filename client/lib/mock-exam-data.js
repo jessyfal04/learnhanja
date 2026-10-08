@@ -1,4 +1,5 @@
 import { searchVocabulary } from "./vocabulary-data.js?v=3";
+import { isActiveStudyStatus } from "./study-status.js?v=2";
 
 export const examSections = [
 	{type: "strokes", title: "획수", section: "한자", count: 1, instruction: "다음 한자의 획수는 모두 몇 획입니까?"},
@@ -36,6 +37,29 @@ export function examWordsForLevel(catalog, characters) {
 	}));
 }
 
+export function partialExamData(data, ankiStatus) {
+	const characters = data.characters.filter((entry) => isActiveStudyStatus(ankiStatus?.characters?.[entry.hanja.normalize("NFKC")], "known"));
+	const known = new Set(characters.map((entry) => entry.hanja.normalize("NFKC")));
+	const words = data.words.filter((entry) => [...entry.hanja].every((character) => known.has(character.normalize("NFKC"))));
+	const sections = data.format.sections.flatMap((section) => {
+		const pool = section.type.startsWith("word") || section.type.endsWith("Word") ? words : characters;
+		const count = Math.min(section.count, pool.length);
+		return count ? [{...section, count}] : [];
+	});
+	const fullCount = data.format.sections.reduce((sum, section) => sum + section.count, 0);
+	const count = sections.reduce((sum, section) => sum + section.count, 0);
+	const points = data.format.scoring.pointsBySection;
+	const fullPoints = examGroups(data).reduce((sum, section) => sum + section.count * points[section.section], 0);
+	const maxPoints = examGroups({...data, format: {...data.format, sections}}).reduce((sum, section) => sum + section.count * points[section.section], 0);
+	const passingScore = Math.max(1, Math.ceil(data.format.scoring.passingScore / fullPoints * maxPoints));
+	const durationSeconds = Math.max(60, Math.ceil(data.format.durationSeconds * count / fullCount / 60) * 60);
+	return {
+		...data,
+		targets: {characters, words},
+		format: {...data.format, sections, durationSeconds, scoring: {...data.format.scoring, passingScore}},
+	};
+}
+
 export function secureRandom() {
 	const value = new Uint32Array(1);
 	globalThis.crypto.getRandomValues(value);
@@ -65,7 +89,9 @@ export function makeQuestion(data, type, random = secureRandom, excluded = new S
 	const section = examSections.find((entry) => entry.type === type);
 	if (!section) throw new Error(`알 수 없는 문항 유형: ${type}`);
 	const entries = type.startsWith("word") || type.endsWith("Word") ? data.words : data.characters;
-	const available = entries.filter((entry) => !excluded.has(entry.hanja) && (targetSource === null || entry.hanja === targetSource));
+	const targets = (type.startsWith("word") || type.endsWith("Word") ? data.targets?.words : data.targets?.characters) || entries;
+	let available = targets.filter((entry) => !excluded.has(entry.hanja) && (targetSource === null || entry.hanja === targetSource));
+	if (!available.length && targetSource === null) available = targets;
 	if (!available.length) throw new Error(`문항 자료가 부족합니다: ${type}`);
 	const target = shuffle(available, random)[0];
 	let stimulus;

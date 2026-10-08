@@ -1,10 +1,13 @@
-import { examGroups, examWordsForLevel, makeExam, makeQuestion, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=2";
-import { answerStatus, buildReportHTML, formatDuration, weaknessLines } from "./mock-exam-report.js?v=2";
+import { examGroups, examWordsForLevel, makeExam, makeQuestion, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=3";
+import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=3";
 import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=2";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
 import { bindHoldButton } from "./hold-button.js?v=1";
+import { state } from "./state.js";
+import { refreshStatus } from "./anki.js?v=12";
+import { isActiveStudyStatus } from "./study-status.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 let data = null;
@@ -25,10 +28,12 @@ export function initializeMockExam() {
 	void prepareLevel().catch((error) => { $("mockSetupStatus").textContent = koreanError(error, "문항 자료를 불러올 수 없습니다"); });
 	$("mockModeSingle").addEventListener("click", () => chooseMode("single"));
 	$("mockModeFull").addEventListener("click", () => chooseMode("full"));
+	$("mockKnownOnly").addEventListener("change", renderKnownHelp);
+	document.addEventListener("hanja-status-change", renderKnownHelp);
 	$("mockStart").addEventListener("click", start);
 	$("mockPrevious").addEventListener("click", () => move(-1));
 	$("mockNext").addEventListener("click", () => move(1));
-	cancelStopHold = bindHoldButton($("mockFinish"), () => session?.mode === "single", finish);
+	cancelStopHold = bindHoldButton($("mockFinish"), () => Boolean(session && !session.finishedAt), finish);
 	cancelRestartHold = bindHoldButton($("mockAgain"), () => true, showSetup);
 	$("mockDownload").addEventListener("click", downloadReport);
 	document.addEventListener("keydown", (event) => {
@@ -51,6 +56,7 @@ async function prepareLevel() {
 	if (!Array.isArray(levelData.format?.sections)) throw new Error("시험 유형 구성이 없습니다");
 	if ($("mockLevel").value === level.value) {
 		data = levelData;
+		renderKnownHelp();
 		$("mockSetupStatus").textContent = "";
 		$("mockKicker").textContent = `SANGONG PRACTICE LAB · ${level.label}`;
 		$("mockHeroMark").textContent = level.label;
@@ -72,6 +78,24 @@ async function prepareLevel() {
 	return levelData;
 }
 
+function renderKnownHelp() {
+	const help = $("mockKnownHelp");
+	if (!$("mockKnownOnly").checked || !data?.characters?.length) {
+		help.textContent = "";
+		return;
+	}
+	if (state.ankiStatusLoading) {
+		help.textContent = "앙키 독음 상태를 확인하는 중…";
+		return;
+	}
+	if (!state.ankiStatus) {
+		help.textContent = "앙키 독음 상태가 필요합니다. 시작할 때 다시 연결합니다.";
+		return;
+	}
+	const known = data.characters.filter((entry) => isActiveStudyStatus(state.ankiStatus.characters?.[entry.hanja.normalize("NFKC")], "known")).length;
+	help.textContent = `현재 급수 ${data.characters.length}자 중 학습한 독음 ${known}자 · 중단 카드 제외 · 연습 기준 자동 조정`;
+}
+
 function chooseMode(value) {
 	mode = value;
 	for (const [id, choice] of [["mockModeSingle", "single"], ["mockModeFull", "full"]]) {
@@ -90,12 +114,18 @@ async function start() {
 		const level = mockExamLevel($("mockLevel").value);
 		if (!level) throw new Error("시험 급수를 선택하세요");
 		const levelData = await prepareLevel();
-		data = {...levelData, groups: examGroups(levelData), words: examWordsForLevel(await loadVocabularyCatalog(), levelData.characters)};
-		if (data.level !== level.label || !data.characters?.length || !data.words?.length || !data.format.sections.length || !data.format.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
-		const trainingType = $("mockType").value;
+		const partial = $("mockKnownOnly").checked;
+		if (partial && !state.ankiStatus && !(await refreshStatus({silent: true}))) throw new Error("앙키 독음 상태를 불러온 뒤 부분 연습을 시작할 수 있습니다");
+		const fullData = {...levelData, words: examWordsForLevel(await loadVocabularyCatalog(), levelData.characters)};
+		data = partial ? partialExamData(fullData, state.ankiStatus) : fullData;
+		data.groups = examGroups(data);
+		if (data.level !== level.label || !data.characters?.length || !Array.isArray(data.words) || (!partial && !data.words.length) || !data.format.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
+		if (!data.groups.length) throw new Error("이 급수에서 학습한 독음 한자가 없습니다. 앙키 상태를 새로고침하거나 전체 시험을 선택하세요");
+		const trainingType = mode === "full" ? "all" : $("mockType").value;
 		const trainingPosition = trainingType === "all" ? 0 : data.groups.find((group) => group.type === trainingType)?.startIndex;
+		if (trainingPosition === undefined) throw new Error("학습한 한자와 어휘로 이 유형의 문제를 만들 수 없습니다. 다른 유형을 고르세요");
 		const questions = mode === "full" ? makeExam(data) : [newTrainingQuestion([], trainingType, trainingPosition)];
-		session = {mode, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0};
+		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0};
 		$("mockSetup").classList.add("is-hidden");
 		$("mockResult").classList.add("is-hidden");
 		$("mockPlay").classList.remove("is-hidden");
@@ -145,7 +175,7 @@ function renderQuestion() {
 	const groupIndex = groups.findIndex((entry) => entry.startIndex <= position && position <= entry.endIndex);
 	const group = groups[groupIndex];
 	const totalAnswered = answers.filter((value) => value !== null).length;
-	$("mockSessionLabel").textContent = full ? `${questions.length}문제 실전 · ${formatDuration(data.format.durationSeconds)}` : "한 문제씩 연습 · 바로 확인";
+	$("mockSessionLabel").textContent = full ? `${session.partial ? "부분 연습 · " : ""}${questions.length}문제 실전 · ${formatDuration(data.format.durationSeconds)}` : `${session.partial ? "부분 연습 · " : ""}한 문제씩 연습 · 바로 확인`;
 	$("mockProgress").textContent = full ? `답함 ${totalAnswered} / ${questions.length} · 현재 ${index + 1}번` : `${index + 1}번째 문제 · ${totalAnswered}문제 답함`;
 	$("mockProgressBar").classList.toggle("is-hidden", !full);
 	$("mockProgressBar").value = totalAnswered / questions.length * 100;
@@ -186,10 +216,7 @@ function renderQuestion() {
 	const groupEnd = full ? index === group.endIndex : session.trainingPosition === group.endIndex && session.trainingType === "all";
 	$("mockNext").textContent = full && index === questions.length - 1 ? "제출하고 채점 →" : groupEnd ? `다음 유형: ${nextGroup.title} →` : "다음 문제 →";
 	$("mockMapLegend").classList.toggle("is-hidden", !full);
-	$("mockFinish").querySelector(".mock-hold-label").textContent = full ? "지금 제출하고 채점" : "길게 눌러 연습 종료";
-	$("mockFinish").classList.toggle("is-training", !full);
-	$("mockFinish").classList.toggle("is-danger", !full);
-	$("mockFinish").classList.toggle("is-light", full);
+	$("mockFinish").querySelector(".mock-hold-label").textContent = full ? "길게 눌러 시험 중단·채점" : "길게 눌러 연습 종료";
 	if (showTypeMap) renderGroupNavigator(groups, groupIndex);
 	const jump = $("mockJump");
 	jump.classList.toggle("is-hidden", !full);
@@ -293,7 +320,7 @@ function renderResult() {
 	const wrong = score.answered - score.correct;
 	const unanswered = score.total - score.answered;
 	const date = new Intl.DateTimeFormat("ko-KR", {dateStyle: "full", timeStyle: "short"}).format(session.finishedAt);
-	$("mockResultMeta").textContent = `${date} · ${session.mode === "full" ? `${session.questions.length}문제 실전` : "한 문제씩 연습"} · ${formatDuration(session.elapsedSeconds)} 소요`;
+	$("mockResultMeta").textContent = `${date} · ${session.partial ? "독음 부분 연습 · " : ""}${session.mode === "full" ? `${session.questions.length}문제 실전` : "한 문제씩 연습"} · ${formatDuration(session.elapsedSeconds)} 소요`;
 	$("mockDownloadStatus").textContent = "브라우저에서 인쇄하여 PDF로도 저장할 수 있습니다";
 	const percent = official?.percent ?? score.percent;
 	$("mockPercent").textContent = `${percent}%`;
@@ -305,9 +332,9 @@ function renderResult() {
 	pass.classList.toggle("is-hidden", !official);
 	if (official) {
 		pass.className = `tag is-medium is-light ${official.passed ? "is-success" : "is-danger"}`;
-		pass.textContent = `${official.passed ? "합격" : "불합격"} · 합격 기준 ${official.passingScore}/${official.maxPoints}점`;
+		pass.textContent = `${session.partial ? official.passed ? "연습 통과" : "연습 미달" : official.passed ? "합격" : "불합격"} · ${session.partial ? "연습" : "합격"} 기준 ${official.passingScore}/${official.maxPoints}점`;
 	}
-	const stats = official ? [[`${official.earnedPoints} / ${official.maxPoints}`, "시험 점수"], [`${score.correct} / ${score.total}`, "정답"], [String(wrong), "오답"], [String(unanswered), "미응답"]] : [[`${score.correct} / ${score.total}`, "정답"], [String(wrong), "오답"], [String(unanswered), "미응답"], [formatDuration(session.elapsedSeconds), "소요 시간"]];
+	const stats = official ? [[`${official.earnedPoints} / ${official.maxPoints}`, session.partial ? "부분 연습 점수" : "시험 점수"], [`${score.correct} / ${score.total}`, "정답"], [String(wrong), "오답"], [String(unanswered), "미응답"]] : [[`${score.correct} / ${score.total}`, "정답"], [String(wrong), "오답"], [String(unanswered), "미응답"], [formatDuration(session.elapsedSeconds), "소요 시간"]];
 	$("mockStats").replaceChildren(...stats.map(([value, caption]) => {
 		const column = document.createElement("div");
 		column.className = "column is-one-quarter-tablet is-half-mobile";
@@ -349,7 +376,7 @@ function downloadReport() {
 	const url = URL.createObjectURL(new Blob([html], {type: "text/html;charset=utf-8"}));
 	const anchor = document.createElement("a");
 	anchor.href = url;
-	anchor.download = `상공회의소-${session.level}-${session.finishedAt.toLocaleDateString("sv-SE")}-연습리포트.html`;
+	anchor.download = reportFilename(session, ++session.reportDownloads);
 	document.body.appendChild(anchor);
 	anchor.click();
 	anchor.remove();
