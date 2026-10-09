@@ -972,6 +972,7 @@ body .tag.insight-level.is-danger.is-light {
 
 #mockInstruction {font-size: 1.02rem; margin-bottom: 0.4rem}
 .mock-stimulus {font-family: "Noto Serif CJK KR", "Noto Serif KR", serif; font-size: clamp(2.1rem, 6vw, 3.1rem); font-weight: 700; line-height: 1.3; margin: 0.2rem 0 1.25rem}
+.mock-stimulus.is-sentence {font-size: clamp(1.15rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.75; white-space: pre-line}
 .mock-choices {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem}
 .mock-choice.button {justify-content: flex-start; height: auto; min-height: 3.3rem; padding: 0.65rem 0.75rem; text-align: left; white-space: normal}
 .mock-shell .mock-choice.button.is-selected {border-color: var(--bulma-link); background: var(--bulma-link-soft); color: var(--bulma-link-text)}

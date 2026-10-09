@@ -1,6 +1,6 @@
-import { examGroups, examWordsForLevel, makeExam, makeQuestion, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=3";
-import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=3";
-import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=2";
+import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=4";
+import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=4";
+import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=3";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
@@ -68,7 +68,7 @@ async function prepareLevel() {
 		const minutes = Math.round(levelData.format.durationSeconds / 60);
 		$("mockModeFullTitle").textContent = `${count}문제 실전`;
 		$("mockModeFullDescription").textContent = `기출 순서 그대로, ${minutes}분 안에 풀어요. 결과는 제출 후 공개됩니다.`;
-		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
+		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
 		const typeSelect = $("mockType");
 		const selected = typeSelect.value;
 		typeSelect.replaceChildren(new Option("전체 유형 · 시험지 순서", "all"), ...groups.map((group) =>
@@ -116,16 +116,37 @@ async function start() {
 		const levelData = await prepareLevel();
 		const partial = $("mockKnownOnly").checked;
 		if (partial && !state.ankiStatus && !(await refreshStatus({silent: true}))) throw new Error("앙키 독음 상태를 불러온 뒤 부분 연습을 시작할 수 있습니다");
-		const fullData = {...levelData, words: examWordsForLevel(await loadVocabularyCatalog(), levelData.characters)};
+		const words = examWordsForLevel(await loadVocabularyCatalog(), levelData.characters);
+		const needsSentences = levelData.format.sections.some((section) => section.readingContext);
+		let sentenceWordsByType = {};
+		let generationEnabled = false;
+		if (needsSentences) {
+			const response = await fetch(`/api/mock-exam/sentences?level=${encodeURIComponent(level.value)}`, {cache: "no-store"});
+			if (!response.ok) throw new Error("독해 한자어 목록을 불러올 수 없습니다");
+			const manifest = await response.json();
+			sentenceWordsByType = Object.fromEntries(Object.entries(manifest.wordsByType).map(([type, spellings]) => {
+				const allowed = new Set(spellings);
+				return [type, words.filter((entry) => allowed.has(entry.hanja))];
+			}));
+			generationEnabled = manifest.generationEnabled;
+		}
+		const fullData = {...levelData, words, sentenceWordsByType};
 		data = partial ? partialExamData(fullData, state.ankiStatus) : fullData;
 		data.groups = examGroups(data);
 		if (data.level !== level.label || !data.characters?.length || !Array.isArray(data.words) || (!partial && !data.words.length) || !data.format.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
 		if (!data.groups.length) throw new Error("이 급수에서 학습한 독음 한자가 없습니다. 앙키 상태를 새로고침하거나 전체 시험을 선택하세요");
 		const trainingType = mode === "full" ? "all" : $("mockType").value;
+		const usesSentences = trainingType === "all" ? data.groups.some((group) => group.readingContext) : data.groups.some((group) => group.type === trainingType && group.readingContext);
+		if (usesSentences && !generationEnabled) throw new Error("독해 연습에는 서버의 OPENAI_API_KEY 설정이 필요합니다");
 		const trainingPosition = trainingType === "all" ? 0 : data.groups.find((group) => group.type === trainingType)?.startIndex;
 		if (trainingPosition === undefined) throw new Error("학습한 한자와 어휘로 이 유형의 문제를 만들 수 없습니다. 다른 유형을 고르세요");
-		const questions = mode === "full" ? makeExam(data) : [newTrainingQuestion([], trainingType, trainingPosition)];
-		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0};
+		const sentenceProvider = async (hanja, type) => {
+			const response = await fetch("/api/mock-exam/sentence", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, type, hanja})});
+			if (!response.ok) throw new Error((await response.text()).trim() || "독해 문장을 준비할 수 없습니다");
+			return response.json();
+		};
+		const questions = mode === "full" ? await makeExamAsync(data, sentenceProvider, secureRandom, (ready, total) => { $("mockSetupStatus").textContent = `문항을 준비하는 중… ${ready}/${total}`; }) : [await newTrainingQuestion([], trainingType, trainingPosition, sentenceProvider)];
+		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, sentenceProvider, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0};
 		$("mockSetup").classList.add("is-hidden");
 		$("mockResult").classList.add("is-hidden");
 		$("mockPlay").classList.remove("is-hidden");
@@ -142,12 +163,12 @@ async function start() {
 	}
 }
 
-function newTrainingQuestion(previous, selected, position) {
+async function newTrainingQuestion(previous, selected, position, provider) {
 	const groups = data.groups;
 	const type = selected === "all" ? groups.find((group) => group.startIndex <= position && position <= group.endIndex)?.type : selected;
 	if (!groups.some((group) => group.type === type)) throw new Error("선택한 유형의 문항 자료가 없습니다");
 	const excluded = new Set(previous.slice(-12).filter((entry) => entry.type === type).map((entry) => entry.source));
-	return {...makeQuestion(data, type, secureRandom, excluded), number: previous.length + 1};
+	return {...await makeQuestionAsync(data, type, provider, secureRandom, excluded), number: previous.length + 1};
 }
 
 function tick() {
@@ -184,10 +205,16 @@ function renderQuestion() {
 	$("mockGroupTitle").textContent = `${String(groupIndex + 1).padStart(2, "0")} / ${String(groups.length).padStart(2, "0")} · ${group.title}`;
 	const groupAnswered = full ? answers.slice(group.startIndex, group.endIndex + 1).filter((value) => value !== null).length : null;
 	$("mockGroupProgress").textContent = full ? `${rangeLabel(group)} · ${index - group.startIndex + 1}/${group.count} 문항 · 답함 ${groupAnswered}/${group.count}` : `기출 ${rangeLabel(group)} 유형 · 문제별 정답 확인`;
-	$("mockSectionBadge").textContent = `제${question.section === "한자" ? "1" : "2"}영역 · ${question.section}`;
+	$("mockSectionBadge").textContent = `제${({한자: 1, 어휘: 2, 독해: 3})[question.section]}영역 · ${question.section}`;
 	$("mockTypeBadge").textContent = question.title;
 	$("mockInstruction").textContent = question.instruction;
-	$("mockStimulus").textContent = question.stimulus;
+	const stimulus = $("mockStimulus");
+	stimulus.classList.toggle("is-sentence", Boolean(question.stimulusParts));
+	if (question.stimulusParts) {
+		const marked = document.createElement("u");
+		marked.textContent = question.stimulusParts[1];
+		stimulus.replaceChildren(document.createTextNode(question.stimulusParts[0]), marked, document.createTextNode(question.stimulusParts[2]));
+	} else stimulus.textContent = question.stimulus;
 	const choices = $("mockChoices");
 	choices.replaceChildren(...question.choices.map((choice, choiceIndex) => {
 		const button = document.createElement("button");
@@ -255,17 +282,24 @@ function renderGroupNavigator(groups, currentIndex) {
 	}
 }
 
-function jumpToGroup(group) {
-	if (!session || session.finishedAt) return;
+async function jumpToGroup(group) {
+	if (!session || session.finishedAt || session.loading) return;
 	if (session.mode === "full") {
 		const firstUnanswered = session.answers.findIndex((answer, index) => index >= group.startIndex && index <= group.endIndex && answer === null);
 		session.index = firstUnanswered < 0 ? group.startIndex : firstUnanswered;
 	} else {
-		session.trainingType = "all";
-		session.trainingPosition = group.startIndex;
-		session.questions.push(newTrainingQuestion(session.questions, "all", group.startIndex));
-		session.answers.push(null);
-		session.index++;
+		const active = session;
+		active.loading = true;
+		try {
+			const question = await newTrainingQuestion(active.questions, "all", group.startIndex, active.sentenceProvider);
+			if (session !== active || active.finishedAt) return;
+			session.trainingType = "all";
+			session.trainingPosition = group.startIndex;
+			session.questions.push(question);
+			session.answers.push(null);
+			session.index++;
+		} catch (error) { showMessage("danger", koreanError(error, "독해 문장을 준비할 수 없습니다")); }
+		finally { active.loading = false; }
 	}
 	renderQuestion();
 }
@@ -287,17 +321,26 @@ function chooseAnswer(choice) {
 	renderQuestion();
 }
 
-function move(direction) {
-	if (!session || session.finishedAt) return;
+async function move(direction) {
+	if (!session || session.finishedAt || session.loading) return;
 	if (session.mode === "full") {
 		if (direction < 0 && session.index > 0) session.index--;
 		else if (direction > 0 && session.index < session.questions.length - 1) session.index++;
 		else if (direction > 0 && session.index === session.questions.length - 1) return finish();
 	} else if (direction > 0 && session.answers[session.index] !== null) {
-		if (session.trainingType === "all") session.trainingPosition = (session.trainingPosition + 1) % data.groups.reduce((total, group) => total + group.count, 0);
-		session.questions.push(newTrainingQuestion(session.questions, session.trainingType, session.trainingPosition));
-		session.answers.push(null);
-		session.index++;
+		const position = session.trainingType === "all" ? (session.trainingPosition + 1) % data.groups.reduce((total, group) => total + group.count, 0) : session.trainingPosition;
+		const active = session;
+		active.loading = true;
+		$("mockNext").classList.add("is-loading");
+		try {
+			const question = await newTrainingQuestion(active.questions, active.trainingType, position, active.sentenceProvider);
+			if (session !== active || active.finishedAt) return;
+			session.trainingPosition = position;
+			session.questions.push(question);
+			session.answers.push(null);
+			session.index++;
+		} catch (error) { showMessage("danger", koreanError(error, "독해 문장을 준비할 수 없습니다")); }
+		finally { active.loading = false; $("mockNext").classList.remove("is-loading"); }
 	}
 	renderQuestion();
 }

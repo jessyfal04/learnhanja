@@ -10,7 +10,7 @@ import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
 import { initializeGames } from "./games.js?v=5";
 import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=3";
-import { initializeMockExam } from "./mock-exam.js?v=4";
+import { initializeMockExam } from "./mock-exam.js?v=5";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
