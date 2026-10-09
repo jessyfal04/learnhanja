@@ -26,7 +26,7 @@ test("9급 bank uses only the tagged characters and complete source fields", () 
 	assert.equal(data.characters.length, 50);
 	assert.deepEqual(new Set(data.characters.map((entry) => entry.hanja.normalize("NFKC"))), new Set([...officialNine].map((character) => character.normalize("NFKC"))));
 	assert.equal(Object.hasOwn(levelData, "words"), false);
-	assert.equal(data.words.length, 95);
+	assert.equal(data.words.length, 91);
 	const characters = new Set(levels.groups[0].characters);
 	const dictionary = new Map(catalog.map((entry) => [entry.hanja, entry]));
 	for (const entry of data.characters) {
@@ -55,6 +55,23 @@ test("each generated paper follows all 30 positions and has one valid answer per
 		const sectionQuestions = first.filter((question) => question.type === section.type);
 		assert.equal(new Set(sectionQuestions.map((question) => question.source)).size, section.count);
 	}
+});
+
+test("paper-like traps use varied stroke positions and related choices", () => {
+	const strokePositions = new Set();
+	for (let seed = 1; seed <= 20; seed++) {
+		const question = makeQuestion(data, "strokes", randomSequence(seed), new Set(), "羊");
+		strokePositions.add(question.choices.indexOf(question.correct));
+		assert.deepEqual([...question.choices].map(Number).sort((a, b) => a - b), Array.from({length: 5}, (_, index) => Math.min(...question.choices.map(Number)) + index));
+	}
+	assert.ok(strokePositions.size >= 3);
+	const radical = makeQuestion(data, "radical", randomSequence(7), new Set(), "兒");
+	assert.equal(radical.correct, "儿");
+	assert.ok(radical.choices.includes("臼"));
+	assert.ok(radical.choices.includes("兒"));
+	const animal = makeQuestion(data, "characterMeaning", randomSequence(9), new Set(), "馬");
+	assert.ok(animal.choices.includes("소"));
+	assert.ok(animal.choices.includes("물고기"));
 });
 
 test("question type map follows the paper ranges and adapts to another level layout", () => {
@@ -209,7 +226,7 @@ test("each report gives a compact weakness summary by source, type and confused 
 test("8급 uses all twelve types, GPT reading contexts and 150/250 passing", async () => {
 	assert.equal(eight.characters.length, 150);
 	assert.deepEqual(new Set(eight.characters.map((entry) => entry.hanja)), new Set([...levels.groups[0].characters, ...levels.groups[1].characters]));
-	assert.equal(eight.words.length, 818);
+	assert.equal(eight.words.length, 680);
 	assert.equal(eight.sentenceWordsByType.sentenceSound.length, 680);
 	assert.deepEqual(examGroups(eight).map((group) => group.count), [2, 2, 7, 7, 6, 6, 6, 3, 3, 3, 3, 2]);
 	const queried = [];

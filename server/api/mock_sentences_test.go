@@ -25,8 +25,8 @@ func TestSentenceGenerationUsesVerifiedGradeWord(t *testing.T) {
 		if payload["model"] != "gpt-6-luna" {
 			t.Errorf("model = %v", payload["model"])
 		}
-		if !strings.Contains(payload["input"].(string), "人口") {
-			t.Errorf("target missing")
+		if !strings.Contains(payload["input"].(string), "人口") || !strings.Contains(payload["input"].(string), "급수: 8급") {
+			t.Errorf("grade or target missing")
 		}
 		text := "이 도시의 人口는 해마다 늘고 있다."
 		if calls == 1 {
@@ -66,7 +66,7 @@ func TestSentenceGenerationUsesVerifiedGradeWord(t *testing.T) {
 	}
 }
 
-func TestSentenceGenerationRequiresServerKey(t *testing.T) {
+func TestSentenceFallsBackToKRDictWithoutServerKey(t *testing.T) {
 	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -74,8 +74,27 @@ func TestSentenceGenerationRequiresServerKey(t *testing.T) {
 	server := &Server{sentences: service}
 	response := httptest.NewRecorder()
 	server.sentence(response, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(`{"level":"8","type":"sentenceSound","hanja":"人口"}`)))
-	if response.Code != http.StatusServiceUnavailable {
-		t.Fatalf("status = %d", response.Code)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"source":"KRDict"`) {
+		t.Fatalf("fallback: %d %s", response.Code, response.Body.String())
+	}
+}
+
+func TestSentenceFallsBackWhenGPTFails(t *testing.T) {
+	calls := 0
+	openai := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		http.Error(w, "temporary failure", http.StatusServiceUnavailable)
+	}))
+	defer openai.Close()
+	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{apiKey: "test-key", endpoint: openai.URL, client: openai.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &Server{sentences: service}
+	response := httptest.NewRecorder()
+	server.sentence(response, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(`{"level":"8","type":"sentenceSound","hanja":"人口"}`)))
+	if response.Code != http.StatusOK || calls != 1 || !strings.Contains(response.Body.String(), `"source":"KRDict"`) {
+		t.Fatalf("fallback: %d calls=%d %s", response.Code, calls, response.Body.String())
 	}
 }
 
@@ -84,7 +103,7 @@ func TestReadingContextCanVaryByQuestionType(t *testing.T) {
 		"data/mock-exam.json":  &fstest.MapFile{Data: []byte(`{"6":{"characters":[{"hanja":"人"},{"hanja":"口"},{"hanja":"學"}],"format":{"sections":[{"type":"sentenceSound","readingContext":{"kind":"sentence","wordLength":2,"minCharacters":15,"maxCharacters":55}},{"type":"passageMeaning","readingContext":{"kind":"passage","wordLength":3,"minCharacters":80,"maxCharacters":200}}]}}}`)},
 		"data/vocabulary.json": &fstest.MapFile{Data: []byte(`[["人口","인구",[],["사람 수"],0,1],["人口學","인구학",[],["인구에 관한 학문"],0,1]]`)},
 	}
-	service, err := newSentenceService(files, sentenceOptions{})
+	service, err := newSentenceService(files, sentenceOptions{apiKey: "test-key"})
 	if err != nil {
 		t.Fatal(err)
 	}

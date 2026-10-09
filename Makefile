@@ -6,6 +6,7 @@ IMAGE ?= jessyfal04/hanja
 TAG ?= tagname
 
 run:
+	@set -a; if [ -f .env.local ]; then . ./.env.local; fi; set +a; \
 	GOCACHE=$(GOCACHE) go run ./server/main -port $(PORT)
 
 build:
@@ -18,6 +19,7 @@ data:
 
 test:
 	python3 scripts/build_cheonjamun.py --check
+	python3 -B scripts/build_mock_exam_sentences.py --check
 	GOCACHE=$(GOCACHE) go test ./...
 	node --test client/lib/*.test.mjs
 	find client/lib -name '*.js' -exec node --check {} \;

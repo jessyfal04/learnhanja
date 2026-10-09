@@ -1,4 +1,5 @@
 import { searchVocabulary } from "./vocabulary-data.js?v=3";
+import { examChoices } from "./mock-exam-traps.js?v=1";
 import { isActiveStudyStatus } from "./study-status.js?v=2";
 
 export const examSections = [
@@ -29,7 +30,7 @@ export function examGroups(data) {
 
 export function examWordsForLevel(catalog, characters) {
 	const selected = searchVocabulary(catalog, characters.map((entry) => entry.hanja), Infinity).entries;
-	const eligible = selected.filter((entry) => [...entry.hanja].length > 1 && entry.hangul && entry.definitions?.some((definition) => definition.trim()));
+	const eligible = selected.filter((entry) => [...entry.hanja].length === 2 && [...entry.hangul].length === 2 && /^[가-힣]{2}$/u.test(entry.hangul) && entry.definitions?.some((definition) => definition.trim()));
 	const spellings = new Map();
 	for (const entry of eligible) spellings.set(entry.hanja, (spellings.get(entry.hanja) || 0) + 1);
 	return eligible.filter((entry) => spellings.get(entry.hanja) === 1).map((entry) => ({
@@ -81,16 +82,6 @@ export function shuffle(values, random = secureRandom) {
 	return result;
 }
 
-function uniqueValues(entries, field) {
-	return [...new Set(entries.map((entry) => String(entry[field])))];
-}
-
-function fiveChoices(correct, values, random) {
-	const others = shuffle(values.filter((value) => value !== correct), random).slice(0, 4);
-	if (others.length !== 4) throw new Error("문항 선택지가 부족합니다");
-	return shuffle([correct, ...others], random);
-}
-
 export function makeQuestion(data, type, random = secureRandom, excluded = new Set(), targetSource = null) {
 	const section = examSections.find((entry) => entry.type === type);
 	if (!section) throw new Error(`알 수 없는 문항 유형: ${type}`);
@@ -99,30 +90,32 @@ export function makeQuestion(data, type, random = secureRandom, excluded = new S
 	const targets = (type.startsWith("word") || type.endsWith("Word") ? data.targets?.words : data.targets?.characters) || entries;
 	let available = targets.filter((entry) => !excluded.has(entry.hanja) && (targetSource === null || entry.hanja === targetSource));
 	if (!available.length && targetSource === null) available = targets;
+	if (type === "strokes" && targetSource === null && available.some((entry) => entry.strokes >= 5)) available = available.filter((entry) => entry.strokes >= 5);
+	if (["characterMeaning", "meaningCharacter"].includes(type) && targetSource === null) {
+		const clear = available.filter((entry) => entry.meaning.length <= 8 && !/[()/]/u.test(entry.meaning));
+		if (clear.length >= section.count) available = clear;
+	}
+	if (["wordMeaning", "meaningWord"].includes(type) && targetSource === null) {
+		const clear = available.filter((entry) => entry.meaning.length <= (type === "meaningWord" ? 25 : 30));
+		if (clear.length >= section.count) available = clear;
+	}
 	if (!available.length) throw new Error(`문항 자료가 부족합니다: ${type}`);
 	const target = shuffle(available, random)[0];
 	let stimulus;
 	let correct;
-	let values;
 	switch (type) {
-		case "strokes": {
-			stimulus = target.hanja;
-			correct = String(target.strokes);
-			const start = Math.max(1, target.strokes - 2);
-			values = Array.from({length: 5}, (_, index) => String(start + index));
-			break;
-		}
-		case "radical": stimulus = target.hanja; correct = target.radical; values = uniqueValues(entries, "radical"); break;
-		case "characterSound": stimulus = target.hanja; correct = target.sound; values = uniqueValues(entries, "sound"); break;
-		case "soundCharacter": stimulus = target.sound; correct = target.hanja; values = entries.filter((entry) => entry.sound !== target.sound).map((entry) => entry.hanja); break;
-		case "characterMeaning": stimulus = target.hanja; correct = target.meaning; values = uniqueValues(entries, "meaning"); break;
-		case "meaningCharacter": stimulus = target.meaning; correct = target.hanja; values = entries.filter((entry) => entry.meaning !== target.meaning).map((entry) => entry.hanja); break;
-		case "wordSound": stimulus = target.hanja; correct = target.reading; values = uniqueValues(entries, "reading"); break;
-		case "soundWord": stimulus = target.reading; correct = target.hanja; values = entries.filter((entry) => entry.reading !== target.reading).map((entry) => entry.hanja); break;
-		case "wordMeaning": stimulus = target.hanja; correct = target.meaning; values = uniqueValues(entries, "meaning"); break;
-		case "meaningWord": stimulus = target.meaning; correct = target.hanja; values = entries.filter((entry) => entry.meaning !== target.meaning).map((entry) => entry.hanja); break;
+		case "strokes": stimulus = target.hanja; correct = String(target.strokes); break;
+		case "radical": stimulus = target.hanja; correct = target.radical; break;
+		case "characterSound": stimulus = target.hanja; correct = target.sound; break;
+		case "soundCharacter": stimulus = target.sound; correct = target.hanja; break;
+		case "characterMeaning": stimulus = target.hanja; correct = target.meaning; break;
+		case "meaningCharacter": stimulus = target.meaning; correct = target.hanja; break;
+		case "wordSound": stimulus = target.hanja; correct = target.reading; break;
+		case "soundWord": stimulus = target.reading; correct = target.hanja; break;
+		case "wordMeaning": stimulus = target.hanja; correct = target.meaning; break;
+		case "meaningWord": stimulus = target.meaning; correct = target.hanja; break;
 	}
-	const choices = type === "strokes" ? shuffle(values, random) : fiveChoices(correct, values, random);
+	const choices = examChoices(type, target, entries, random);
 	return {
 		type, title: section.title, section: section.section, instruction: section.instruction,
 		stimulus, choices, correct, source: target.hanja,
@@ -137,17 +130,20 @@ export async function makeQuestionAsync(data, type, sentenceProvider, random = s
 	let available = targets.filter((entry) => !excluded.has(entry.hanja));
 	if (!available.length) available = targets;
 	if (!available.length) throw new Error("독해 한자어가 부족합니다");
+	if (type === "sentenceMeaning") {
+		const clear = available.filter((entry) => entry.meaning.length <= 30);
+		if (clear.length >= section.count) available = clear;
+	}
 	const target = shuffle(available, random)[0];
 	const response = await sentenceProvider(target.hanja, type);
-	if (response.hanja !== target.hanja || response.source !== "ChatGPT" || !response.sentence.includes(target.hanja)) throw new Error("독해 문장 응답이 올바르지 않습니다");
+	if (response.hanja !== target.hanja || !["ChatGPT", "KRDict"].includes(response.source) || !response.sentence.includes(target.hanja)) throw new Error("독해 문장 응답이 올바르지 않습니다");
 	const correct = target[section.answerField];
-	const values = uniqueValues(data.sentenceWordsByType[type], section.answerField);
 	const at = response.sentence.indexOf(target.hanja);
 	return {
 		type, title: section.title, section: section.section, instruction: section.instruction,
 		stimulus: response.sentence, stimulusParts: [response.sentence.slice(0, at), target.hanja, response.sentence.slice(at + target.hanja.length)],
-		choices: fiveChoices(correct, values, random), correct, source: target.hanja,
-		explanation: `${target.hanja} · ${target.reading} · ${target.meaning}`,
+		choices: examChoices(type, target, data.words, random), correct, source: target.hanja,
+		explanation: `${target.hanja} · ${target.reading} · ${target.meaning}${response.source === "KRDict" ? " · 국립국어원 한국어기초사전 예문" : ""}`,
 	};
 }
 

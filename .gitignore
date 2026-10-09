@@ -4,3 +4,4 @@ data/saves/
 out/*
 .cache/
 bin/
+.env.local

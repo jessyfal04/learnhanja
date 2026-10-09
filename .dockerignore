@@ -1,4 +1,5 @@
 .git
+.env.local
 .cache
 bin
 node_modules

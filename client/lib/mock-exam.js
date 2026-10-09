@@ -1,5 +1,5 @@
-import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=4";
-import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=4";
+import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=5";
+import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=5";
 import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=3";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
@@ -68,7 +68,7 @@ async function prepareLevel() {
 		const minutes = Math.round(levelData.format.durationSeconds / 60);
 		$("mockModeFullTitle").textContent = `${count}문제 실전`;
 		$("mockModeFullDescription").textContent = `기출 순서 그대로, ${minutes}분 안에 풀어요. 결과는 제출 후 공개됩니다.`;
-		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
+		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT (국립국어원 예문 대체 가능)" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
 		const typeSelect = $("mockType");
 		const selected = typeSelect.value;
 		typeSelect.replaceChildren(new Option("전체 유형 · 시험지 순서", "all"), ...groups.map((group) =>
@@ -137,7 +137,7 @@ async function start() {
 		if (!data.groups.length) throw new Error("이 급수에서 학습한 독음 한자가 없습니다. 앙키 상태를 새로고침하거나 전체 시험을 선택하세요");
 		const trainingType = mode === "full" ? "all" : $("mockType").value;
 		const usesSentences = trainingType === "all" ? data.groups.some((group) => group.readingContext) : data.groups.some((group) => group.type === trainingType && group.readingContext);
-		if (usesSentences && !generationEnabled) throw new Error("독해 연습에는 서버의 OPENAI_API_KEY 설정이 필요합니다");
+		if (usesSentences && !generationEnabled) throw new Error("독해 문장을 준비할 수 없습니다. 서버 설정을 확인하세요");
 		const trainingPosition = trainingType === "all" ? 0 : data.groups.find((group) => group.type === trainingType)?.startIndex;
 		if (trainingPosition === undefined) throw new Error("학습한 한자와 어휘로 이 유형의 문제를 만들 수 없습니다. 다른 유형을 고르세요");
 		const sentenceProvider = async (hanja, type) => {
