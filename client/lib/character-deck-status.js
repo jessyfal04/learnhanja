@@ -2,7 +2,7 @@ import { studyStatusPresentation } from "./study-status.js";
 
 export function characterDeckPresentation(dokeum, moyang, huneum, {moyangReady = true, huneumReady = true} = {}) {
 	const dokeumPresentation = studyStatusPresentation(dokeum);
-	const classes = moyang?.status === "known" && dokeum?.status !== "known"
+	const classes = moyang?.status === "known" && dokeum?.status !== "known" && dokeumPresentation.key !== "new-active"
 		? "is-danger is-light"
 		: dokeumPresentation.classes;
 	const label = [

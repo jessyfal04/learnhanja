@@ -1,16 +1,16 @@
-import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=23";
-import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=10";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=12";
-import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=6";
+import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=24";
+import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=11";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=13";
+import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=7";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=20";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=11";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=21";
+import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=12";
 import { showView } from "./views.js?v=4";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
 import { initializeGames } from "./games.js?v=5";
-import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=3";
-import { initializeMockExam } from "./mock-exam.js?v=6";
+import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=4";
+import { initializeMockExam } from "./mock-exam.js?v=7";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;

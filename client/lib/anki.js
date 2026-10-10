@@ -5,7 +5,7 @@ import { loadStaticJSON } from "./static-data.js";
 import { selectedFromAnki, toggledSelection, withLevelSelection } from "./selection.js?v=2";
 import { koreanError, setLoading, setOptions, showMessage } from "./ui.js";
 import { isActiveStudyStatus, studyStatusKey } from "./study-status.js?v=2";
-import { characterDeckPresentation } from "./character-deck-status.js?v=1";
+import { characterDeckPresentation } from "./character-deck-status.js?v=2";
 
 const deckSelect = document.getElementById("deckSelect");
 const noteTypeSelect = document.getElementById("noteTypeSelect");

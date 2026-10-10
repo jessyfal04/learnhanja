@@ -6,7 +6,7 @@ import { koreanError, showMessage } from "./ui.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
 import { bindHoldButton } from "./hold-button.js?v=1";
 import { state } from "./state.js";
-import { refreshStatus } from "./anki.js?v=12";
+import { refreshStatus } from "./anki.js?v=13";
 import { isActiveStudyStatus } from "./study-status.js?v=2";
 
 const $ = (id) => document.getElementById(id);
