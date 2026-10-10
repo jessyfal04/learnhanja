@@ -1,4 +1,4 @@
-import { ankiCharacterStatus, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=4";
+import { ankiCharacterStatus, ankiDeckNewCount, ankiFields, ankiIdiomStatus, ankiMetadata, ankiNoteTypes } from "./anki-connect.js?v=6";
 import { preferredDeck } from "./deck-names.js";
 import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
@@ -23,6 +23,7 @@ let catalogRequestID = 0;
 let statusRequestID = 0;
 let statusPromise = null;
 let autoSelectRequest = false;
+const cardStatsRequests = {dokeum: 0, moyang: 0, huneum: 0, idiom: 0};
 const auxiliaryRequests = {moyang: 0, huneum: 0};
 
 export async function loadCatalog() {
@@ -60,13 +61,14 @@ export async function loadMetadata() {
 		idiomDeckSelect.value = preferredDeck(metadata.decks, ["사자성어", "sajasongon", "sajaseongeo"]) || idiomDeckSelect.value;
 		status.className = "tag is-medium is-success is-light";
 		status.textContent = `연결됨 · 규격 ${metadata.version}`;
-		await Promise.all([loadNoteTypes(), loadIdiomNoteTypes()]);
-		await Promise.all([
+		await Promise.allSettled([loadNoteTypes(), loadIdiomNoteTypes()]);
+		await Promise.allSettled([
 			refreshStatus({silent: true, autoSelect: true}),
 			refreshIdiomStatus({silent: true}),
 			refreshAuxiliaryStatuses(),
 		]);
 	} catch (error) {
+		for (const kind of Object.keys(cardStatsRequests)) clearSelectedCardStats(kind);
 		status.className = "tag is-medium is-danger is-light";
 		status.textContent = "앙키를 사용할 수 없음";
 		invalidateCharacterStatus();
@@ -77,8 +79,33 @@ export async function loadMetadata() {
 	}
 }
 
+function selectedDeck(kind) {
+	return {dokeum: deckSelect, moyang: moyangDeckSelect, huneum: huneumDeckSelect, idiom: idiomDeckSelect}[kind].value;
+}
+
+function clearSelectedCardStats(kind) {
+	cardStatsRequests[kind]++;
+	document.getElementById(`${kind}CardStats`).textContent = "";
+}
+
+async function refreshSelectedCardStats(kind) {
+	const deck = selectedDeck(kind);
+	const id = ++cardStatsRequests[kind];
+	const element = document.getElementById(`${kind}CardStats`);
+	element.textContent = deck ? "카드 수 확인 중…" : "";
+	if (!deck) return;
+	try {
+		const newCount = await ankiDeckNewCount(deck);
+		if (id !== cardStatsRequests[kind] || deck !== selectedDeck(kind)) return;
+		element.textContent = `새 카드 ${newCount.toLocaleString("ko-KR")}장`;
+	} catch (error) {
+		if (id === cardStatsRequests[kind]) element.textContent = koreanError(error, "카드 수를 불러올 수 없습니다");
+	}
+}
+
 export async function loadNoteTypes() {
 	invalidateCharacterStatus();
+	void refreshSelectedCardStats("dokeum");
 	const deck = deckSelect.value;
 	noteTypeSelect.replaceChildren();
 	characterFieldSelect.replaceChildren();
@@ -114,12 +141,15 @@ function invalidateCharacterStatus() {
 	state.ankiStatusLoading = false;
 	state.ankiStatusError = "";
 	state.ankiStatusSource = null;
+	document.getElementById("dokeumDeckStatus").textContent = "";
 	setLoading(document.getElementById("refreshStatusButton"), false);
 	renderCatalog();
 	document.dispatchEvent(new Event("hanja-status-change"));
 }
 
 export async function loadIdiomNoteTypes() {
+	document.getElementById("idiomDeckStatus").textContent = "";
+	void refreshSelectedCardStats("idiom");
 	if (!idiomDeckSelect.value) return;
 	const noteTypes = await ankiNoteTypes(idiomDeckSelect.value);
 	setOptions(idiomNoteTypeSelect, noteTypes, ["사자성어"]);
@@ -138,6 +168,7 @@ export function refreshStatus({silent = false, autoSelect = false} = {}) {
 		return statusPromise;
 	}
 	const config = {deck: deckSelect.value, noteType: noteTypeSelect.value, field: characterFieldSelect.value};
+	void refreshSelectedCardStats("dokeum");
 	if (!config.deck || !config.noteType || !config.field) {
 		state.ankiStatusError = "연결 탭에서 덱, 노트 유형, 한자 필드를 선택하세요";
 		document.dispatchEvent(new Event("hanja-status-change"));
@@ -156,6 +187,7 @@ export function refreshStatus({silent = false, autoSelect = false} = {}) {
 			if (id !== statusRequestID) return false;
 			state.ankiStatus = result;
 			state.ankiStatusSource = {...config, checkedAt: Date.now()};
+			document.getElementById("dokeumDeckStatus").textContent = `학습함 ${result.known.toLocaleString("ko-KR")}자 · ${config.deck}`;
 			if (autoSelectRequest) state.selected = selectedFromAnki(state.catalog, result);
 			renderCatalog();
 			if (!silent) showMessage("success", `앙키에서 한자 ${result.total}자의 상태를 확인했습니다`);
@@ -164,6 +196,7 @@ export function refreshStatus({silent = false, autoSelect = false} = {}) {
 			if (id !== statusRequestID) return false;
 			state.ankiStatus = null;
 			state.ankiStatusSource = null;
+			document.getElementById("dokeumDeckStatus").textContent = "";
 			state.ankiStatusError = koreanError(error, "앙키 상태를 확인할 수 없습니다. AnkiConnect와 연결 설정을 확인하세요");
 			if (!silent) showMessage("danger", state.ankiStatusError);
 			renderCatalog();
@@ -183,14 +216,17 @@ export function refreshStatus({silent = false, autoSelect = false} = {}) {
 
 export async function refreshIdiomStatus({silent = false} = {}) {
 	const button = document.getElementById("refreshIdiomStatusButton");
+	void refreshSelectedCardStats("idiom");
 	setLoading(button, true);
 	try {
 		state.idiomAnkiStatus = await ankiIdiomStatus({deck: idiomDeckSelect.value, noteType: idiomNoteTypeSelect.value, field: idiomFieldSelect.value});
+		document.getElementById("idiomDeckStatus").textContent = `학습함 ${state.idiomAnkiStatus.known.toLocaleString("ko-KR")}개 · ${idiomDeckSelect.value}`;
 		document.dispatchEvent(new Event("hanja-idiom-status-change"));
 		if (!silent) showMessage("success", `앙키에서 사자성어 ${state.idiomAnkiStatus.total}개의 상태를 확인했습니다`);
 		return true;
 	} catch (error) {
 		state.idiomAnkiStatus = null;
+		document.getElementById("idiomDeckStatus").textContent = "";
 		document.dispatchEvent(new Event("hanja-idiom-status-change"));
 		if (!silent) showMessage("danger", koreanError(error, "사자성어 앙키 상태를 확인할 수 없습니다"));
 		return false;
@@ -208,6 +244,7 @@ export async function refreshAuxiliaryStatus(kind) {
 	const statusElement = document.getElementById(kind === "moyang" ? "moyangDeckStatus" : "huneumSelectStatus");
 	const statusKey = kind === "moyang" ? "moyangAnkiStatus" : "huneumAnkiStatus";
 	const deck = select.value;
+	void refreshSelectedCardStats(kind);
 	const requestID = ++auxiliaryRequests[kind];
 	state[statusKey] = null;
 	if (kind === "huneum") state.huneumAnkiStatusSource = "";
@@ -241,6 +278,7 @@ export async function refreshAuxiliaryStatus(kind) {
 
 function clearAuxiliaryStatus(kind) {
 	auxiliaryRequests[kind]++;
+	clearSelectedCardStats(kind);
 	state[kind === "moyang" ? "moyangAnkiStatus" : "huneumAnkiStatus"] = null;
 	if (kind === "huneum") state.huneumAnkiStatusSource = "";
 	document.getElementById(kind === "moyang" ? "moyangDeckStatus" : "huneumSelectStatus").textContent = "앙키 연결 필요";

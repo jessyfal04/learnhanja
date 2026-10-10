@@ -1,14 +1,61 @@
 import { state } from "./state.js";
 import { koreanError, setLoading, showMessage } from "./ui.js";
-import { filterAndSortVocabulary, vocabularyKnowledge } from "./vocab-filter.js";
+import { countSleepingVocabulary, filterAndSortVocabulary, vocabularyKnowledge } from "./vocab-filter.js?v=1";
 import { showView } from "./views.js?v=3";
-import { insightLink } from "./insights.js?v=24";
+import { insightLink } from "./insights.js?v=25";
 import { loadVocabularyCatalog, searchVocabulary } from "./vocabulary-data.js?v=3";
 import { fillStatusCharacters } from "./status-characters.js?v=1";
 import { closeFrequencyPopover, frequencyCell } from "./frequency-display.js?v=1";
+import { urlWithQuery } from "./url-query.js?v=1";
 
 let requestID = 0;
 let scheduledBuild;
+let sleepingRequestID = 0;
+
+export async function renderSleepingVocabulary() {
+	const id = ++sleepingRequestID;
+	const status = document.getElementById("sleepingVocabStatus");
+	const button = document.getElementById("showSleepingVocabButton");
+	if (!state.ankiStatus || !state.knownWordsSource) {
+		status.textContent = "잠자는 어휘를 계산하려면 앙키 독음 덱과 Migaku 단어를 연결하세요";
+		button.classList.add("is-hidden");
+		return;
+	}
+	status.textContent = "잠자는 어휘를 계산하는 중…";
+	try {
+		const catalog = await loadVocabularyCatalog();
+		if (id !== sleepingRequestID) return;
+		const count = countSleepingVocabulary(catalog, state.knownWords, state.markedWords, state.ankiStatus);
+		status.textContent = `잠자는 어휘 ${count.toLocaleString("ko-KR")}개`;
+		button.classList.remove("is-hidden");
+	} catch (error) {
+		if (id === sleepingRequestID) {
+			status.textContent = koreanError(error, "잠자는 어휘를 계산할 수 없습니다");
+			button.classList.add("is-hidden");
+		}
+	}
+}
+
+export async function showSleepingVocabulary() {
+	if (!state.ankiStatus || !state.knownWordsSource) return;
+	const button = document.getElementById("showSleepingVocabButton");
+	setLoading(button, true);
+	try {
+		const catalog = await loadVocabularyCatalog();
+		state.vocabulary = catalog.filter((entry) => vocabularyKnowledge(entry, state.knownWords, state.markedWords, state.ankiStatus) === "target");
+		state.vocabularyTotal = state.vocabulary.length;
+		document.getElementById("vocabFilter").value = "";
+		document.getElementById("vocabKnowledgeFilter").value = "all";
+		document.getElementById("maxRank").value = "";
+		window.history.replaceState(window.history.state, "", urlWithQuery(window.location.href, ""));
+		renderVocabulary();
+		showView("vocabulary");
+	} catch (error) {
+		showMessage("danger", koreanError(error, "잠자는 어휘 목록을 불러올 수 없습니다"));
+	} finally {
+		setLoading(button, false);
+	}
+}
 
 export function scheduleVocabulary() {
 	requestID++;

@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=23">
-	<script type="module" src="/lib/app.js?v=43"></script>
+	<link rel="stylesheet" href="/style/style.css?v=24">
+	<script type="module" src="/lib/app.js?v=44"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -34,9 +34,9 @@
 				<h2 class="title is-5 mb-1">한자 학습 상태</h2>
 				<p class="subtitle is-6">급수별 한자가 들어 있는 필드를 선택합니다</p>
 				<div class="columns is-multiline">
-					<div class="column is-one-third"><label class="label" for="deckSelect">독음 덱</label><div class="select is-fullwidth"><select id="deckSelect"></select></div></div>
-					<div class="column is-one-third"><label class="label" for="moyangDeckSelect">모양 덱</label><div class="select is-fullwidth"><select id="moyangDeckSelect"></select></div><p id="moyangDeckStatus" class="help" role="status"></p></div>
-					<div class="column is-one-third"><label class="label" for="huneumDeckSelect">훈음 덱</label><div class="select is-fullwidth"><select id="huneumDeckSelect"></select></div><p id="huneumSelectStatus" class="help" role="status"></p></div>
+					<div class="column is-one-third"><label class="label" for="moyangDeckSelect">모양 덱</label><div class="select is-fullwidth"><select id="moyangDeckSelect"></select></div><p class="help selected-deck-summary" role="status"><span id="moyangDeckStatus"></span><span id="moyangCardStats"></span></p></div>
+					<div class="column is-one-third"><label class="label" for="deckSelect">독음 덱</label><div class="select is-fullwidth"><select id="deckSelect"></select></div><p class="help selected-deck-summary" role="status"><span id="dokeumDeckStatus"></span><span id="dokeumCardStats"></span></p></div>
+					<div class="column is-one-third"><label class="label" for="huneumDeckSelect">훈음 덱</label><div class="select is-fullwidth"><select id="huneumDeckSelect"></select></div><p class="help selected-deck-summary" role="status"><span id="huneumSelectStatus"></span><span id="huneumCardStats"></span></p></div>
 					<div class="column is-one-third"><label class="label" for="noteTypeSelect">독음 노트 유형</label><div class="select is-fullwidth"><select id="noteTypeSelect"></select></div></div>
 					<div class="column is-one-third"><label class="label" for="characterFieldSelect">독음 한자 필드</label><div class="select is-fullwidth"><select id="characterFieldSelect"></select></div></div>
 				</div>
@@ -45,7 +45,7 @@
 				<h2 class="title is-5 mb-1">사자성어 학습 상태</h2>
 				<p class="subtitle is-6">사자성어 전체가 들어 있는 필드를 선택합니다</p>
 				<div class="columns is-multiline">
-					<div class="column is-one-third"><label class="label" for="idiomDeckSelect">덱</label><div class="select is-fullwidth"><select id="idiomDeckSelect"></select></div></div>
+					<div class="column is-one-third"><label class="label" for="idiomDeckSelect">덱</label><div class="select is-fullwidth"><select id="idiomDeckSelect"></select></div><p class="help selected-deck-summary" role="status"><span id="idiomDeckStatus"></span><span id="idiomCardStats"></span></p></div>
 					<div class="column is-one-third"><label class="label" for="idiomNoteTypeSelect">노트 유형</label><div class="select is-fullwidth"><select id="idiomNoteTypeSelect"></select></div></div>
 					<div class="column is-one-third"><label class="label" for="idiomFieldSelect">사자성어 필드</label><div class="select is-fullwidth"><select id="idiomFieldSelect"></select></div></div>
 				</div>
@@ -57,6 +57,7 @@
 				<div class="field"><label class="label" for="knownWordsFile">TXT 파일</label><input id="knownWordsFile" class="input" type="file" accept=".txt,text/plain"></div>
 				<div class="field has-addons"><div class="control"><input id="knownWordsPort" class="input" type="number" min="1" max="65535" value="8766" aria-label="아는 단어 로컬 포트"></div><div class="control"><button id="loadKnownWordsPort" class="button is-link" type="button">포트에서 불러오기</button></div></div>
 				<p id="knownWordsStatus" class="help" role="status">아는 단어 출처가 연결되지 않았습니다</p>
+				<p class="help mt-2"><span id="sleepingVocabStatus" role="status">잠자는 어휘를 계산하려면 앙키 독음 덱과 Migaku 단어를 연결하세요</span> <button id="showSleepingVocabButton" class="button is-small is-text is-hidden" type="button">목록 보기</button></p>
 			</section>
 
 			<section class="box" aria-labelledby="saveTitle">
@@ -306,6 +307,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v33 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v34 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

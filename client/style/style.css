@@ -23,6 +23,10 @@
 	gap: 0.5rem;
 }
 
+.selected-deck-summary > span:first-child:not(:empty) + span:not(:empty)::before {
+	content: " · ";
+}
+
 .hanja-button {
 	font-family: "Noto Serif CJK KR", "Noto Serif KR", serif;
 	font-size: 1.35rem;

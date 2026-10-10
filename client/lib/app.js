@@ -1,16 +1,16 @@
-import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=24";
-import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=11";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=13";
-import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=7";
+import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=25";
+import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=12";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=14";
+import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=8";
 import { hideMessage } from "./ui.js";
-import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=21";
-import { buildVocabulary, renderVocabulary, scheduleVocabulary } from "./vocab.js?v=12";
+import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=22";
+import { buildVocabulary, renderSleepingVocabulary, renderVocabulary, scheduleVocabulary, showSleepingVocabulary } from "./vocab.js?v=13";
 import { showView } from "./views.js?v=4";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
-import { initializeGames } from "./games.js?v=5";
-import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=4";
-import { initializeMockExam } from "./mock-exam.js?v=7";
+import { initializeGames } from "./games.js?v=6";
+import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=5";
+import { initializeMockExam } from "./mock-exam.js?v=8";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
@@ -76,9 +76,10 @@ document.addEventListener("hanja-catalog-change", () => {
 	void renderRecommendations();
 });
 document.getElementById("buildVocabButton").addEventListener("click", () => buildVocabulary());
+document.getElementById("showSleepingVocabButton").addEventListener("click", () => { void showSleepingVocabulary(); });
 document.addEventListener("hanja-selection-change", scheduleVocabulary);
-document.addEventListener("hanja-known-words-change", renderVocabulary);
-document.addEventListener("hanja-status-change", () => { renderVocabulary(); renderIdioms(); });
+document.addEventListener("hanja-known-words-change", () => { renderVocabulary(); void renderSleepingVocabulary(); });
+document.addEventListener("hanja-status-change", () => { renderVocabulary(); renderIdioms(); void renderSleepingVocabulary(); });
 document.getElementById("vocabFilter").addEventListener("input", (event) => { renderVocabulary(); updateQueryURL("vocabulary", event.target.value); });
 for (const id of ["vocabKnowledgeFilter", "vocabSort", "maxRank"]) document.getElementById(id).addEventListener("input", renderVocabulary);
 document.getElementById("saveFileButton").addEventListener("click", saveBrowserFile);

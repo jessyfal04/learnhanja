@@ -15,7 +15,7 @@ globalThis.document = {
 		return {content: {textContent: ""}, dataset: {}, classList: {toggle() {}}, append() {}, appendChild() {}, addEventListener() {}, setAttribute() {}, set innerHTML(value) { this.content.textContent = value; }};
 	},
 };
-const { refreshStatus, refreshAuxiliaryStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=12");
+const { refreshStatus, refreshAuxiliaryStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=14");
 document.getElementById("deckSelect").value = "한자";
 document.getElementById("noteTypeSelect").value = "Hanja";
 document.getElementById("characterFieldSelect").value = "Char";
@@ -28,6 +28,7 @@ function responseFor(action, params) {
 	if (action === "modelFieldNames") result = ["Char", "Alternate"];
 	if (action === "modelNames") result = ["Hanja"];
 	if (action === "findNotes") result = /is:new|is:suspended/.test(params.query) && !params.query.includes("-is:new") ? [] : [1];
+	if (action === "findCards") result = params.query.includes("is:new") && !params.query.includes("-is:new") ? [] : [1];
 	if (action === "notesInfo") result = [{noteId: 1, fields: {Char: {value: "人"}, Alternate: {value: "山"}}}];
 	return {ok: true, json: async () => ({result, error: null})};
 }
@@ -53,6 +54,7 @@ test("concurrent refreshes share one request and record the chosen Anki source",
 	assert.equal(await first, true);
 	assert.equal(state.ankiStatus.characters["人"].status, "known");
 	assert.equal(state.ankiStatusSource.field, "Char");
+	assert.equal(document.getElementById("dokeumDeckStatus").textContent, "학습함 1자 · 한자");
 	assert.equal(state.ankiStatusLoading, false);
 	assert.ok(events.includes("hanja-status-change"));
 });

@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { shuffled } from "./game-data.js";
 import { huneumEntries, huneumQuestion } from "./huneum-game-data.js";
-import { ankiCharacterStatus, ankiFields, ankiMetadata, ankiNoteTypes, ankiOpenDeck } from "./anki-connect.js?v=5";
+import { ankiCharacterStatus, ankiFields, ankiMetadata, ankiNoteTypes, ankiOpenDeck } from "./anki-connect.js?v=6";
 import { preferredDeck } from "./deck-names.js";
 
 const $ = (id) => document.getElementById(id);

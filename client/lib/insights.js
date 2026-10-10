@@ -1,11 +1,11 @@
 import { state } from "./state.js";
-import { refreshStatus, renderCatalog } from "./anki.js?v=13";
+import { refreshStatus, renderCatalog } from "./anki.js?v=14";
 import { loadStaticJSON } from "./static-data.js";
 import { showView } from "./views.js?v=3";
 import { decomposeHanja, filterRelated, hangulCandidates, isHanja, levelFor, normalize, parseText, referenceFor, statusFor, studyInfo } from "./insight-data.js?v=6";
 import { urlWithQuery } from "./url-query.js?v=1";
 import { loadVocabularyCatalog, relatedVocabulary } from "./vocabulary-data.js?v=3";
-import { vocabularyKnowledge } from "./vocab-filter.js";
+import { vocabularyKnowledge } from "./vocab-filter.js?v=1";
 import { fillStatusCharacters } from "./status-characters.js?v=1";
 import { frequencyCell } from "./frequency-display.js?v=1";
 import { characterDeckPresentation } from "./character-deck-status.js?v=2";

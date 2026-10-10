@@ -17,6 +17,10 @@ export function vocabularyKnowledge(entry, knownWords, markedWords, ankiStatus) 
 	return learned ? "target" : "unknown";
 }
 
+export function countSleepingVocabulary(entries, knownWords, markedWords, ankiStatus) {
+	return (entries || []).reduce((count, entry) => count + (vocabularyKnowledge(entry, knownWords, markedWords, ankiStatus) === "target"), 0);
+}
+
 export function filterAndSortVocabulary(entries, query, maxRank, sort, knowledge = {}, statusFilter = "all") {
 	const needle = String(query || "").trim().toLocaleLowerCase();
 	const maximum = Number(maxRank) > 0 ? Number(maxRank) : Number.MAX_SAFE_INTEGER;

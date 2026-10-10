@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { loadStaticJSON } from "./static-data.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
 import { addExposure, buildBalancedMatchRound, buildMatchRound, buildMixedQuestion, entryKey, gameEntries, knownGameEntries, randomizedGameEntries, shuffled, unknownGameEntries, wordIsKnown } from "./game-data.js";
-import { initializeHuneumGame, prepareHuneumDeck } from "./huneum-game.js?v=3";
+import { initializeHuneumGame, prepareHuneumDeck } from "./huneum-game.js?v=4";
 
 let catalog = null;
 let idiomCatalog = null;

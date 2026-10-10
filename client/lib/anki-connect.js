@@ -34,6 +34,12 @@ export async function ankiOpenDeck(deck) {
 	if (await invoke("guiDeckOverview", {name}) !== true) throw new Error(`앙키에서 '${name}' 덱을 열 수 없습니다`);
 }
 
+export async function ankiDeckNewCount(deck) {
+	const query = `deck:"${escapeQuery(String(deck || "").trim())}"`;
+	const cards = await invoke("findCards", {query: `${query} is:new -is:suspended`});
+	return cards.length;
+}
+
 export async function ankiCharacterStatus(config) {
 	const data = await loadStatusData(config.deck, config.noteType, config.field, "한자");
 	return buildCharacterStatus(data.notes, config.field, data.known, data.newCards, data.suspended);

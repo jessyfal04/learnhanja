@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ankiOpenDeck, buildCharacterStatus, buildIdiomStatus } from "./anki-connect.js";
+import { ankiDeckNewCount, ankiOpenDeck, buildCharacterStatus, buildIdiomStatus } from "./anki-connect.js";
 
 const notes = [
 	{noteId: 1, fields: {Char: {value: "<b>金枝玉葉</b>"}}},
@@ -63,6 +63,26 @@ test("opens the detected deck overview with its complete name", async () => {
 		await ankiOpenDeck("한자::C. 훈음 X");
 		assert.deepEqual(payload, {action: "guiDeckOverview", version: 6, params: {name: "한자::C. 훈음 X"}});
 		await assert.rejects(ankiOpenDeck(""), /열 앙키 덱이 없습니다/);
+	} finally {
+		globalThis.fetch = previousFetch;
+	}
+});
+
+test("counts active new cards in a deck", async () => {
+	const previousFetch = globalThis.fetch;
+	const queries = [];
+	globalThis.fetch = async (_url, options) => {
+		const {action, params} = JSON.parse(options.body);
+		assert.equal(action, "findCards");
+		queries.push(params.query);
+		const result = [1, 2];
+		return {ok: true, json: async () => ({result, error: null})};
+	};
+	try {
+		assert.equal(await ankiDeckNewCount("한자::A. 모양"), 2);
+		assert.deepEqual(queries, [
+			'deck:"한자::A. 모양" is:new -is:suspended',
+		]);
 	} finally {
 		globalThis.fetch = previousFetch;
 	}

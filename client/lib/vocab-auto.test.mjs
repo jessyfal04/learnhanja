@@ -11,9 +11,10 @@ globalThis.document = {
 	createElement(tagName) {
 		return {tagName, appendChild(child) { this.child = child; }, append(...children) { this.children = children; }, addEventListener() {}, setAttribute() {}};
 	},
+	dispatchEvent() {},
 };
-globalThis.window = {location: {hash: "#connection"}, clearTimeout, setTimeout};
-const {buildVocabulary, scheduleVocabulary} = await import("./vocab.js");
+globalThis.window = {location: {hash: "#connection", href: "http://localhost/?q=old#connection"}, history: {state: null, replaceState() {}}, clearTimeout, setTimeout};
+const {buildVocabulary, scheduleVocabulary, showSleepingVocabulary} = await import("./vocab.js");
 
 test("vocabulary calculates after selection and remains on the current tab", async () => {
 	globalThis.fetch = async (path) => {
@@ -29,4 +30,15 @@ test("vocabulary calculates after selection and remains on the current tab", asy
 	state.selected.clear();
 	await buildVocabulary({navigate: false});
 	assert.equal(state.vocabularyTotal, 0);
+});
+
+test("sleeping vocabulary button opens the full eligible list", async () => {
+	state.ankiStatus = {characters: {人: {status: "known"}}};
+	state.knownWordsSource = "Migaku";
+	state.knownWords = new Set();
+	state.markedWords = new Set();
+	await showSleepingVocabulary();
+	assert.equal(window.location.hash, "vocabulary");
+	assert.deepEqual(state.vocabulary.map((entry) => entry.hangul), ["인"]);
+	assert.match(document.getElementById("vocabSummary").textContent, /1개 표시/);
 });

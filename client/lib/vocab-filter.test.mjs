@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterAndSortVocabulary, vocabularyKnowledge } from "./vocab-filter.js";
+import { countSleepingVocabulary, filterAndSortVocabulary, vocabularyKnowledge } from "./vocab-filter.js";
 
 const entries = [
 	{hanja: "月", hangul: "월", meanings: ["moon"], pokemonRank: 20, niklRank: 0},
@@ -35,6 +35,18 @@ test("classifies Migaku words and unknown words made only from learned Hanja", (
 	assert.equal(vocabularyKnowledge({hanja: "山", hangul: "산"}, knownWords, new Set(), ankiStatus), "unknown");
 	assert.equal(vocabularyKnowledge({hanja: "山", hangul: "산"}, knownWords, new Set(["산"]), ankiStatus), "marked");
 	assert.equal(vocabularyKnowledge(entries[0], null, new Set(), ankiStatus), "unverified");
+});
+
+test("counts only unknown unmarked words with every Hanja actively learned", () => {
+	const words = [
+		{hanja: "人月", hangul: "인월"},
+		{hanja: "月", hangul: "월"},
+		{hanja: "山", hangul: "산"},
+		{hanja: "金", hangul: "금"},
+	];
+	const anki = {characters: {人: {status: "known"}, 月: {status: "known"}, 山: {status: "known", suspended: true}, 金: {status: "new"}}};
+	assert.equal(countSleepingVocabulary(words, new Set(["월"]), new Set(), anki), 1);
+	assert.equal(countSleepingVocabulary(words, new Set(["월"]), new Set(["인월"]), anki), 0);
 });
 
 test("puts unknown words made from learned Hanja first, ordered by frequency", () => {
