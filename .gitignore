@@ -6,3 +6,4 @@ out/*
 bin/
 .env.local
 scripts/reply_to_scanner.py
+.migaku

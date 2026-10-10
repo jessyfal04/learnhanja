@@ -118,6 +118,12 @@ If LearnHanja is served from another origin, add that origin to AnkiConnect's `w
 python3 scripts/extract_migaku_known_korean.py --txt-output known_words.txt --format text > /dev/null
 ```
 
+The command prints `migakuCounts` to stderr with word-level known, learning, tracked, and ignored totals. Tracked words are counted independently; an ignored entry is excluded from the ignored total when the same word also has a known entry. For a readable JSON file containing the counts and all four word lists, run:
+
+```bash
+python3 scripts/extract_migaku_known_korean.py --stats > .migaku
+```
+
 - Or start its local bridge, then press **포트에서 불러오기**:
 
 ```bash

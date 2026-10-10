@@ -130,21 +130,27 @@ def query_words(
     return sorted(grouped.values(), key=lambda row: str(row["word"]).casefold())
 
 
-def stats(conn: sqlite3.Connection, language: str) -> list[dict[str, object]]:
-    conn.row_factory = sqlite3.Row
-    return [
-        dict(row)
-        for row in conn.execute(
-            """
-            select knownStatus, tracked, del, isModern, count(*) as rows
-            from WordList
-            where language = ?
-            group by knownStatus, tracked, del, isModern
-            order by knownStatus, tracked, del, isModern
-            """,
-            (language,),
-        )
-    ]
+def migaku_word_lists(conn: sqlite3.Connection, language: str) -> dict[str, list[str]]:
+    statuses: dict[str, set[str]] = {}
+    tracked: set[str] = set()
+    for word, status, is_tracked in conn.execute(
+        "select dictForm, knownStatus, tracked from WordList where language = ? and del = 0",
+        (language,),
+    ):
+        word = unicodedata.normalize("NFC", str(word))
+        statuses.setdefault(word, set()).add(status)
+        if is_tracked:
+            tracked.add(word)
+
+    return {
+        "known": sorted((word for word, values in statuses.items() if "KNOWN" in values), key=str.casefold),
+        "learning": sorted((word for word, values in statuses.items() if "LEARNING" in values), key=str.casefold),
+        "tracked": sorted(tracked, key=str.casefold),
+        "ignored": sorted((
+            word for word, values in statuses.items()
+            if "IGNORED" in values and "KNOWN" not in values
+        ), key=str.casefold),
+    }
 
 
 def write_csv(rows: list[dict[str, object]], output: Path) -> None:
@@ -270,9 +276,9 @@ def main() -> int:
         "--format",
         choices=["text", "json", "jsonl"],
         default="text",
-        help="stdout format. text is the normal lambda output.",
+        help="stdout format. json includes counts and categorized word lists.",
     )
-    parser.add_argument("--stats", action="store_true")
+    parser.add_argument("--stats", action="store_true", help="Print counts and categorized word lists as JSON")
     args = parser.parse_args()
 
     if args.serve:
@@ -300,6 +306,8 @@ def main() -> int:
             words = dict.fromkeys(str(row["word"]) for row in rows if str(row["word"]).strip())
             args.txt_output.write_text("\n".join(words) + "\n", encoding="utf-8")
 
+        word_lists = migaku_word_lists(conn, args.language)
+        counts = {name: len(words) for name, words in word_lists.items()}
         summary = {
             "profile": str(args.profile),
             "blob": str(blob_path),
@@ -307,15 +315,17 @@ def main() -> int:
             "status": args.status,
             "distinct": not args.all_rows,
             "count": len(rows),
+            "migakuCounts": counts,
             "csv": str(args.output) if args.output else None,
         }
 
         print(json.dumps(summary, ensure_ascii=False), file=sys.stderr)
-        if args.stats:
-            print(json.dumps({"stats": stats(conn, args.language)}, ensure_ascii=False), file=sys.stderr)
-
-        if args.format == "json":
-            print(json.dumps(rows, ensure_ascii=False, indent=2))
+        if args.stats or args.format == "json":
+            print(json.dumps(
+                {"counts": counts, "words": word_lists},
+                ensure_ascii=False,
+                indent=2,
+            ))
         elif args.format == "jsonl":
             for row in rows:
                 print(json.dumps(row, ensure_ascii=False))
