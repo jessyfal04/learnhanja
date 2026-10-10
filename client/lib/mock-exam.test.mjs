@@ -74,6 +74,16 @@ test("paper-like traps use varied stroke positions and related choices", () => {
 	assert.ok(animal.choices.includes("물고기"));
 });
 
+test("meaning distractors do not repeat month or number templates", () => {
+	for (const source of ["五月", "八十"]) for (const seed of [1, 7, 73, 121]) {
+		const question = makeQuestion(eight, "wordMeaning", randomSequence(seed), new Set(), source);
+		const wrong = question.choices.filter((choice) => choice !== question.correct);
+		assert.equal(wrong.length, 4);
+		assert.ok(wrong.filter((choice) => /^일 년 열두 달 (?:가운데|중) .+ 달$/u.test(choice)).length <= 1, `${source}: ${wrong}`);
+		assert.ok(wrong.filter((choice) => /^[가-힣]+의 .+ 배가 되는 수$/u.test(choice)).length <= 1, `${source}: ${wrong}`);
+	}
+});
+
 test("question type map follows the paper ranges and adapts to another level layout", () => {
 	const groups = examGroups(data);
 	assert.deepEqual(groups.map(({startIndex, endIndex}) => [startIndex + 1, endIndex + 1]), [[1, 1], [2, 2], [3, 7], [8, 12], [13, 16], [17, 20], [21, 24], [25, 26], [27, 28], [29, 30]]);

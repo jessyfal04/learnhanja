@@ -33,20 +33,43 @@ function readingSimilarity(left, right) {
 }
 
 function definitionSimilarity(left, right) {
-	const tokens = (text) => (text.match(/[가-힣]{2,}/gu) || []).filter((token) => !["어떤", "것을", "것이", "등을", "등의", "있는", "하는"].includes(token));
+	const tokens = (text) => (text.match(/[가-힣]{2,}/gu) || []).filter((token) => !["어떤", "것을", "것이", "등을", "등의", "있는", "하는", "되는", "가운데", "또는"].includes(token));
 	const a = tokens(left);
 	const b = tokens(right);
 	return a.reduce((score, token) => score + (b.some((other) => token.includes(other) || other.includes(token)) ? 1 : 0), 0);
 }
 
-function selectChoices(correct, candidates, random) {
+function meaningPattern(value) {
+	if (/^일 년 열두 달 (?:가운데|중) .+ 달$/u.test(value)) return "calendar-month";
+	if (/^[가-힣]+의 .+ 배가 되는 수$/u.test(value)) return "number-multiple";
+	return "";
+}
+
+function nearDuplicateMeaning(left, right) {
+	const pattern = meaningPattern(left);
+	if (pattern && pattern === meaningPattern(right)) return true;
+	const bigrams = (value) => {
+		const compact = value.replace(/\s+/gu, "");
+		return new Set([...compact].slice(0, -1).map((character, index) => character + compact[index + 1]));
+	};
+	const first = bigrams(left);
+	const second = bigrams(right);
+	return first.size > 0 && second.size > 0 && 2 * [...first].filter((part) => second.has(part)).length / (first.size + second.size) >= 0.72;
+}
+
+function selectChoices(correct, candidates, random, diverseMeanings = false) {
 	const best = new Map();
 	for (const candidate of candidates) {
 		if (!candidate.value || candidate.value === correct) continue;
 		const score = candidate.score + random() * 0.5;
 		if (score > (best.get(candidate.value)?.score ?? -Infinity)) best.set(candidate.value, {value: candidate.value, score});
 	}
-	const wrong = [...best.values()].sort((left, right) => right.score - left.score).slice(0, 4).map((entry) => entry.value);
+	const wrong = [];
+	for (const candidate of [...best.values()].sort((left, right) => right.score - left.score)) {
+		if (diverseMeanings && wrong.some((value) => nearDuplicateMeaning(value, candidate.value))) continue;
+		wrong.push(candidate.value);
+		if (wrong.length === 4) break;
+	}
 	if (wrong.length !== 4) throw new Error("문항 선택지가 부족합니다");
 	return shuffle([correct, ...wrong], random);
 }
@@ -104,12 +127,12 @@ function wordChoices(type, target, entries, random) {
 		return entry[answerField] !== correct;
 	}).map((entry) => ({
 		value: entry[answerField],
-		score: sharedHanja(target.hanja, entry.hanja) * 6
-			+ readingSimilarity(target.reading, entry.reading) * 2
+		score: sharedHanja(target.hanja, entry.hanja) * (answerField === "meaning" ? 12 : 6)
+			+ readingSimilarity(target.reading, entry.reading) * (answerField === "meaning" ? 1 : 2)
 			+ definitionSimilarity(target.meaning, entry.meaning) * 8
-			- Math.abs(target.meaning.length - entry.meaning.length) * (answerField === "meaning" ? 2 : 0),
+			- Math.abs(target.meaning.length - entry.meaning.length) * (answerField === "meaning" ? 0.5 : 0),
 	}));
-	return selectChoices(correct, candidates, random);
+	return selectChoices(correct, candidates, random, answerField === "meaning");
 }
 
 export function examChoices(type, target, entries, random) {
