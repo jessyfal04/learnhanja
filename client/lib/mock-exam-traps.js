@@ -129,7 +129,7 @@ function wordChoices(type, target, entries, random) {
 		value: entry[answerField],
 		score: sharedHanja(target.hanja, entry.hanja) * (answerField === "meaning" ? 12 : 6)
 			+ readingSimilarity(target.reading, entry.reading) * (answerField === "meaning" ? 1 : 2)
-			+ definitionSimilarity(target.meaning, entry.meaning) * 8
+			+ (type === "sentenceBlank" ? 0 : definitionSimilarity(target.meaning, entry.meaning) * 8)
 			- Math.abs(target.meaning.length - entry.meaning.length) * (answerField === "meaning" ? 0.5 : 0),
 	}));
 	return selectChoices(correct, candidates, random, answerField === "meaning");

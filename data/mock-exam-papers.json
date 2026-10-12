@@ -1,0 +1,17 @@
+{
+  "7": {
+    "source": "Anki 상공회의소::7 cumulative Hanja fields; KRDict vocabulary; OpenAI reading and image generation; question order based on 2013 2회 and 2017 1회 papers",
+    "sourceLabel": "2013년 2회 · 2017년 1회 7급 시험지의 문항 구성",
+    "durationSeconds": 2400,
+    "sectionCounts": [["strokes",2],["radical",3],["imageCharacter",1],["characterSound",9],["soundCharacter",9],["characterMeaning",8],["meaningCharacter",8],["wordSound",8],["soundWord",4],["wordMeaning",4],["meaningWord",4],["sentenceSound",3],["sentenceMeaning",5],["sentenceBlank",2]],
+    "readingContexts": {
+      "sentenceSound": {"kind":"sentence","wordLength":2,"minCharacters":15,"maxCharacters":55},
+      "sentenceMeaning": {"kind":"sentence","wordLength":2,"minCharacters":15,"maxCharacters":55},
+      "sentenceBlank": {"kind":"blank","wordLength":2,"minCharacters":15,"maxCharacters":55}
+    },
+    "pictureTargets": {
+      "雲":"one soft cloud","竹":"a cluster of bamboo stalks and narrow leaves","魚":"one fish","馬":"one horse","牛":"one cow","羊":"one sheep","花":"one flower in bloom","山":"one mountain peak"
+    },
+    "scoring": {"pointsBySection":{"한자":4,"어휘":6,"독해":8},"passingScore":216}
+  }
+}

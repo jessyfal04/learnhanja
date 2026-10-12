@@ -12,6 +12,7 @@ const levelEight = JSON.parse(readFileSync(new URL("../data/mock-exam.json", imp
 const eightWords = examWordsForLevel(catalog, levelEight.characters);
 const eightSentenceWords = eightWords.filter((entry) => [...entry.hanja].length === 2 && [...entry.reading].length === 2 && /^[가-힣]+$/u.test(entry.reading));
 const eight = {...levelEight, words: eightWords, sentenceWordsByType: {sentenceSound: eightSentenceWords, sentenceMeaning: eightSentenceWords}};
+const levelSeven = JSON.parse(readFileSync(new URL("../data/mock-exam.json", import.meta.url)))["7"];
 const levels = JSON.parse(readFileSync(new URL("../data/levels-sangong.json", import.meta.url)));
 // 대한상공회의소 배정한자 (1~9급).zip / 배정한자 (5~9급).hwp의 9급 열
 const officialNine = "車高工果交口女大力老立馬萬面母木目文門夫父山夕石手水身心兒羊魚玉王牛雨月衣人日子自長田足主天川土行火";
@@ -93,7 +94,7 @@ test("question type map follows the paper ranges and adapts to another level lay
 });
 
 test("every 9급 character and word can generate each relevant type with one valid choice", () => {
-	const characterTypes = examSections.filter((section) => section.section === "한자").map((section) => section.type);
+	const characterTypes = examGroups(data).filter((section) => section.section === "한자").map((section) => section.type);
 	const wordTypes = examSections.filter((section) => section.section === "어휘").map((section) => section.type);
 	let checked = 0;
 	for (const [entries, types] of [[data.characters, characterTypes], [data.words, wordTypes]]) for (const entry of entries) for (const type of types) {
@@ -266,4 +267,50 @@ test("8급 partial reading targets require known characters", async () => {
 	const question = await makeQuestionAsync(partial, "sentenceSound", async (hanja) => ({hanja, source: "ChatGPT", sentence: `오늘은 ${hanja}를 살펴보았다.`}), randomSequence(5));
 	assert.ok(partial.targets.sentenceWordsByType.sentenceSound.some((word) => word.hanja === question.source));
 	assert.equal(question.choices.length, 5);
+});
+
+test("7급 paper uses the configured picture and blank types", async () => {
+	assert.equal(levelSeven.characters.length, 300);
+	assert.deepEqual(examGroups(levelSeven).map((group) => group.count), [2, 3, 1, 9, 9, 8, 8, 8, 4, 4, 4, 3, 5, 2]);
+	const words = examWordsForLevel(catalog, levelSeven.characters);
+	const targets = words.filter((word) => [...word.hanja].length === 2);
+	const grade = {...levelSeven, words, sentenceWordsByType: {sentenceSound: targets, sentenceMeaning: targets, sentenceBlank: targets}};
+	const providers = {
+		image: async (hanja) => ({hanja, image: "data:image/jpeg;base64,YWJj"}),
+		sentence: async (hanja, type) => ({hanja, source: "ChatGPT", sentence: type === "sentenceBlank" ? "사람들은 오늘 □□에 모였다." : `오늘은 ${hanja}를 살펴보았다.`}),
+	};
+	const paper = await makeExamAsync(grade, providers, randomSequence(14));
+	assert.equal(paper.length, 70);
+	assert.equal(paper[5].type, "imageCharacter");
+	assert.match(paper[5].imageData, /^data:image\/jpeg;base64,/);
+	assert.equal(paper.slice(-2).every((question) => question.type === "sentenceBlank" && question.stimulus.includes("□□") && question.correct === question.source), true);
+	assert.equal(scoreExam(paper, paper.map((question) => question.correct), grade.format.scoring).maxPoints, 360);
+	const report = buildReportHTML({questions: paper, answers: paper.map((question) => question.correct), mode: "full", level: "7급", scoring: grade.format.scoring, startedAt: new Date(0), finishedAt: new Date(1000), elapsedSeconds: 1});
+	assert.match(report, /data:image\/jpeg;base64/);
+});
+
+test("blank-fill replaces an option that GPT finds equally valid", async () => {
+	const words = examWordsForLevel(catalog, levelSeven.characters);
+	const target = words.find((entry) => entry.hanja === "東南");
+	const grade = {...levelSeven, words, sentenceWordsByType: {sentenceBlank: [target]}};
+	let rejected;
+	let calls = 0;
+	const provider = async (hanja, type, choices) => {
+		assert.equal(hanja, "東南");
+		assert.equal(type, "sentenceBlank");
+		assert.equal(choices.length, 5);
+		calls++;
+		if (calls === 1) {
+			rejected = choices.find((choice) => choice !== hanja);
+			const error = new Error("ambiguous");
+			error.ambiguousChoices = [rejected];
+			throw error;
+		}
+		assert.ok(!choices.includes(rejected));
+		return {hanja, source: "ChatGPT", sentence: "사람들은 □□ 해안을 따라 이동했다."};
+	};
+	const question = await makeQuestionAsync(grade, "sentenceBlank", provider, randomSequence(9));
+	assert.equal(calls, 2);
+	assert.equal(question.correct, "東南");
+	assert.ok(!question.choices.includes(rejected));
 });

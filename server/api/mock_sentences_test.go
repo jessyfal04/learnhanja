@@ -115,3 +115,59 @@ func TestReadingContextCanVaryByQuestionType(t *testing.T) {
 		t.Fatal("passage should allow longer text and line breaks")
 	}
 }
+
+func TestBlankContextRequiresOnePlaceholderAndNoAnswerLeak(t *testing.T) {
+	word := examWord{hanja: "人口", reading: "인구", meaning: "사람 수"}
+	context := readingContext{Kind: "blank", WordLength: 2, MinCharacters: 15, MaxCharacters: 55}
+	if !validGeneratedText("이 도시의 □□는 해마다 늘고 있다.", word, context) {
+		t.Fatal("valid blank rejected")
+	}
+	for _, value := range []string{"이 도시의 人口는 해마다 늘고 있다.", "이 도시의 인구는 해마다 늘고 있다.", "이 도시의 □□와 □□를 살핀다.", "이 도시의 □□□는 해마다 늘고 있다."} {
+		if validGeneratedText(value, word, context) {
+			t.Fatalf("invalid blank accepted: %q", value)
+		}
+	}
+}
+
+func TestBlankChoicesRejectAmbiguityAndSendDefinitions(t *testing.T) {
+	calls := 0
+	openai := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		var payload map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Error(err)
+		}
+		input := payload["input"].(string)
+		if !strings.Contains(input, `"hanja":"南東"`) || !strings.Contains(input, "남쪽과 동쪽 사이의 방향") {
+			t.Errorf("option definitions missing from prompt: %s", input)
+		}
+		fitting := []string{"東南", "南東"}
+		if calls == 2 {
+			fitting = []string{"東南"}
+		}
+		encoded, _ := json.Marshal(map[string]any{"text": "태풍이 섬의 □□ 해안으로 다가왔다.", "fitting": fitting})
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "completed", "output": []any{map[string]any{"content": []any{map[string]string{"type": "output_text", "text": string(encoded)}}}}})
+	}))
+	defer openai.Close()
+	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{apiKey: "test-key", endpoint: openai.URL, client: openai.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &Server{sentences: service}
+	body := `{"level":"7","type":"sentenceBlank","hanja":"東南","choices":["東南","南東","東洋","東北","北東"]}`
+	first := httptest.NewRecorder()
+	server.sentence(first, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(body)))
+	if first.Code != http.StatusConflict || !strings.Contains(first.Body.String(), `"南東"`) || calls != 1 {
+		t.Fatalf("ambiguous: %d calls=%d %s", first.Code, calls, first.Body.String())
+	}
+	second := httptest.NewRecorder()
+	server.sentence(second, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(body)))
+	if second.Code != http.StatusOK || !strings.Contains(second.Body.String(), `"source":"ChatGPT"`) || calls != 2 {
+		t.Fatalf("unique: %d calls=%d %s", second.Code, calls, second.Body.String())
+	}
+	invalid := httptest.NewRecorder()
+	server.sentence(invalid, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(`{"level":"7","type":"sentenceBlank","hanja":"東南","choices":["東南","東南","東洋","東北","北東"]}`)))
+	if invalid.Code != http.StatusBadRequest || calls != 2 {
+		t.Fatalf("invalid options: %d calls=%d", invalid.Code, calls)
+	}
+}

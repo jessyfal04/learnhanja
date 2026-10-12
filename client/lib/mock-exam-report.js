@@ -49,7 +49,7 @@ export function buildReportHTML({questions, answers, mode, partial = false, leve
 			const classes = [choice === question.correct ? "is-answer" : "", choice === answers[index] && status === "wrong" ? "is-error" : ""].filter(Boolean).join(" ");
 			return `<li class="${classes}"><span>${choiceIndex + 1}</span>${escapeHTML(choice)}${choice === question.correct ? " <b>정답</b>" : ""}${choice === answers[index] && status === "wrong" ? " <b>내 선택</b>" : ""}</li>`;
 		}).join("");
-		const stimulus = question.stimulusParts ? `${escapeHTML(question.stimulusParts[0])}<u>${escapeHTML(question.stimulusParts[1])}</u>${escapeHTML(question.stimulusParts[2])}` : escapeHTML(question.stimulus);
+		const stimulus = question.imageData ? `<img src="${escapeHTML(question.imageData)}" alt="시험 그림" style="display:block;width:min(100%,320px);height:auto;aspect-ratio:1;object-fit:contain">` : question.stimulusParts ? `${escapeHTML(question.stimulusParts[0])}<u>${escapeHTML(question.stimulusParts[1])}</u>${escapeHTML(question.stimulusParts[2])}` : escapeHTML(question.stimulus);
 		return `<article class="question ${status}"><div class="question-head"><div><span class="number">${String(index + 1).padStart(2, "0")}</span><span class="type">${escapeHTML(question.section)} · ${escapeHTML(question.title)}</span></div><strong class="status">${statusLabel}</strong></div><p class="instruction">${escapeHTML(question.instruction)}</p><p class="stimulus${question.stimulusParts ? " is-sentence" : ""}">${stimulus}</p><ol>${choices}</ol><p class="explanation">풀이 · ${escapeHTML(question.explanation)}</p></article>`;
 	}).join("");
 	const wrong = score.answered - score.correct;

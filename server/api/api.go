@@ -12,6 +12,7 @@ type Server struct {
 	files       fs.FS
 	sentences   *sentenceService
 	sentenceErr error
+	images      imageOptions
 }
 
 func NewServer(files fs.FS) *Server {
@@ -20,7 +21,7 @@ func NewServer(files fs.FS) *Server {
 		model:  os.Getenv("OPENAI_MODEL"),
 		client: &http.Client{Timeout: 45 * time.Second},
 	})
-	return &Server{files: files, sentences: sentences, sentenceErr: err}
+	return &Server{files: files, sentences: sentences, sentenceErr: err, images: imageOptions{model: os.Getenv("OPENAI_IMAGE_MODEL"), client: &http.Client{Timeout: 120 * time.Second}}}
 }
 
 func (s *Server) ServeMux() *http.ServeMux {
@@ -28,6 +29,7 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux.HandleFunc("GET /healthz", s.logged(s.health))
 	mux.HandleFunc("GET /api/mock-exam/sentences", s.logged(s.sentenceManifest))
 	mux.HandleFunc("POST /api/mock-exam/sentence", s.logged(s.sentence))
+	mux.HandleFunc("POST /api/mock-exam/image", s.logged(s.imageQuestion))
 	mux.Handle("GET /", s.loggedHandler(s.staticFiles()))
 	return mux
 }

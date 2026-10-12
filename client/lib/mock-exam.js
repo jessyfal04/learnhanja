@@ -1,6 +1,6 @@
-import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=5";
-import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=5";
-import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=3";
+import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=7";
+import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=6";
+import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=4";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
@@ -68,7 +68,7 @@ async function prepareLevel() {
 		const minutes = Math.round(levelData.format.durationSeconds / 60);
 		$("mockModeFullTitle").textContent = `${count}문제 실전`;
 		$("mockModeFullDescription").textContent = `기출 순서 그대로, ${minutes}분 안에 풀어요. 결과는 제출 후 공개됩니다.`;
-		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT (국립국어원 예문 대체 가능)" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
+		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT (일부 국립국어원 예문 대체 가능)" : ""}${groups.some((group) => group.type === "imageCharacter") ? " · 그림: OpenAI" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
 		const typeSelect = $("mockType");
 		const selected = typeSelect.value;
 		typeSelect.replaceChildren(new Option("전체 유형 · 시험지 순서", "all"), ...groups.map((group) =>
@@ -120,6 +120,7 @@ async function start() {
 		const needsSentences = levelData.format.sections.some((section) => section.readingContext);
 		let sentenceWordsByType = {};
 		let generationEnabled = false;
+		let imageGenerationEnabled = false;
 		if (needsSentences) {
 			const response = await fetch(`/api/mock-exam/sentences?level=${encodeURIComponent(level.value)}`, {cache: "no-store"});
 			if (!response.ok) throw new Error("독해 한자어 목록을 불러올 수 없습니다");
@@ -129,6 +130,7 @@ async function start() {
 				return [type, words.filter((entry) => allowed.has(entry.hanja))];
 			}));
 			generationEnabled = manifest.generationEnabled;
+			imageGenerationEnabled = manifest.imageGenerationEnabled;
 		}
 		const fullData = {...levelData, words, sentenceWordsByType};
 		data = partial ? partialExamData(fullData, state.ankiStatus) : fullData;
@@ -138,15 +140,28 @@ async function start() {
 		const trainingType = mode === "full" ? "all" : $("mockType").value;
 		const usesSentences = trainingType === "all" ? data.groups.some((group) => group.readingContext) : data.groups.some((group) => group.type === trainingType && group.readingContext);
 		if (usesSentences && !generationEnabled) throw new Error("독해 문장을 준비할 수 없습니다. 서버 설정을 확인하세요");
+		const usesImages = trainingType === "all" ? data.groups.some((group) => group.type === "imageCharacter") : trainingType === "imageCharacter";
+		if (usesImages && !imageGenerationEnabled) throw new Error("그림 문항을 준비할 수 없습니다. 서버 설정을 확인하세요");
 		const trainingPosition = trainingType === "all" ? 0 : data.groups.find((group) => group.type === trainingType)?.startIndex;
 		if (trainingPosition === undefined) throw new Error("학습한 한자와 어휘로 이 유형의 문제를 만들 수 없습니다. 다른 유형을 고르세요");
-		const sentenceProvider = async (hanja, type) => {
-			const response = await fetch("/api/mock-exam/sentence", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, type, hanja})});
+		const sentenceProvider = async (hanja, type, choices) => {
+			const response = await fetch("/api/mock-exam/sentence", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, type, hanja, ...(choices ? {choices} : {})})});
+			if (response.status === 409) {
+				const details = await response.json();
+				const error = new Error("문항의 정답이 하나로 좁혀지지 않습니다");
+				error.ambiguousChoices = details.retryChoices;
+				throw error;
+			}
 			if (!response.ok) throw new Error((await response.text()).trim() || "독해 문장을 준비할 수 없습니다");
 			return response.json();
 		};
-		const questions = mode === "full" ? await makeExamAsync(data, sentenceProvider, secureRandom, (ready, total) => { $("mockSetupStatus").textContent = `문항을 준비하는 중… ${ready}/${total}`; }) : [await newTrainingQuestion([], trainingType, trainingPosition, sentenceProvider)];
-		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, sentenceProvider, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0};
+		const providers = {sentence: sentenceProvider, image: async (hanja) => {
+			const response = await fetch("/api/mock-exam/image", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, hanja})});
+			if (!response.ok) throw new Error((await response.text()).trim() || "그림을 준비할 수 없습니다");
+			return response.json();
+		}};
+		const questions = mode === "full" ? await makeExamAsync(data, providers, secureRandom, (ready, total) => { $("mockSetupStatus").textContent = `문항을 준비하는 중… ${ready}/${total}`; }) : [await newTrainingQuestion([], trainingType, trainingPosition, providers)];
+		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, providers, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0};
 		$("mockSetup").classList.add("is-hidden");
 		$("mockResult").classList.add("is-hidden");
 		$("mockPlay").classList.remove("is-hidden");
@@ -210,7 +225,13 @@ function renderQuestion() {
 	$("mockInstruction").textContent = question.instruction;
 	const stimulus = $("mockStimulus");
 	stimulus.classList.toggle("is-sentence", Boolean(question.stimulusParts));
-	if (question.stimulusParts) {
+	stimulus.classList.toggle("is-image", Boolean(question.imageData));
+	if (question.imageData) {
+		const picture = document.createElement("img");
+		picture.src = question.imageData;
+		picture.alt = "시험 그림";
+		stimulus.replaceChildren(picture);
+	} else if (question.stimulusParts) {
 		const marked = document.createElement("u");
 		marked.textContent = question.stimulusParts[1];
 		stimulus.replaceChildren(document.createTextNode(question.stimulusParts[0]), marked, document.createTextNode(question.stimulusParts[2]));
@@ -291,7 +312,7 @@ async function jumpToGroup(group) {
 		const active = session;
 		active.loading = true;
 		try {
-			const question = await newTrainingQuestion(active.questions, "all", group.startIndex, active.sentenceProvider);
+			const question = await newTrainingQuestion(active.questions, "all", group.startIndex, active.providers);
 			if (session !== active || active.finishedAt) return;
 			session.trainingType = "all";
 			session.trainingPosition = group.startIndex;
@@ -333,7 +354,7 @@ async function move(direction) {
 		active.loading = true;
 		$("mockNext").classList.add("is-loading");
 		try {
-			const question = await newTrainingQuestion(active.questions, active.trainingType, position, active.sentenceProvider);
+			const question = await newTrainingQuestion(active.questions, active.trainingType, position, active.providers);
 			if (session !== active || active.finishedAt) return;
 			session.trainingPosition = position;
 			session.questions.push(question);
@@ -400,6 +421,13 @@ function renderResult() {
 		head.className = "mock-review-head";
 		head.append(label(`${index + 1}. ${question.section} · ${question.title}`, ""), label({correct: "정답", wrong: "오답", unanswered: "미응답"}[status], "mock-review-status"));
 		card.append(head, label(`${question.instruction}  ${question.stimulus}`, "mock-review-prompt"));
+		if (question.imageData) {
+			const picture = document.createElement("img");
+			picture.className = "mock-review-image";
+			picture.src = question.imageData;
+			picture.alt = "시험 그림";
+			card.append(picture);
+		}
 		const choices = document.createElement("div");
 		choices.className = "mock-review-choices";
 		for (const choice of question.choices) {
