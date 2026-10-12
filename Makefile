@@ -37,11 +37,14 @@ docker-push: docker-build
 	docker push $(IMAGE):$(TAG)
 
 production:
-	@test -n "$$COMMIT_MESSAGE" || { echo 'Usage: make production COMMIT_MESSAGE="your commit message"' >&2; exit 2; }
 	@test "$$(git branch --show-current)" = main || { echo 'Production must run from main' >&2; exit 2; }
 	$(MAKE) test
-	git add -A
-	git commit -m "$$COMMIT_MESSAGE"
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		test -n "$$COMMIT_MESSAGE" || { echo 'Uncommitted changes require COMMIT_MESSAGE="your commit message"' >&2; exit 2; }; \
+		git add -A && git commit -m "$$COMMIT_MESSAGE"; \
+	else \
+		echo 'Working tree clean; using existing commit'; \
+	fi
 	git push origin main
 	$(MAKE) docker-push
 
