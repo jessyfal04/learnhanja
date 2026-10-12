@@ -10,7 +10,21 @@
       "sentenceBlank": {"kind":"blank","wordLength":2,"minCharacters":15,"maxCharacters":55}
     },
     "pictureTargets": {
-      "雲":"one soft cloud","竹":"a cluster of bamboo stalks and narrow leaves","魚":"one fish","馬":"one horse","牛":"one cow","羊":"one sheep","花":"one flower in bloom","山":"one mountain peak"
+      "雲":"one soft cloud",
+      "竹":"a cluster of bamboo stalks and narrow leaves",
+      "魚":"one fish",
+      "馬":"one horse",
+      "牛":"one cow",
+      "羊":"one sheep",
+      "花":"one flower in bloom",
+      "山":"one mountain peak",
+      "日":"one bright sun in the sky",
+      "月":"one crescent moon in the night sky",
+      "木":"one tree with a visible trunk and branches",
+      "火":"one small fire with visible flames",
+      "石":"one large natural stone",
+      "鳥":"one bird standing in profile",
+      "雨":"rain falling from a gray cloud"
     },
     "scoring": {"pointsBySection":{"한자":4,"어휘":6,"독해":8},"passingScore":216}
   }

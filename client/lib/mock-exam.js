@@ -1,6 +1,6 @@
-import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=7";
+import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=8";
 import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=7";
-import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=4";
+import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=5";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
@@ -422,6 +422,7 @@ function renderResult() {
 		row.append(label(title, "mock-weakness-label"), label(value, "mock-weakness-value"));
 		return row;
 	}));
+	$("mockTypeTimeDetails").open = false;
 	$("mockTypeTimes").replaceChildren(...timeByType(session.questions, session.questionTimeMs).map(({title, count, milliseconds}) => {
 		const row = document.createElement("tr");
 		for (const value of [title, String(count), formatDuration(Math.round(milliseconds / 1000))]) {

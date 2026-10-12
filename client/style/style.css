@@ -948,6 +948,7 @@ body .tag.insight-level.is-danger.is-light {
 .mock-timer {font-variant-numeric: tabular-nums; font-weight: 800}
 .mock-session-meta {display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.35rem}
 .mock-type-time table {font-size: 0.82rem}
+.mock-type-time summary {cursor: pointer}
 .mock-type-time td:not(:first-child) {text-align: right; font-variant-numeric: tabular-nums}
 .mock-type-time td:last-child {font-weight: 700}
 .mock-map {padding: 0.7rem 0.8rem; background: var(--bulma-scheme-main-bis); border-color: var(--bulma-border-weak)}

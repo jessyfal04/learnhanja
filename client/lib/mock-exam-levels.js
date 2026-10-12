@@ -1,4 +1,4 @@
-export const mockExamPath = "/data/mock-exam.json?v=4";
+export const mockExamPath = "/data/mock-exam.json?v=5";
 
 export const mockExamLevels = [
 	{value: "9", label: "9급"},

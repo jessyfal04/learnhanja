@@ -85,6 +85,20 @@ test("meaning distractors do not repeat month or number templates", () => {
 	}
 });
 
+test("word distractors vary for the same target while retaining one answer", () => {
+	for (const [grade, source] of [[data, "女子"], [eight, "自己"], [{...levelSeven, words: examWordsForLevel(catalog, levelSeven.characters)}, "時間"]]) {
+		for (const type of ["wordSound", "wordMeaning", "soundWord", "meaningWord"]) {
+			const sets = new Set();
+			for (let seed = 1; seed <= 30; seed++) {
+				const question = makeQuestion(grade, type, randomSequence(seed * 7919), new Set(), source);
+				assert.equal(question.choices.filter((choice) => choice === question.correct).length, 1);
+				sets.add(question.choices.filter((choice) => choice !== question.correct).sort().join("|"));
+			}
+			assert.ok(sets.size >= 3, `${grade.level} ${type}: ${sets.size} sets`);
+		}
+	}
+});
+
 test("question type map follows the paper ranges and adapts to another level layout", () => {
 	const groups = examGroups(data);
 	assert.deepEqual(groups.map(({startIndex, endIndex}) => [startIndex + 1, endIndex + 1]), [[1, 1], [2, 2], [3, 7], [8, 12], [13, 16], [17, 20], [21, 24], [25, 26], [27, 28], [29, 30]]);
@@ -279,6 +293,7 @@ test("8급 partial reading targets require known characters", async () => {
 
 test("7급 paper uses the configured picture and blank types", async () => {
 	assert.equal(levelSeven.characters.length, 300);
+	assert.equal(levelSeven.pictureTargets.length, 15);
 	assert.deepEqual(examGroups(levelSeven).map((group) => group.count), [2, 3, 1, 9, 9, 8, 8, 8, 4, 4, 4, 3, 5, 2]);
 	const words = examWordsForLevel(catalog, levelSeven.characters);
 	const targets = words.filter((word) => [...word.hanja].length === 2);
@@ -295,6 +310,16 @@ test("7급 paper uses the configured picture and blank types", async () => {
 	assert.equal(scoreExam(paper, paper.map((question) => question.correct), grade.format.scoring).maxPoints, 360);
 	const report = buildReportHTML({questions: paper, answers: paper.map((question) => question.correct), mode: "full", level: "7급", scoring: grade.format.scoring, startedAt: new Date(0), finishedAt: new Date(1000), elapsedSeconds: 1});
 	assert.match(report, /data:image\/jpeg;base64/);
+});
+
+test("7급 picture question samples a broad set of concrete targets", async () => {
+	const sources = new Set();
+	for (let seed = 1; seed <= 80; seed++) {
+		const question = await makeQuestionAsync(levelSeven, "imageCharacter", {image: async (hanja) => ({hanja, image: "data:image/jpeg;base64,YWJj"})}, randomSequence(seed * 7919));
+		assert.equal(question.choices.filter((choice) => choice === question.correct).length, 1);
+		sources.add(question.source);
+	}
+	assert.ok(sources.size >= 12, `${sources.size} picture targets sampled`);
 });
 
 test("blank-fill replaces an option that GPT finds equally valid", async () => {

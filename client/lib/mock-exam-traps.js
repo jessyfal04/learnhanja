@@ -57,11 +57,11 @@ function nearDuplicateMeaning(left, right) {
 	return first.size > 0 && second.size > 0 && 2 * [...first].filter((part) => second.has(part)).length / (first.size + second.size) >= 0.72;
 }
 
-function selectChoices(correct, candidates, random, diverseMeanings = false) {
+function selectChoices(correct, candidates, random, diverseMeanings = false, scoreVariation = 0.5) {
 	const best = new Map();
 	for (const candidate of candidates) {
 		if (!candidate.value || candidate.value === correct) continue;
-		const score = candidate.score + random() * 0.5;
+		const score = candidate.score + random() * scoreVariation;
 		if (score > (best.get(candidate.value)?.score ?? -Infinity)) best.set(candidate.value, {value: candidate.value, score});
 	}
 	const wrong = [];
@@ -132,7 +132,7 @@ function wordChoices(type, target, entries, random) {
 			+ (type === "sentenceBlank" ? 0 : definitionSimilarity(target.meaning, entry.meaning) * 8)
 			- Math.abs(target.meaning.length - entry.meaning.length) * (answerField === "meaning" ? 0.5 : 0),
 	}));
-	return selectChoices(correct, candidates, random, answerField === "meaning");
+	return selectChoices(correct, candidates, random, answerField === "meaning", 6);
 }
 
 export function examChoices(type, target, entries, random) {

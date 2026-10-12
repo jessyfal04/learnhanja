@@ -1,5 +1,5 @@
 import { searchVocabulary } from "./vocabulary-data.js?v=3";
-import { examChoices } from "./mock-exam-traps.js?v=2";
+import { examChoices } from "./mock-exam-traps.js?v=3";
 import { isActiveStudyStatus } from "./study-status.js?v=2";
 
 export const examSections = [
