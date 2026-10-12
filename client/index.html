@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=24">
-	<script type="module" src="/lib/app.js?v=46"></script>
+	<link rel="stylesheet" href="/style/style.css?v=25">
+	<script type="module" src="/lib/app.js?v=47"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -251,7 +251,7 @@
 					<div class="notification is-link is-light mock-source-note"><p id="mockSource"></p></div><p id="mockSetupStatus" class="help mb-2" role="status"></p><div class="buttons is-right"><button id="mockStart" class="button is-link is-medium" type="button">연습 시작 →</button></div>
 				</div>
 				<div id="mockPlay" class="mock-panel is-hidden">
-					<div class="level is-mobile mb-3"><div class="level-left"><div><p id="mockSessionLabel" class="mock-kicker"></p><h3 id="mockProgress" class="title is-5 mb-0"></h3></div></div><div class="level-right"><span id="mockTimer" class="tag is-info is-light is-medium mock-timer" role="timer">00:00</span></div></div>
+					<div class="level is-mobile mb-3"><div class="level-left"><div><p id="mockSessionLabel" class="mock-kicker"></p><h3 id="mockProgress" class="title is-5 mb-0"></h3></div></div><div class="level-right mock-session-meta"><span id="mockSelectionCount" class="tag is-link is-light is-medium is-hidden"></span><span id="mockTimer" class="tag is-info is-light is-medium mock-timer" role="timer">00:00</span></div></div>
 					<progress id="mockProgressBar" class="progress is-link is-small mb-3" value="0" max="100" aria-label="답한 문항 비율"></progress>
 					<div id="mockMap" class="mock-map box mb-3"><div class="mock-map-heading"><h4 class="has-text-weight-bold mb-0">유형 이동</h4><div id="mockMapLegend" class="mock-map-legend"><span><i class="mock-legend-dot is-current"></i>현재</span><span><i class="mock-legend-dot is-answered"></i>답함</span></div></div><nav id="mockGroupNav" class="mock-group-nav" aria-label="문항 유형별 이동"></nav></div>
 					<div id="mockTypeContext" class="mock-type-context mb-3"><p id="mockGroupTitle" class="has-text-weight-bold"></p><p id="mockGroupProgress" class="help"></p></div>
@@ -274,6 +274,7 @@
 						<h4 class="is-size-6 has-text-weight-bold mb-2">약점 요약</h4>
 						<div id="mockWeakness"></div>
 					</section>
+					<section class="mock-type-time mb-5" aria-labelledby="mockTypeTimeTitle"><h4 id="mockTypeTimeTitle" class="is-size-6 has-text-weight-bold mb-2">유형별 소요 시간</h4><div class="table-container"><table class="table is-fullwidth is-narrow"><thead><tr><th>유형</th><th class="has-text-right">문항</th><th class="has-text-right">시간</th></tr></thead><tbody id="mockTypeTimes"></tbody></table></div></section>
 					<div class="buttons mb-2">
 						<button id="mockDownload" class="button is-link" type="button">컬러 리포트 HTML 다운로드</button>
 						<button id="mockAgain" class="button is-light" type="button"><span class="mock-hold-fill" aria-hidden="true"></span><span class="mock-hold-label">길게 눌러 다시 하기</span></button>

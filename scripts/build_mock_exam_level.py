@@ -12,13 +12,19 @@ LEVELS = ROOT / "client/data/levels-sangong.json"
 INSIGHTS = ROOT / "client/data/insights.json"
 PAPERS = ROOT / "data/mock-exam-papers.json"
 
-def build_grade(level, levels, insights, paper):
+def build_grade(level, levels, insights, paper, meaning_new=None):
+    use_meaning_new = int(level) <= 6
+    if use_meaning_new and meaning_new is None:
+        raise ValueError(f"{level}급 requires an Anki MeaningNew snapshot")
     characters = []
     found = False
     for group in levels["groups"]:
         for hanja in group["characters"]:
             record = insights["characters"][hanja]
-            meaning, sound = record["hun"].rsplit(" ", 1)
+            meaning_source = meaning_new.get(hanja) if use_meaning_new else record["hun"]
+            if not isinstance(meaning_source, str) or " " not in meaning_source.strip():
+                raise ValueError(f"missing or invalid MeaningNew for {hanja} in {level}급")
+            meaning, sound = meaning_source.rsplit(" ", 1)
             characters.append({
                 "hanja": hanja,
                 "sound": sound,
@@ -57,6 +63,7 @@ def build_grade(level, levels, insights, paper):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--level", help="Numeric Sangong grade, for example 7; defaults to all paper specs")
+    parser.add_argument("--meaning-new", type=Path, help="JSON mapping of Hanja to Anki MeaningNew field; required for 6급 and above")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     configs = json.loads(CONFIG.read_text(encoding="utf-8"))
@@ -65,8 +72,9 @@ def main():
         raise SystemExit(f"No paper specification for {args.level}급")
     levels = json.loads(LEVELS.read_text(encoding="utf-8"))
     insights = json.loads(INSIGHTS.read_text(encoding="utf-8"))
+    meaning_new = json.loads(args.meaning_new.read_text(encoding="utf-8")) if args.meaning_new else None
     for level in [args.level] if args.level else papers:
-        grade = build_grade(level, levels, insights, papers[level])
+        grade = build_grade(level, levels, insights, papers[level], meaning_new)
         if args.check:
             if configs.get(level) != grade:
                 raise SystemExit(f"{level}급 mock exam data is out of date")

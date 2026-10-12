@@ -232,6 +232,14 @@ test("each report gives a compact weakness summary by source, type and confused 
 	assert.match(report, /<section class="weakness"><h2>약점 요약<\/h2>/);
 	assert.match(report, /다시 볼 한자/);
 	assert.match(report, /오답·미응답/);
+	assert.match(report, /유형별 소요 시간/);
+});
+
+test("partial report includes selected character count and time by type", () => {
+	const question = {section: "한자", type: "characterSound", title: "한자의 음", source: "山", stimulus: "山", instruction: "음은?", choices: ["산", "천"], correct: "산", explanation: "산"};
+	const report = buildReportHTML({questions: [question], answers: ["산"], mode: "single", partial: true, level: "9급", startedAt: new Date(0), finishedAt: new Date(2500), elapsedSeconds: 2, questionTimeMs: [2500], selectedCharacterCount: 12, totalCharacterCount: 50});
+	assert.match(report, /선택 한자 12\/50자/);
+	assert.match(report, /<td>한자의 음<\/td><td>1<\/td><td>00:03<\/td>/);
 });
 
 test("8급 uses all twelve types, GPT reading contexts and 150/250 passing", async () => {

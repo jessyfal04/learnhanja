@@ -1,5 +1,5 @@
 import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=7";
-import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=6";
+import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=7";
 import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=4";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
@@ -8,6 +8,7 @@ import { bindHoldButton } from "./hold-button.js?v=1";
 import { state } from "./state.js";
 import { refreshStatus } from "./anki.js?v=14";
 import { isActiveStudyStatus } from "./study-status.js?v=2";
+import { pauseQuestionTime, timeByType, trackQuestionTime } from "./mock-exam-timing.js?v=1";
 
 const $ = (id) => document.getElementById(id);
 let data = null;
@@ -161,7 +162,7 @@ async function start() {
 			return response.json();
 		}};
 		const questions = mode === "full" ? await makeExamAsync(data, providers, secureRandom, (ready, total) => { $("mockSetupStatus").textContent = `문항을 준비하는 중… ${ready}/${total}`; }) : [await newTrainingQuestion([], trainingType, trainingPosition, providers)];
-		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, providers, startedAt: new Date(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0};
+		session = {mode, partial, level: data.level, scoring: data.format.scoring, questions, answers: Array(questions.length).fill(null), index: 0, trainingType, trainingPosition, providers, startedAt: new Date(), startedAtMonotonic: performance.now(), finishedAt: null, elapsedSeconds: 0, reportDownloads: 0, questionTimeMs: Array(questions.length).fill(0), timingIndex: null, timingStartedAt: null, selectedCharacterCount: partial ? data.targets.characters.length : null, totalCharacterCount: levelData.characters.length};
 		$("mockSetup").classList.add("is-hidden");
 		$("mockResult").classList.add("is-hidden");
 		$("mockPlay").classList.remove("is-hidden");
@@ -201,6 +202,7 @@ function tick() {
 
 function renderQuestion() {
 	if (!session || session.finishedAt) return;
+	trackQuestionTime(session, performance.now());
 	const {questions, answers, index} = session;
 	const question = questions[index];
 	const answer = answers[index];
@@ -212,6 +214,8 @@ function renderQuestion() {
 	const group = groups[groupIndex];
 	const totalAnswered = answers.filter((value) => value !== null).length;
 	$("mockSessionLabel").textContent = full ? `${session.partial ? "부분 연습 · " : ""}${questions.length}문제 실전 · ${formatDuration(data.format.durationSeconds)}` : `${session.partial ? "부분 연습 · " : ""}한 문제씩 연습 · 바로 확인`;
+	$("mockSelectionCount").classList.toggle("is-hidden", !session.partial);
+	if (session.partial) $("mockSelectionCount").textContent = `선택 한자 ${session.selectedCharacterCount}/${session.totalCharacterCount}자`;
 	$("mockProgress").textContent = full ? `답함 ${totalAnswered} / ${questions.length} · 현재 ${index + 1}번` : `${index + 1}번째 문제 · ${totalAnswered}문제 답함`;
 	$("mockProgressBar").classList.toggle("is-hidden", !full);
 	$("mockProgressBar").value = totalAnswered / questions.length * 100;
@@ -311,6 +315,7 @@ async function jumpToGroup(group) {
 	} else {
 		const active = session;
 		active.loading = true;
+		pauseQuestionTime(active, performance.now());
 		try {
 			const question = await newTrainingQuestion(active.questions, "all", group.startIndex, active.providers);
 			if (session !== active || active.finishedAt) return;
@@ -318,6 +323,7 @@ async function jumpToGroup(group) {
 			session.trainingPosition = group.startIndex;
 			session.questions.push(question);
 			session.answers.push(null);
+			session.questionTimeMs.push(0);
 			session.index++;
 		} catch (error) { showMessage("danger", koreanError(error, "독해 문장을 준비할 수 없습니다")); }
 		finally { active.loading = false; }
@@ -352,6 +358,7 @@ async function move(direction) {
 		const position = session.trainingType === "all" ? (session.trainingPosition + 1) % data.groups.reduce((total, group) => total + group.count, 0) : session.trainingPosition;
 		const active = session;
 		active.loading = true;
+		pauseQuestionTime(active, performance.now());
 		$("mockNext").classList.add("is-loading");
 		try {
 			const question = await newTrainingQuestion(active.questions, active.trainingType, position, active.providers);
@@ -359,6 +366,7 @@ async function move(direction) {
 			session.trainingPosition = position;
 			session.questions.push(question);
 			session.answers.push(null);
+			session.questionTimeMs.push(0);
 			session.index++;
 		} catch (error) { showMessage("danger", koreanError(error, "독해 문장을 준비할 수 없습니다")); }
 		finally { active.loading = false; $("mockNext").classList.remove("is-loading"); }
@@ -369,6 +377,7 @@ async function move(direction) {
 function finish() {
 	if (!session || session.finishedAt) return;
 	cancelStopHold();
+	pauseQuestionTime(session, session.mode === "full" ? Math.min(performance.now(), session.startedAtMonotonic + data.format.durationSeconds * 1000) : performance.now());
 	session.finishedAt = new Date();
 	session.elapsedSeconds = Math.floor((session.finishedAt - session.startedAt) / 1000);
 	if (session.mode === "full") session.elapsedSeconds = Math.min(data.format.durationSeconds, session.elapsedSeconds);
@@ -384,7 +393,7 @@ function renderResult() {
 	const wrong = score.answered - score.correct;
 	const unanswered = score.total - score.answered;
 	const date = new Intl.DateTimeFormat("ko-KR", {dateStyle: "full", timeStyle: "short"}).format(session.finishedAt);
-	$("mockResultMeta").textContent = `${date} · ${session.partial ? "독음 부분 연습 · " : ""}${session.mode === "full" ? `${session.questions.length}문제 실전` : "한 문제씩 연습"} · ${formatDuration(session.elapsedSeconds)} 소요`;
+	$("mockResultMeta").textContent = `${date} · ${session.partial ? `독음 부분 연습 · 선택 한자 ${session.selectedCharacterCount}/${session.totalCharacterCount}자 · ` : ""}${session.mode === "full" ? `${session.questions.length}문제 실전` : "한 문제씩 연습"} · ${formatDuration(session.elapsedSeconds)} 소요`;
 	$("mockDownloadStatus").textContent = "브라우저에서 인쇄하여 PDF로도 저장할 수 있습니다";
 	const percent = official?.percent ?? score.percent;
 	$("mockPercent").textContent = `${percent}%`;
@@ -411,6 +420,15 @@ function renderResult() {
 	$("mockWeakness").replaceChildren(...weaknessLines(session.questions, session.answers).map(([title, value]) => {
 		const row = document.createElement("p");
 		row.append(label(title, "mock-weakness-label"), label(value, "mock-weakness-value"));
+		return row;
+	}));
+	$("mockTypeTimes").replaceChildren(...timeByType(session.questions, session.questionTimeMs).map(({title, count, milliseconds}) => {
+		const row = document.createElement("tr");
+		for (const value of [title, String(count), formatDuration(Math.round(milliseconds / 1000))]) {
+			const cell = document.createElement("td");
+			cell.textContent = value;
+			row.appendChild(cell);
+		}
 		return row;
 	}));
 	$("mockReview").replaceChildren(...session.questions.map((question, index) => {
