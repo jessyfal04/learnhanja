@@ -1,6 +1,6 @@
 import { initializeInsights, openInsights, renderInsights } from "./insights.js?v=25";
 import { initializeCheonjamun, renderCheonjamun } from "./cheonjamun.js?v=12";
-import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=14";
+import { characterFieldChanged, clearSelection, loadCatalog, loadFields, loadIdiomFields, loadIdiomNoteTypes, loadMetadata, loadNoteTypes, refreshAuxiliaryStatus, refreshAuxiliaryStatuses, refreshConnection, refreshIdiomStatus, refreshStatus, selectStatus } from "./anki.js?v=15";
 import { autoSaveSelection, initializeFileSave, openBrowserFile, saveBrowserFile } from "./saves.js?v=8";
 import { hideMessage } from "./ui.js";
 import { initializeIdiomLevels, loadIdioms, renderIdioms } from "./idioms.js?v=22";
@@ -9,11 +9,20 @@ import { showView } from "./views.js?v=4";
 import { initializeKnownWords } from "./known-words.js?v=1";
 import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1";
 import { initializeGames } from "./games.js?v=6";
-import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=5";
+import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=6";
 import { initializeMockExam } from "./mock-exam.js?v=13";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
+let lastConnectionRefresh = Date.now();
+let connectionRefreshRunning = false;
+
+function autoRefreshConnection(minAgeMs) {
+	if (document.hidden || connectionRefreshRunning || Date.now() - lastConnectionRefresh < minAgeMs) return;
+	lastConnectionRefresh = Date.now();
+	connectionRefreshRunning = true;
+	void refreshConnection().finally(() => { connectionRefreshRunning = false; });
+}
 
 function currentView() {
 	return window.location.hash.slice(1);
@@ -52,7 +61,10 @@ function scheduleLocationRoute() {
 }
 
 document.getElementById("messageClose").addEventListener("click", hideMessage);
-document.getElementById("refreshAnkiButton").addEventListener("click", loadMetadata);
+document.getElementById("refreshAnkiButton").addEventListener("click", async () => {
+	await loadMetadata();
+	lastConnectionRefresh = Date.now();
+});
 document.getElementById("deckSelect").addEventListener("change", loadNoteTypes);
 document.getElementById("noteTypeSelect").addEventListener("change", loadFields);
 document.getElementById("characterFieldSelect").addEventListener("change", characterFieldChanged);
@@ -106,6 +118,9 @@ initializeRecommendations();
 initializeMockExam();
 window.addEventListener("hashchange", scheduleLocationRoute);
 window.addEventListener("popstate", scheduleLocationRoute);
+window.addEventListener("focus", () => autoRefreshConnection(60_000));
+document.addEventListener("visibilitychange", () => autoRefreshConnection(60_000));
+setInterval(() => autoRefreshConnection(5 * 60_000), 60_000);
 applyLocationQuery();
 showView(currentView());
 initializeInsights();
@@ -121,4 +136,5 @@ renderInsights();
 queryRoutingReady = true;
 applyLocationQuery(true);
 await loadMetadata();
+lastConnectionRefresh = Date.now();
 await initializeFileSave();

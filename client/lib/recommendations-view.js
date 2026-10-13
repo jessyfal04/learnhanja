@@ -1,17 +1,35 @@
 import { insightLink } from "./insights.js?v=25";
-import { rankChapters } from "./recommendations.js?v=1";
+import { buildChapterCandidates, defaultRecommendationWeights, normalizedRecommendationWeights, rankChapterCandidates } from "./recommendations.js?v=2";
 import { state } from "./state.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
 
 const $ = (id) => document.getElementById(id);
 let vocabulary;
 let vocabularyPromise;
+let candidates;
 let rankings;
 let selectedChapter;
+const weightControls = {
+	completion: ["recommendationCompletionWeight", "recommendationCompletionShare"],
+	vocabulary: ["recommendationVocabularyWeight", "recommendationVocabularyShare"],
+	level: ["recommendationLevelWeight", "recommendationLevelShare"],
+	order: ["recommendationOrderWeight", "recommendationOrderShare"],
+};
+const importanceLabels = ["중요하지 않음", "낮음", "보통", "중요", "매우 중요"];
 
 export function initializeRecommendations() {
 	document.addEventListener("hanja-status-change", invalidateRecommendations);
 	document.addEventListener("hanja-known-words-change", invalidateRecommendations);
+	document.addEventListener("hanja-catalog-change", invalidateRecommendations);
+	for (const [input] of Object.values(weightControls)) {
+		$(input).addEventListener("input", updateWeightShares);
+		$(input).addEventListener("change", weightsChanged);
+	}
+	$("recommendationWeightsReset").addEventListener("click", () => {
+		for (const [key, [input]] of Object.entries(weightControls)) $(input).value = defaultRecommendationWeights[key];
+		weightsChanged();
+	});
+	updateWeightShares();
 	document.addEventListener("hanja-view-change", (event) => {
 		if (event.detail.view === "recommendations") void renderRecommendations();
 	});
@@ -45,14 +63,21 @@ export async function renderRecommendations() {
 		return renderRecommendations();
 	}
 
-	rankings ||= rankChapters({
+	candidates ||= buildChapterCandidates({
 		ankiStatus: state.ankiStatus,
 		knownWords: state.knownWords,
 		vocabulary,
 		catalog: state.catalog,
 	});
+	rankings ||= rankChapterCandidates(candidates, currentWeights());
+	showRankings();
+}
+
+function showRankings() {
+	const status = $("recommendationsStatus");
+	const content = $("recommendationsContent");
 	if (!rankings.length) {
-		status.textContent = "사용 가능한 암기박사 장을 모두 학습했습니다";
+		status.textContent = "추천할 한자가 없습니다. 학습한 한자와 일시 중단되지 않은 새 카드는 추천에서 제외합니다";
 		return;
 	}
 	const top = rankings.slice(0, 5);
@@ -73,8 +98,33 @@ function prerequisiteMessage() {
 }
 
 function invalidateRecommendations() {
+	candidates = null;
 	rankings = null;
 	if (!$("recommendationsView").classList.contains("is-hidden")) void renderRecommendations();
+}
+
+function currentWeights() {
+	return Object.fromEntries(Object.entries(weightControls).map(([key, [input]]) => [key, Number($(input).value)]));
+}
+
+function updateWeightShares() {
+	const shares = normalizedRecommendationWeights(currentWeights());
+	const percentages = Object.fromEntries(Object.entries(shares).map(([key, share]) => [key, Math.floor(share * 100)]));
+	const remainder = 100 - Object.values(percentages).reduce((sum, value) => sum + value, 0);
+	const order = Object.keys(shares).sort((left, right) => (shares[right] * 100 - percentages[right]) - (shares[left] * 100 - percentages[left]));
+	for (const key of order.slice(0, remainder)) percentages[key]++;
+	for (const [key, [input, output]] of Object.entries(weightControls)) {
+		const label = importanceLabels[Number($(input).value)];
+		$(output).textContent = `${label} · ${percentages[key]}%`;
+		$(input).setAttribute("aria-valuetext", `${label}, ${percentages[key]}% 비중`);
+	}
+}
+
+function weightsChanged() {
+	updateWeightShares();
+	if (!candidates || $("recommendationsView").classList.contains("is-hidden")) return;
+	rankings = rankChapterCandidates(candidates, currentWeights());
+	showRankings();
 }
 
 function renderChapterRows(top) {
@@ -90,7 +140,7 @@ function renderChapterRows(top) {
 		const position = cell();
 		position.append(label(`#${index + 1}`, index === 0 ? "tag is-link" : "tag is-light"));
 		const chapter = cell(`${entry.chapter}장`, "has-text-weight-semibold recommendation-chapter-number");
-		const score = cell(`평균 순위 ${entry.finalScore.toFixed(2)}`, "recommendation-score");
+		const score = cell(entry.finalScore.toFixed(2), "recommendation-score");
 		const progress = cell();
 		progress.append(label(`남음 ${entry.missingCount}자`, "tag is-warning is-light"));
 		const vocabulary = cell();
@@ -116,11 +166,9 @@ function renderChapterRows(top) {
 
 function renderCharacterRows(chapter) {
 	$("recommendationCharacterSummary").textContent = `${chapter.chapter}장 · 남음 ${chapter.missingCount}자`;
-	$("recommendedCharacter").textContent = chapter.recommendedCharacter;
-	$("recommendationCharacterBody").replaceChildren(...chapter.recommendedCharacters.map((entry, index) => {
+	$("recommendationCharacterBody").replaceChildren(...chapter.recommendedCharacters.map((entry) => {
 		const row = document.createElement("tr");
 		row.classList.add("recommendation-character-row");
-		if (index === 0) row.classList.add("is-selected");
 		const character = document.createElement("td");
 		character.append(insightLink(entry.character));
 		row.append(character, cell(entry.level || "급수 목록 밖"), cell(`KNOWN 어휘 ${entry.contributionCount}개`));

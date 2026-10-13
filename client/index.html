@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=26">
-	<script type="module" src="/lib/app.js?v=49"></script>
+	<link rel="stylesheet" href="/style/style.css?v=27">
+	<script type="module" src="/lib/app.js?v=50"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -17,20 +17,21 @@
 	<main class="container px-4 py-5">
 		<div id="message" class="notification is-hidden" role="status"><button id="messageClose" class="delete" type="button" aria-label="닫기"></button><span id="messageText"></span></div>
 		<div class="tabs is-boxed mb-5" aria-label="화면 선택"><ul>
-			<li id="connectionTab" class="is-active"><a href="#connection">연결 및 저장</a></li>
-			<li id="charactersTab"><a href="#characters">한자 선택</a></li>
-			<li id="recommendationsTab"><a href="#recommendations">추천</a></li>
-			<li id="vocabularyTab"><a href="#vocabulary">어휘</a></li>
-			<li id="idiomsTab"><a href="#idioms">사자성어</a></li>
-			<li id="cheonjamunTab"><a href="#cheonjamun">천자문</a></li>
-			<li id="insightsTab"><a href="#insights">한자 탐구</a></li>
-			<li id="gamesTab"><a href="#games">게임</a></li>
-			<li id="mockExamTab"><a href="#mockExam">모의시험</a></li>
+			<li id="connectionTab" class="is-active"><a href="#connection"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#connection"></use></svg><span>연결 및 저장</span></a></li>
+			<li id="recommendationsTab"><a href="#recommendations"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#recommendations"></use></svg><span>추천</span></a></li>
+			<li id="charactersTab"><a href="#characters"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#characters"></use></svg><span>한자 선택</span></a></li>
+			<li id="insightsTab"><a href="#insights"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#insights"></use></svg><span>한자 탐구</span></a></li>
+			<li id="vocabularyTab"><a href="#vocabulary"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#vocabulary"></use></svg><span>어휘</span></a></li>
+			<li id="idiomsTab"><a href="#idioms"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#idioms"></use></svg><span>사자성어</span></a></li>
+			<li id="cheonjamunTab"><a href="#cheonjamun"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#cheonjamun"></use></svg><span>천자문</span></a></li>
+			<li id="gamesTab"><a href="#games"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#games"></use></svg><span>게임</span></a></li>
+			<li id="mockExamTab"><a href="#mockExam"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#mockExam"></use></svg><span>모의시험</span></a></li>
 		</ul></div>
 
 		<div id="connectionView">
 			<section class="box" aria-labelledby="ankiTitle">
 				<div class="level mb-4"><div class="level-left"><div><h1 id="ankiTitle" class="title is-4 mb-1">앙키 연결</h1><p class="subtitle is-6 mb-0">브라우저에서 이 컴퓨터의 앙키커넥트에 직접 연결합니다</p></div></div><div class="level-right"><div class="buttons"><span id="ankiStatus" class="tag is-medium is-light">확인 중…</span><button id="refreshAnkiButton" class="button is-small is-light" type="button">다시 연결</button></div></div></div>
+				<p class="help mb-4">앙키 연결과 학습 상태는 1분 이상 지나 탭으로 돌아오거나 화면을 열어 둔 동안 5분마다 새로고침합니다</p>
 				<h2 class="title is-5 mb-1">한자 학습 상태</h2>
 				<p class="subtitle is-6">급수별 한자가 들어 있는 필드를 선택합니다</p>
 				<div class="columns is-multiline">
@@ -81,14 +82,24 @@
 			<section class="box recommendation-panel" aria-labelledby="recommendationsTitle">
 				<div class="recommendation-heading">
 					<div><p class="recommendation-kicker">SMART STUDY PATH</p><h2 id="recommendationsTitle" class="title is-4 mb-1">암기박사 추천</h2><p class="subtitle is-6 mb-0">앙키 학습 상태와 Migaku KNOWN 어휘로 다음 암기박사 장과 한자를 추천합니다</p></div>
-					<div class="tags mb-0"><span class="tag is-link is-light">4개 기준</span><span class="tag is-light">각 25%</span></div>
+					<div class="tags mb-0"><span class="tag is-link is-light">4개 기준</span><span class="tag is-light">가중 순위</span></div>
+				</div>
+				<div class="recommendation-weights mb-5" aria-labelledby="recommendationWeightsTitle">
+					<div class="recommendation-weights-heading"><div><h3 id="recommendationWeightsTitle" class="title is-6 mb-1">추천 기준 중요도</h3><p class="help mt-0 mb-0">중요하지 않음 · 낮음 · 보통 · 중요 · 매우 중요, 5단계로 선택하세요. 모두 0이면 균등 적용합니다</p></div><button id="recommendationWeightsReset" class="button is-small is-light" type="button">모두 보통</button></div>
+					<div class="recommendation-weight-grid">
+						<label class="recommendation-weight"><span>완성까지 남은 글자 <output id="recommendationCompletionShare">보통 · 25%</output></span><input id="recommendationCompletionWeight" type="range" min="0" max="4" step="1" value="2" list="recommendationImportanceStops" aria-label="완성까지 남은 글자 중요도"></label>
+						<label class="recommendation-weight"><span>새로 읽을 KNOWN 어휘 <output id="recommendationVocabularyShare">보통 · 25%</output></span><input id="recommendationVocabularyWeight" type="range" min="0" max="4" step="1" value="2" list="recommendationImportanceStops" aria-label="새로 읽을 KNOWN 어휘 중요도"></label>
+						<label class="recommendation-weight"><span>한자 급수 <output id="recommendationLevelShare">보통 · 25%</output></span><input id="recommendationLevelWeight" type="range" min="0" max="4" step="1" value="2" list="recommendationImportanceStops" aria-label="한자 급수 중요도"></label>
+						<label class="recommendation-weight"><span>책의 장 순서 <output id="recommendationOrderShare">보통 · 25%</output></span><input id="recommendationOrderWeight" type="range" min="0" max="4" step="1" value="2" list="recommendationImportanceStops" aria-label="책의 장 순서 중요도"></label>
+					</div>
+					<datalist id="recommendationImportanceStops"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option></datalist>
 				</div>
 				<div id="recommendationsStatus" class="notification is-light py-3" role="status">추천 자료를 확인하는 중…</div>
 				<div id="recommendationsContent" class="is-hidden">
 					<div class="recommendation-section-heading"><div><p class="recommendation-kicker">TOP 5</p><h3 class="title is-5 mb-1">추천 장</h3></div><p class="help mb-0">행을 눌러 한자 추천을 확인하세요</p></div>
-					<div class="table-container recommendation-table mb-5"><table class="table is-hoverable is-fullwidth"><thead><tr><th>추천</th><th>장</th><th>종합</th><th>진행</th><th>어휘</th><th>기준별 순위</th></tr></thead><tbody id="recommendationChapterBody"></tbody></table></div>
+					<div class="table-container recommendation-table mb-5"><table class="table is-hoverable is-fullwidth"><thead><tr><th>추천</th><th>장</th><th>가중 순위</th><th>진행</th><th>어휘</th><th>기준별 순위</th></tr></thead><tbody id="recommendationChapterBody"></tbody></table></div>
 					<section class="recommendation-detail" aria-labelledby="recommendationDetailTitle">
-						<div class="recommendation-character-hero"><div><p class="recommendation-kicker">NEXT HANJA</p><h3 id="recommendationDetailTitle" class="title is-5 mb-1">추천 한자</h3><p id="recommendationCharacterSummary" class="subtitle is-6 mb-0"></p></div><p id="recommendedCharacter" class="recommended-character-display"></p></div>
+						<div class="recommendation-character-hero"><h3 id="recommendationDetailTitle" class="title is-5 mb-1">추천 한자</h3><p id="recommendationCharacterSummary" class="subtitle is-6 mb-0"></p></div>
 						<div class="table-container recommendation-character-table"><table class="table is-hoverable is-fullwidth"><thead><tr><th>한자</th><th>급수</th><th>새로 읽을 수 있는 KNOWN 어휘</th></tr></thead><tbody id="recommendationCharacterBody"></tbody></table></div>
 					</section>
 				</div>
@@ -308,6 +319,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v35 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v36 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

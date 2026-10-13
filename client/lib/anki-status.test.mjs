@@ -15,7 +15,7 @@ globalThis.document = {
 		return {content: {textContent: ""}, dataset: {}, classList: {toggle() {}}, append() {}, appendChild() {}, addEventListener() {}, setAttribute() {}, set innerHTML(value) { this.content.textContent = value; }};
 	},
 };
-const { refreshStatus, refreshAuxiliaryStatus, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=14");
+const { refreshStatus, refreshAuxiliaryStatus, refreshConnection, refreshIdiomStatus, characterFieldChanged } = await import("./anki.js?v=15");
 document.getElementById("deckSelect").value = "한자";
 document.getElementById("noteTypeSelect").value = "Hanja";
 document.getElementById("characterFieldSelect").value = "Char";
@@ -25,6 +25,8 @@ document.getElementById("idiomFieldSelect").value = "Char";
 
 function responseFor(action, params) {
 	let result;
+	if (action === "requestPermission") result = {permission: "granted", version: 6};
+	if (action === "deckNames") result = ["한자", "사자성어"];
 	if (action === "modelFieldNames") result = ["Char", "Alternate"];
 	if (action === "modelNames") result = ["Hanja"];
 	if (action === "findNotes") result = /is:new|is:suspended/.test(params.query) && !params.query.includes("-is:new") ? [] : [1];
@@ -32,6 +34,20 @@ function responseFor(action, params) {
 	if (action === "notesInfo") result = [{noteId: 1, fields: {Char: {value: "人"}, Alternate: {value: "山"}}}];
 	return {ok: true, json: async () => ({result, error: null})};
 }
+
+test("automatic connection refresh shares a request and preserves manual selection", async () => {
+	let release;
+	mockFetch(new Promise((resolve) => { release = resolve; }));
+	state.selected = new Set(["日"]);
+	const first = refreshConnection();
+	const second = refreshConnection();
+	assert.strictEqual(first, second);
+	release();
+	await first;
+	assert.deepEqual([...state.selected], ["日"]);
+	assert.match(document.getElementById("ankiStatus").textContent, /연결됨/);
+	assert.equal(state.ankiStatus.characters["人"].status, "known");
+});
 
 function mockFetch(gate) {
 	let calls = 0;

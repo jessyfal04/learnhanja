@@ -23,6 +23,7 @@ let catalogRequestID = 0;
 let statusRequestID = 0;
 let statusPromise = null;
 let autoSelectRequest = false;
+let connectionRefreshPromise = null;
 const cardStatsRequests = {dokeum: 0, moyang: 0, huneum: 0, idiom: 0};
 const auxiliaryRequests = {moyang: 0, huneum: 0};
 
@@ -45,7 +46,7 @@ export async function loadCatalog() {
 	}
 }
 
-export async function loadMetadata() {
+export async function loadMetadata({autoSelect = true, silent = false} = {}) {
 	const status = document.getElementById("ankiStatus");
 	status.className = "tag is-medium is-warning is-light";
 	status.textContent = "연결 중…";
@@ -63,7 +64,7 @@ export async function loadMetadata() {
 		status.textContent = `연결됨 · 규격 ${metadata.version}`;
 		await Promise.allSettled([loadNoteTypes(), loadIdiomNoteTypes()]);
 		await Promise.allSettled([
-			refreshStatus({silent: true, autoSelect: true}),
+			refreshStatus({silent: true, autoSelect}),
 			refreshIdiomStatus({silent: true}),
 			refreshAuxiliaryStatuses(),
 		]);
@@ -75,8 +76,40 @@ export async function loadMetadata() {
 		for (const kind of ["moyang", "huneum"]) clearAuxiliaryStatus(kind);
 		state.ankiStatusError = "앙키에 연결할 수 없습니다. AnkiConnect와 연결 설정을 확인하세요";
 		document.dispatchEvent(new Event("hanja-status-change"));
-		showMessage("warning", koreanError(error, "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다"));
+		if (!silent) showMessage("warning", koreanError(error, "급수별 한자 목록은 사용할 수 있지만 앙키 상태는 확인할 수 없습니다"));
 	}
+}
+
+export function refreshConnection() {
+	if (connectionRefreshPromise) return connectionRefreshPromise;
+	connectionRefreshPromise = (async () => {
+		if (!deckSelect.value || !noteTypeSelect.value || !characterFieldSelect.value) {
+			await loadMetadata({autoSelect: false, silent: true});
+			return;
+		}
+		const status = document.getElementById("ankiStatus");
+		try {
+			const metadata = await ankiMetadata();
+			status.className = "tag is-medium is-success is-light";
+			status.textContent = `연결됨 · 규격 ${metadata.version}`;
+			await Promise.allSettled([
+				refreshStatus({silent: true}),
+				refreshIdiomStatus({silent: true}),
+				refreshAuxiliaryStatuses(),
+			]);
+		} catch (error) {
+			status.className = "tag is-medium is-danger is-light";
+			status.textContent = "앙키를 사용할 수 없음";
+			invalidateCharacterStatus();
+			for (const kind of ["moyang", "huneum"]) clearAuxiliaryStatus(kind);
+			state.idiomAnkiStatus = null;
+			document.getElementById("idiomDeckStatus").textContent = "";
+			document.dispatchEvent(new Event("hanja-idiom-status-change"));
+			state.ankiStatusError = koreanError(error, "앙키 연결을 확인할 수 없습니다");
+			document.dispatchEvent(new Event("hanja-status-change"));
+		}
+	})().finally(() => { connectionRefreshPromise = null; });
+	return connectionRefreshPromise;
 }
 
 function selectedDeck(kind) {

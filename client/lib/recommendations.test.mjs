@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { competitionRanks, rankChapters, recommendHanja } from "./recommendations.js";
+import { buildChapterCandidates, competitionRanks, normalizedRecommendationWeights, rankChapterCandidates, rankChapters, recommendHanja } from "./recommendations.js";
 
 const catalog = {
 	groups: [
@@ -9,7 +9,7 @@ const catalog = {
 	],
 };
 
-test("uses active-known status and missing count while excluding completed chapters", () => {
+test("excludes active known and active new cards from candidate characters", () => {
 	const ankiStatus = {
 		characters: {
 			一: {status: "known", suspended: false},
@@ -25,12 +25,10 @@ test("uses active-known status and missing count while excluding completed chapt
 		],
 	};
 	const result = rankChapters({ankiStatus, knownWords: new Set(), vocabulary: [], catalog});
-	assert.deepEqual(result.map((entry) => entry.chapter), [1, 2]);
-	assert.deepEqual(result.map((entry) => entry.missingCharacters), [["二"], ["三"]]);
-	assert.deepEqual(result.map((entry) => entry.completionRank), [1, 1]);
+	assert.deepEqual(result.map((entry) => entry.chapter), [1]);
+	assert.deepEqual(result.map((entry) => entry.missingCharacters), [["二"]]);
+	assert.deepEqual(result.map((entry) => entry.completionRank), [1]);
 	assert.equal(result[0].bookOrderRank, 1);
-	assert.equal(result[1].bookOrderRank, 2);
-	assert.ok(result[0].finalScore < result[1].finalScore);
 	for (const entry of result) {
 		assert.equal(entry.finalScore, (entry.completionRank + entry.vocabUnlockRank + entry.levelFitRank + entry.bookOrderRank) / 4);
 	}
@@ -40,7 +38,7 @@ test("counts only unique newly unlocked Migaku KNOWN words", () => {
 	const ankiStatus = {
 		characters: {
 			一: {status: "known", suspended: false},
-			二: {status: "new", suspended: false},
+			二: {status: "new", suspended: true},
 			三: {status: "unknown", suspended: false},
 			四: {status: "unknown", suspended: false},
 		},
@@ -69,7 +67,7 @@ test("counts only unique newly unlocked Migaku KNOWN words", () => {
 
 test("uses the mean missing-character difficulty and treats outside characters as hardest", () => {
 	const ankiStatus = {
-		characters: {一: {status: "known"}, 二: {status: "new"}, 三: {status: "new"}, 龍: {status: "new"}},
+		characters: {一: {status: "known"}, 二: {status: "new", suspended: true}, 三: {status: "new", suspended: true}, 龍: {status: "new", suspended: true}},
 		chapters: [
 			{chapter: 1, characters: ["一", "三"]},
 			{chapter: 2, characters: ["二", "龍"]},
@@ -84,6 +82,36 @@ test("uses the mean missing-character difficulty and treats outside characters a
 	assert.equal(byChapter.get(1).levelFitRank, 1);
 	assert.equal(byChapter.get(2).levelFitRank, 1);
 	assert.equal(byChapter.get(3).levelFitRank, 3);
+});
+
+test("active new cards cannot count toward vocabulary unlocked by a chapter", () => {
+	const result = rankChapters({
+		ankiStatus: {characters: {一: {status: "known"}, 二: {status: "new"}, 三: {status: "unknown"}}, chapters: [{chapter: 1, characters: ["二", "三"]}]},
+		knownWords: new Set(["갑", "을"]),
+		vocabulary: [{hangul: "갑", hanja: "一三"}, {hangul: "을", hanja: "二三"}],
+		catalog,
+	});
+	assert.deepEqual(result[0].missingCharacters, ["三"]);
+	assert.deepEqual(result[0].unlockedWords.map((word) => word.hangul), ["갑"]);
+});
+
+test("weighted ranks follow chosen criteria and normalize their shares", () => {
+	const ankiStatus = {
+		characters: {一: {status: "unknown"}, 二: {status: "unknown"}, 三: {status: "unknown"}},
+		chapters: [{chapter: 1, characters: ["一", "二"]}, {chapter: 2, characters: ["三"]}],
+	};
+	const onlyCompletion = rankChapters({ankiStatus, knownWords: new Set(), vocabulary: [], catalog, weights: {completion: 4, vocabulary: 0, level: 0, order: 0}});
+	assert.deepEqual(onlyCompletion.map((entry) => entry.chapter), [2, 1]);
+	const onlyOrder = rankChapters({ankiStatus, knownWords: new Set(), vocabulary: [], catalog, weights: {completion: 0, vocabulary: 0, level: 0, order: 4}});
+	assert.deepEqual(onlyOrder.map((entry) => entry.chapter), [1, 2]);
+	assert.deepEqual(normalizedRecommendationWeights({completion: 1, vocabulary: 3, level: 0, order: 0}), {completion: 0.25, vocabulary: 0.75, level: 0, order: 0});
+	assert.deepEqual(normalizedRecommendationWeights({completion: 0, vocabulary: 0, level: 0, order: 0}), {completion: 0.25, vocabulary: 0.25, level: 0.25, order: 0.25});
+	const candidates = buildChapterCandidates({ankiStatus, knownWords: new Set(), vocabulary: [], catalog});
+	const cachedCharacters = candidates[0].recommendedCharacters;
+	assert.deepEqual(rankChapterCandidates(candidates, {completion: 4, vocabulary: 0, level: 0, order: 0}).map((entry) => entry.chapter), [2, 1]);
+	assert.deepEqual(rankChapterCandidates(candidates, {completion: 0, vocabulary: 0, level: 0, order: 4}).map((entry) => entry.chapter), [1, 2]);
+	assert.strictEqual(candidates[0].recommendedCharacters, cachedCharacters);
+	assert.equal(candidates[0].finalScore, undefined);
 });
 
 test("uses standard competition ranking for ascending and descending values", () => {

@@ -28,28 +28,46 @@ export function levelCatalog(catalog) {
 	return {characters, outsideLevelIndex: catalog?.groups?.length || 0};
 }
 
-export function rankChapters({ankiStatus, knownWords, vocabulary, catalog}) {
+export const defaultRecommendationWeights = Object.freeze({completion: 2, vocabulary: 2, level: 2, order: 2});
+
+export function normalizedRecommendationWeights(weights = defaultRecommendationWeights) {
+	const values = Object.fromEntries(Object.keys(defaultRecommendationWeights).map((key) => {
+		const value = Number(weights[key]);
+		return [key, Number.isFinite(value) && value >= 0 ? value : defaultRecommendationWeights[key]];
+	}));
+	const total = Object.values(values).reduce((sum, value) => sum + value, 0);
+	return total ? Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value / total])) : normalizedRecommendationWeights();
+}
+
+export function rankChapters({ankiStatus, knownWords, vocabulary, catalog, weights}) {
+	return rankChapterCandidates(buildChapterCandidates({ankiStatus, knownWords, vocabulary, catalog}), weights);
+}
+
+export function buildChapterCandidates({ankiStatus, knownWords, vocabulary, catalog}) {
 	const levels = levelCatalog(catalog);
 	const statusCharacters = new Map(Object.entries(ankiStatus?.characters || {}).map(([character, info]) => [normalizeHanja(character), info]));
 	const currentKnown = new Set([...statusCharacters].filter(([, info]) => info.status === "known" && !info.suspended).map(([character]) => character));
 	const normalizedKnownWords = new Set([...(knownWords || [])].map(normalizeHangul));
+	const knownVocabulary = (vocabulary || []).flatMap((entry) => {
+		const hangul = normalizeHangul(entry.hangul);
+		if (!hangul || !normalizedKnownWords.has(hangul)) return [];
+		const hanja = normalizeHanja(entry.hanja).trim();
+		const wordCharacters = [...hanja];
+		if (!wordCharacters.length || wordCharacters.every((character) => currentKnown.has(character))) return [];
+		return [{hangul, hanja, wordCharacters}];
+	});
 	const candidates = [];
 
 	for (const source of ankiStatus?.chapters || []) {
 		const characters = [...new Set((source.characters || []).map(normalizeHanja).filter(Boolean))];
 		const missingCharacters = characters.filter((character) => {
 			const info = statusCharacters.get(character);
-			return info?.status !== "known" || info.suspended;
+			return !info || info.suspended || (info.status !== "known" && info.status !== "new");
 		});
 		if (!missingCharacters.length) continue;
-		const prospectiveKnown = new Set([...currentKnown, ...characters]);
+		const prospectiveKnown = new Set([...currentKnown, ...missingCharacters]);
 		const unlockedByHangul = new Map();
-		for (const entry of vocabulary || []) {
-			const hangul = normalizeHangul(entry.hangul);
-			if (!hangul || !normalizedKnownWords.has(hangul)) continue;
-			const hanja = normalizeHanja(entry.hanja).trim();
-			const wordCharacters = [...hanja];
-			if (!wordCharacters.length || wordCharacters.every((character) => currentKnown.has(character))) continue;
+		for (const {hangul, hanja, wordCharacters} of knownVocabulary) {
 			if (!wordCharacters.every((character) => prospectiveKnown.has(character))) continue;
 			if (!unlockedByHangul.has(hangul)) unlockedByHangul.set(hangul, new Set());
 			unlockedByHangul.get(hangul).add(hanja);
@@ -82,11 +100,20 @@ export function rankChapters({ankiStatus, knownWords, vocabulary, catalog}) {
 		candidates.forEach((candidate, index) => { candidate[rankKey] = ranks[index]; });
 	}
 	for (const candidate of candidates) {
-		candidate.finalScore = (candidate.completionRank + candidate.vocabUnlockRank + candidate.levelFitRank + candidate.bookOrderRank) / 4;
 		candidate.recommendedCharacters = recommendHanja(candidate, catalog);
-		candidate.recommendedCharacter = candidate.recommendedCharacters[0]?.character || "";
 	}
-	return candidates.sort((left, right) => left.finalScore - right.finalScore || left.chapter - right.chapter);
+	return candidates;
+}
+
+export function rankChapterCandidates(candidates, weights) {
+	const share = normalizedRecommendationWeights(weights);
+	return candidates.map((candidate) => ({
+		...candidate,
+		finalScore: candidate.completionRank * share.completion
+			+ candidate.vocabUnlockRank * share.vocabulary
+			+ candidate.levelFitRank * share.level
+			+ candidate.bookOrderRank * share.order,
+	})).sort((left, right) => left.finalScore - right.finalScore || left.chapter - right.chapter);
 }
 
 export function recommendHanja(chapter, catalog) {
