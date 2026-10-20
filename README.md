@@ -9,13 +9,14 @@ LearnHanja is a self-hosted web app for studying Korean Hanja.
 - Browse and filter 447 unique 사자성어
 - Explore readings, meanings, radicals, stroke counts, related words, and idioms
 - Practice known Hanja and Migaku vocabulary with two browser-only games
+- Read Korean with optional Hanja substitutions in **한자 몰입 읽기**, including **문맥 복습** for recently missed 독음 cards
 - Save your selection as a local JSON file
 
 The interface is in Korean. Anki is optional: the catalogs, vocabulary search, and character exploration work without it.
 
 ## Why the client/server split matters
 
-LearnHanja deliberately keeps both personal study state and vocabulary processing on the client side—in your browser. The Go server is only a small static-file host with a health check.
+LearnHanja keeps Anki and Migaku study state in the browser. The Go server serves static catalogs and handles optional AI reading and mock-exam requests.
 
 ### Done in the browser (client side)
 
@@ -29,11 +30,14 @@ LearnHanja deliberately keeps both personal study state and vocabulary processin
 - Derive learned, new, suspended, and unmatched study states
 - Read and write local JSON selection files
 - Remember an approved file handle in the browser, when supported
+- Convert pasted Korean text to conservative, unambiguous KRDict Hanja spellings without a server request
+- Store contextual reading exposure and completed sessions in local browser storage
 
 ### Done by the Go server (server side)
 
 - Serve the embedded HTML, CSS, JavaScript, and static JSON catalogs
 - Expose a health-check endpoint
+- Validate AI reader targets against the bundled KRDict catalog and call OpenAI Responses API when configured
 
 ### Deliberately not sent to the server
 
@@ -43,12 +47,12 @@ LearnHanja deliberately keeps both personal study state and vocabulary processin
 - Learned/new/suspended status maps
 - Selection-file contents or file handles
 - AnkiConnect credentials or configuration
-- Selected or queried Hanja
+- Selected or queried Hanja, except the small target-word set deliberately sent for an AI reading request
 - Vocabulary searches and results
 
 This design lets a remotely hosted LearnHanja page talk to Anki running on the learner's own computer. AnkiConnect must allow the website's origin, but the LearnHanja server itself never sits between the browser and Anki. Vocabulary searches also remain in the browser after the static catalog has loaded.
 
-The server has no accounts, sessions, user database, or application API. As with any HTTP service, it can log requested static-file paths.
+The server has no accounts or user database. AI reading requests send the chosen subject, length, up to 40 target words, up to 35 familiar words, and up to 8 recent words through the Go server to OpenAI. They do not send the whole Anki collection, Migaku database, or pasted offline text. The reader endpoint accepts same-origin browser requests and limits each client address to 20 generations per hour and the whole server to 60 per day. Browser exposure counts stay local. Server logs include request paths, not passage bodies. A public deployment should restrict access at its reverse proxy if stronger access control is needed.
 
 ## Quick start
 
@@ -67,6 +71,7 @@ make run
 Then open <http://127.0.0.1:8004>.
 
 - `make run` loads `OPENAI_API_KEY` from `.env.local` when that file exists
+- `make docker-run` passes the ignored `.env.local` into the container when present
 - The default listen address is `::`, so the app is reachable through any network interface
 - To restrict it to the same machine, run `go run ./server/main -host 127.0.0.1`
 - To change the port, run `go run ./server/main -port 8090`
@@ -83,6 +88,14 @@ Then open <http://127.0.0.1:8004>.
 - Default image: `jessyfal04/hanja:tagname`
 - Custom image: `make docker-build IMAGE=example/learnhanja TAG=latest`
 - Custom port: `make docker-run PORT=8090`
+
+### 한자 몰입 읽기
+
+Open **연결 및 저장** and refresh the 독음 deck and Migaku words, then open **한자 몰입 읽기**. Choose a subject and length and press **오늘 틀린 한자로 읽기** to retrieve cards answered Again today in the selected 독음 deck. **다른 한자 선택** offers recently introduced cards, selected characters, all active learned 독음 characters, and the cumulative 상공회의소 3급 list. If Anki is disconnected, enter Hanja there manually. Migaku data is optional.
+
+For a source checkout, set `OPENAI_API_KEY` in the ignored `.env.local` before `make run` or `make docker-run`. The API key remains on the Go server. If deploying through another process, provide that environment variable to the process.
+
+Open **내 글 붙여넣기 · 오프라인** to convert Korean text. Dictionary matching happens only in the browser, preserves the original text, and leaves ambiguous or unsupported words unchanged. The default uses learned 독음 characters; manual characters can supplement them. **혼용문**, **한글**, and **독음 연습** switch the same passage without regeneration. Click a word for Korean and available English meanings, character breakdown, Anki and Migaku status, and a link to 한자 탐구. Copy the Hangul version for Migaku. Complete the reading to store exposure counts locally; seeing a character does not mark it learned in Anki. AI reading targets approximately 90–95% familiar vocabulary as a heuristic, not a measured guarantee. This reader is for modern Korean mixed-script text; classical 한문 requires a separate aligned-text mode.
 
 ## How to use it
 

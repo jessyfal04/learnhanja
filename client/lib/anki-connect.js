@@ -40,6 +40,37 @@ export async function ankiDeckNewCount(deck) {
 	return cards.length;
 }
 
+export async function ankiRecentCharacters({deck, field, days = 1, ease = 1}) {
+	const safeDays = Math.max(1, Math.min(30, Number(days) || 1));
+	const query = `deck:"${escapeQuery(deck)}" rated:${safeDays}:${ease === 1 ? 1 : 2}`;
+	const cardIDs = await invoke("findCards", {query});
+	const noteIDs = new Set();
+	for (let start = 0; start < cardIDs.length; start += notesBatchSize) {
+		const cards = await invoke("cardsInfo", {cards: cardIDs.slice(start, start + notesBatchSize)});
+		for (const card of cards || []) noteIDs.add(card.note);
+	}
+	const characters = new Set();
+	for (const note of await notesInfo([...noteIDs])) {
+		for (const character of extractHanja(note.fields?.[field]?.value)) characters.add(character);
+	}
+	return characters;
+}
+
+export async function ankiRecentlyIntroducedCharacters({deck, field, days = 7}) {
+	const safeDays = Math.max(1, Math.min(30, Number(days) || 7));
+	const cardIDs = await invoke("findCards", {query: `deck:"${escapeQuery(deck)}" introduced:${safeDays}`});
+	const noteIDs = new Set();
+	for (let start = 0; start < cardIDs.length; start += notesBatchSize) {
+		const cards = await invoke("cardsInfo", {cards: cardIDs.slice(start, start + notesBatchSize)});
+		for (const card of cards || []) noteIDs.add(card.note);
+	}
+	const characters = new Set();
+	for (const note of await notesInfo([...noteIDs])) {
+		for (const character of extractHanja(note.fields?.[field]?.value)) characters.add(character);
+	}
+	return characters;
+}
+
 export async function ankiCharacterStatus(config) {
 	const data = await loadStatusData(config.deck, config.noteType, config.field, "한자");
 	return buildCharacterStatus(data.notes, config.field, data.known, data.newCards, data.suspended);

@@ -33,7 +33,7 @@ func main() {
 		Handler:           server.ServeMux(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
-		WriteTimeout:      60 * time.Second,
+		WriteTimeout:      180 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
 

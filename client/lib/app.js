@@ -11,6 +11,7 @@ import { queryFieldID, queryFromSearch, urlWithQuery } from "./url-query.js?v=1"
 import { initializeGames } from "./games.js?v=6";
 import { initializeRecommendations, renderRecommendations } from "./recommendations-view.js?v=6";
 import { initializeMockExam } from "./mock-exam.js?v=13";
+import { initializeReader } from "./reader.js?v=3";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
@@ -105,6 +106,7 @@ document.querySelector("#vocabularyTab a").addEventListener("click", (event) => 
 document.querySelector("#idiomsTab a").addEventListener("click", (event) => { event.preventDefault(); showView("idioms"); });
 document.querySelector("#gamesTab a").addEventListener("click", (event) => { event.preventDefault(); showView("games"); });
 document.querySelector("#mockExamTab a").addEventListener("click", (event) => { event.preventDefault(); showView("mockExam"); });
+document.querySelector("#readerTab a").addEventListener("click", (event) => { event.preventDefault(); showView("reader"); });
 document.getElementById("idiomFilter").addEventListener("input", (event) => { renderIdioms(); updateQueryURL("idioms", event.target.value); });
 for (const id of ["idiomSourceFilter", "idiomLevelFilter", "idiomSort", "idiomSelectedOnly"]) document.getElementById(id).addEventListener("input", renderIdioms);
 document.addEventListener("hanja-idiom-status-change", renderIdioms);
@@ -116,6 +118,7 @@ initializeKnownWords();
 initializeGames();
 initializeRecommendations();
 initializeMockExam();
+initializeReader();
 window.addEventListener("hashchange", scheduleLocationRoute);
 window.addEventListener("popstate", scheduleLocationRoute);
 window.addEventListener("focus", () => autoRefreshConnection(60_000));

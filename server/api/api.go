@@ -13,6 +13,7 @@ type Server struct {
 	sentences   *sentenceService
 	sentenceErr error
 	images      imageOptions
+	reader      *readerService
 }
 
 func NewServer(files fs.FS) *Server {
@@ -21,7 +22,11 @@ func NewServer(files fs.FS) *Server {
 		model:  os.Getenv("OPENAI_MODEL"),
 		client: &http.Client{Timeout: 45 * time.Second},
 	})
-	return &Server{files: files, sentences: sentences, sentenceErr: err, images: imageOptions{model: os.Getenv("OPENAI_IMAGE_MODEL"), client: &http.Client{Timeout: 120 * time.Second}}}
+	reader, readerErr := newReaderService(files, sentenceOptions{apiKey: os.Getenv("OPENAI_API_KEY"), model: os.Getenv("OPENAI_MODEL"), client: &http.Client{Timeout: 45 * time.Second}})
+	if readerErr != nil {
+		log.Printf("reader unavailable: %v", readerErr)
+	}
+	return &Server{files: files, sentences: sentences, sentenceErr: err, images: imageOptions{model: os.Getenv("OPENAI_IMAGE_MODEL"), client: &http.Client{Timeout: 120 * time.Second}}, reader: reader}
 }
 
 func (s *Server) ServeMux() *http.ServeMux {
@@ -30,6 +35,7 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux.HandleFunc("GET /api/mock-exam/sentences", s.logged(s.sentenceManifest))
 	mux.HandleFunc("POST /api/mock-exam/sentence", s.logged(s.sentence))
 	mux.HandleFunc("POST /api/mock-exam/image", s.logged(s.imageQuestion))
+	mux.HandleFunc("POST /api/reader/generate", s.logged(s.readerGenerate))
 	mux.Handle("GET /", s.loggedHandler(s.staticFiles()))
 	return mux
 }

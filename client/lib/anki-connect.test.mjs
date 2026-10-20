@@ -1,6 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ankiDeckNewCount, ankiOpenDeck, buildCharacterStatus, buildIdiomStatus } from "./anki-connect.js";
+import { ankiDeckNewCount, ankiOpenDeck, ankiRecentCharacters, ankiRecentlyIntroducedCharacters, buildCharacterStatus, buildIdiomStatus } from "./anki-connect.js";
+
+test("retrieves recently failed and introduced characters from the selected reading deck", async () => {
+	const previous = globalThis.fetch;
+	const queries = [];
+	globalThis.fetch = async (_url, options) => {
+		const {action, params} = JSON.parse(options.body);
+		if (action === "findCards") { queries.push(params.query); return {ok: true, json: async () => ({result: [21, 22], error: null})}; }
+		if (action === "cardsInfo") return {ok: true, json: async () => ({result: [{note: 7}, {note: 7}], error: null})};
+		if (action === "notesInfo") { assert.deepEqual(params.notes, [7]); return {ok: true, json: async () => ({result: [{noteId: 7, fields: {Char: {value: "<b>觀察</b>"}}}], error: null})}; }
+		throw Error(action);
+	};
+	try {
+		assert.deepEqual([...await ankiRecentCharacters({deck: "한자::B. 독음", field: "Char"})], ["觀", "察"]);
+		assert.deepEqual([...await ankiRecentlyIntroducedCharacters({deck: "한자::B. 독음", field: "Char"})], ["觀", "察"]);
+		assert.deepEqual(queries, ['deck:"한자::B. 독음" rated:1:1', 'deck:"한자::B. 독음" introduced:7']);
+	} finally { globalThis.fetch = previous; }
+});
 
 const notes = [
 	{noteId: 1, fields: {Char: {value: "<b>金枝玉葉</b>"}}},

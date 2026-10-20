@@ -49,4 +49,4 @@ production:
 	$(MAKE) docker-push
 
 docker-run:
-	docker run --rm --publish $(PORT):8004 $(IMAGE):$(TAG)
+	docker run --rm $(if $(wildcard .env.local),--env-file .env.local,) --publish $(PORT):8004 $(IMAGE):$(TAG)

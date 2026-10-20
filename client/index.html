@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=27">
-	<script type="module" src="/lib/app.js?v=50"></script>
+	<link rel="stylesheet" href="/style/style.css?v=29">
+	<script type="module" src="/lib/app.js?v=52"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container">
@@ -25,6 +25,7 @@
 			<li id="idiomsTab"><a href="#idioms"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#idioms"></use></svg><span>사자성어</span></a></li>
 			<li id="cheonjamunTab"><a href="#cheonjamun"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#cheonjamun"></use></svg><span>천자문</span></a></li>
 			<li id="gamesTab"><a href="#games"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#games"></use></svg><span>게임</span></a></li>
+			<li id="readerTab"><a href="#reader"><span>한자 몰입 읽기</span></a></li>
 			<li id="mockExamTab"><a href="#mockExam"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#mockExam"></use></svg><span>모의시험</span></a></li>
 		</ul></div>
 
@@ -251,6 +252,30 @@
 			</section>
 		</div>
 
+		<div id="readerView" class="is-hidden">
+			<section class="box" aria-labelledby="readerTitle">
+				<h2 id="readerTitle" class="title is-4 mb-2">한자 몰입 읽기</h2>
+				<p class="subtitle is-6 mb-4">오늘 어려웠던 한자를 한국어 글에서 다시 읽어 보세요.</p>
+				<div class="columns is-variable is-2 is-vcentered mb-2">
+					<div class="column is-one-third"><label class="label" for="readerSubject">주제</label><div class="select is-fullwidth"><select id="readerSubject"><option>한국사</option><option>일상생활</option><option>기술</option><option>사이버 보안</option><option>문학</option><option value="free">직접 입력</option></select></div></div>
+					<div class="column is-one-third"><label class="label" for="readerLength">길이</label><div class="select is-fullwidth"><select id="readerLength"><option value="short">짧게 · 100~200자</option><option value="medium">보통 · 300~500자</option><option value="long">길게 · 600~1,000자</option></select></div></div>
+				</div>
+				<div id="readerFreeSubjectField" class="field is-hidden"><label class="label" for="readerFreeSubject">읽고 싶은 주제</label><input id="readerFreeSubject" class="input" maxlength="80"></div>
+				<div class="buttons mb-3"><button id="readerRescue" class="button is-primary" type="button">오늘 틀린 한자로 읽기</button><button id="readerGenerate" class="button is-link is-light" type="button">글 만들기</button></div>
+				<details id="readerOptions" class="mb-3"><summary>다른 한자 선택</summary><div class="columns is-variable is-2 mt-2"><div class="column is-one-third"><label class="label" for="readerSource">한자 출처</label><div class="select is-fullwidth"><select id="readerSource"><option value="failed">오늘 틀린 한자</option><option value="introduced">최근 시작한 한자</option><option value="selected">선택한 한자</option><option value="learned">학습한 독음 전체</option><option value="syllabus">상공회의소 3급 누적</option></select></div></div><div class="column"><label class="label" for="readerManual">직접 고른 한자</label><input id="readerManual" class="input" maxlength="30" placeholder="예: 察 警 觀"></div></div></details>
+				<details id="readerPasteOptions"><summary>내 글 붙여넣기 · 오프라인</summary><div class="mt-3"><label class="label" for="readerPaste">한국어 글</label><textarea id="readerPaste" class="textarea" rows="5" maxlength="30000" placeholder="한자로 읽고 싶은 글을 붙여넣으세요"></textarea><label class="checkbox mt-3"><input id="readerKnownOnly" type="checkbox" checked> 학습한 독음 한자만 바꾸기</label><p class="help">애매한 단어는 그대로 두며, 글은 서버로 보내지 않습니다.</p><button id="readerConvert" class="button is-link is-light mt-3" type="button">글 바꾸기</button></div></details>
+				<p id="readerStatus" class="help mt-3" role="status"></p>
+			</section>
+			<section id="readerResult" class="box is-hidden" aria-label="읽기 지문">
+				<div class="buttons are-small"><button class="button is-link reader-mode" data-mode="mixed" type="button">혼용문</button><button class="button reader-mode" data-mode="hangul" type="button">한글</button><button class="button reader-mode" data-mode="practice" type="button">독음 연습</button><button id="readerCopy" class="button is-light" type="button">한글 복사</button></div>
+				<p class="help mb-3">한자어를 누르면 독음과 뜻을 볼 수 있습니다.</p>
+				<div id="readerPassage" class="reader-passage" lang="ko" aria-live="polite"></div>
+				<div id="readerDetails" class="notification is-light is-hidden mt-4" role="status"></div>
+				<button id="readerFinish" class="button is-primary mt-4" type="button">읽기 마치기</button>
+				<p id="readerSummary" class="help" role="status"></p>
+			</section>
+		</div>
+
 		<div id="mockExamView" class="is-hidden">
 			<section class="box mock-shell" aria-labelledby="mockTitle">
 				<div class="level mock-hero mb-5"><div class="level-left"><div><p id="mockKicker" class="mock-kicker">SANGONG PRACTICE LAB</p><h2 id="mockTitle" class="title is-4 mb-2">상공회의소 모의시험</h2><p id="mockDescription" class="subtitle is-6 mb-0">기출 문항 유형과 순서를 바탕으로, 선택한 급수에서 새 문제를 만듭니다.</p></div></div><div class="level-right"><span id="mockHeroMark" class="tag is-link is-light is-large">9급</span></div></div>
@@ -319,6 +344,6 @@
 			</section>
 		</div>
 	</main>
-	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v36 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
+	<footer class="footer py-5"><div class="content has-text-centered">한자 배우기 · v37 · <a href="https://github.com/jessyfal04/learnhanja" target="_blank" rel="noreferrer">소스 코드</a></div></footer>
 </body>
 </html>

@@ -153,6 +153,13 @@ export function addExposure(exposures, entry) {
 	return exposures;
 }
 
+export function addReadingExposure(stats, entry) {
+	const key = entryKey(entry);
+	stats.words[key] = (stats.words[key] || 0) + 1;
+	for (const character of entryHanja(entry)) stats.characters[character] = (stats.characters[character] || 0) + 1;
+	return stats;
+}
+
 function normalizedWords(words) {
 	return new Set(Array.from(words || [], normalizeHangul));
 }
