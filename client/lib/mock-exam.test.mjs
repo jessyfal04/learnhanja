@@ -13,6 +13,7 @@ const eightWords = examWordsForLevel(catalog, levelEight.characters);
 const eightSentenceWords = eightWords.filter((entry) => [...entry.hanja].length === 2 && [...entry.reading].length === 2 && /^[가-힣]+$/u.test(entry.reading));
 const eight = {...levelEight, words: eightWords, sentenceWordsByType: {sentenceSound: eightSentenceWords, sentenceMeaning: eightSentenceWords}};
 const levelSeven = JSON.parse(readFileSync(new URL("../data/mock-exam.json", import.meta.url)))["7"];
+const levelSix = JSON.parse(readFileSync(new URL("../data/mock-exam.json", import.meta.url)))["6"];
 const levels = JSON.parse(readFileSync(new URL("../data/levels-sangong.json", import.meta.url)));
 // 대한상공회의소 배정한자 (1~9급).zip / 배정한자 (5~9급).hwp의 9급 열
 const officialNine = "車高工果交口女大力老立馬萬面母木目文門夫父山夕石手水身心兒羊魚玉王牛雨月衣人日子自長田足主天川土行火";
@@ -291,6 +292,15 @@ test("8급 partial reading targets require known characters", async () => {
 	assert.equal(question.choices.length, 5);
 });
 
+test("mock reading questions accept generated text only", async () => {
+	const target = eightSentenceWords[0];
+	const grade = {...eight, sentenceWordsByType: {sentenceSound: [target]}};
+	await assert.rejects(
+		makeQuestionAsync(grade, "sentenceSound", async (hanja) => ({hanja, source: "KRDict", sentence: `오늘은 ${hanja}를 살펴보았다.`}), randomSequence(5)),
+		/독해 문장 응답이 올바르지 않습니다/,
+	);
+});
+
 test("7급 paper uses the configured picture and blank types", async () => {
 	assert.equal(levelSeven.characters.length, 300);
 	assert.equal(levelSeven.pictureTargets.length, 15);
@@ -320,6 +330,57 @@ test("7급 picture question samples a broad set of concrete targets", async () =
 		sources.add(question.source);
 	}
 	assert.ok(sources.size >= 12, `${sources.size} picture targets sampled`);
+});
+
+test("6급 has a clean 450-character bank and paired passage questions", async () => {
+	assert.equal(levelSix.characters.length, 450);
+	assert.equal(new Set(levelSix.characters.map((entry) => entry.hanja)).size, 450);
+	assert.ok(!levelSix.characters.some((entry) => entry.hanja === "豊" || /[:|()/]/u.test(entry.sound + entry.meaning)));
+	assert.deepEqual(levelSix.characters.find((entry) => entry.hanja === "金").sounds, ["금", "김"]);
+	assert.deepEqual(examGroups(levelSix).map((group) => group.count), [2, 3, 2, 10, 10, 9, 9, 10, 10, 5, 5, 3, 5, 5, 2]);
+	const words = examWordsForLevel(catalog, levelSix.characters);
+	const passageCharacters = levelSix.characters.filter((entry) => /^[가-힣]{2,5}$/u.test(entry.meaning));
+	const grade = {...levelSix, words, passageCharacters, sentenceWordsByType: {sentenceSound: words, sentenceMeaning: words, sentenceBlank: words, passage: words}};
+	const providers = {image: async (hanja) => ({hanja, image: "data:image/png;base64,YWJj"}), sentence: async (hanja, type) => ({hanja, source: "ChatGPT", sentence: type === "sentenceBlank" ? "오늘은 □□에 관해 이야기했다." : `오늘은 ${hanja}에 관해 이야기했다.`}), passage: async (word, character) => {
+		const target = passageCharacters.find((entry) => entry.hanja === character);
+		const reading = words.find((entry) => entry.hanja === word).reading;
+		return {word, character, characterText: target.meaning, text: `오늘 ㉠${reading}에 관해 이야기했다. 이어서 ㉡${target.meaning}도 살펴보았다.`, source: "ChatGPT"};
+	}};
+	const paper = await makeExamAsync(grade, providers, randomSequence(6));
+	assert.equal(paper.length, 90);
+	assert.deepEqual(paper.slice(-2).map((question) => question.type), ["passageWord", "passageCharacter"]);
+	assert.equal(paper[88].stimulus, paper[89].stimulus);
+	assert.equal(paper[88].passage, true);
+	assert.equal(Object.hasOwn(levelSix, "passageTargets"), false);
+	assert.equal(scoreExam(paper, paper.map((question) => question.correct), grade.format.scoring).maxPoints, 480);
+	for (const question of paper) assert.equal(question.choices.filter((choice) => choice === question.correct).length, 1);
+});
+
+test("paired passage targets vary beyond a fixed list", async () => {
+	const words = examWordsForLevel(catalog, levelSix.characters);
+	const passageCharacters = levelSix.characters.filter((entry) => /^[가-힣]{2,5}$/u.test(entry.meaning));
+	const grade = {...levelSix, words, passageCharacters, sentenceWordsByType: {passage: words}};
+	const pairs = new Set();
+	for (let seed = 1; seed <= 30; seed++) {
+		const question = await makeQuestionAsync(grade, "passage", {passage: async (word, character) => {
+			pairs.add(`${word}:${character}`);
+			const meaning = passageCharacters.find((entry) => entry.hanja === character).meaning;
+			const reading = words.find((entry) => entry.hanja === word).reading;
+			return {word, character, characterText: meaning, text: `㉠${reading}와 ㉡${meaning}에 관한 이야기다.`, source: "ChatGPT"};
+		}}, randomSequence(seed));
+		assert.equal(question.passage, true);
+	}
+	assert.ok(pairs.size > 8);
+});
+
+test("partial paired passage requires a word and a distinct learned character", () => {
+	const words = examWordsForLevel(catalog, levelSix.characters);
+	const word = words.find((entry) => entry.hanja === "家族");
+	const passageCharacters = levelSix.characters.filter((entry) => ["族", "人"].includes(entry.hanja));
+	const grade = {...levelSix, words, passageCharacters, sentenceWordsByType: {passage: [word]}};
+	const known = (characters) => ({characters: Object.fromEntries(characters.map((hanja) => [hanja, {status: "known", suspended: false}]))});
+	assert.equal(partialExamData(grade, known(["家", "族"])).format.sections.some((entry) => entry.type === "passage"), false);
+	assert.equal(partialExamData(grade, known(["家", "族", "人"])).format.sections.find((entry) => entry.type === "passage")?.count, 2);
 });
 
 test("blank-fill replaces an option that GPT finds equally valid", async () => {

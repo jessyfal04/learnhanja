@@ -1,0 +1,77 @@
+{
+  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary; GPT reading contexts; question order based on 2013 2회 and 2017 1회 papers",
+  "sourceLabel": "2013년 2회 · 2017년 1회 8급 시험지의 문항 구성",
+  "durationSeconds": 1800,
+  "sectionCounts": [
+    [
+      "strokes",
+      2
+    ],
+    [
+      "radical",
+      2
+    ],
+    [
+      "characterSound",
+      7
+    ],
+    [
+      "soundCharacter",
+      7
+    ],
+    [
+      "characterMeaning",
+      6
+    ],
+    [
+      "meaningCharacter",
+      6
+    ],
+    [
+      "wordSound",
+      6
+    ],
+    [
+      "soundWord",
+      3
+    ],
+    [
+      "wordMeaning",
+      3
+    ],
+    [
+      "meaningWord",
+      3
+    ],
+    [
+      "sentenceSound",
+      3
+    ],
+    [
+      "sentenceMeaning",
+      2
+    ]
+  ],
+  "readingContexts": {
+    "sentenceSound": {
+      "kind": "sentence",
+      "wordLength": 2,
+      "minCharacters": 15,
+      "maxCharacters": 55
+    },
+    "sentenceMeaning": {
+      "kind": "sentence",
+      "wordLength": 2,
+      "minCharacters": 15,
+      "maxCharacters": 55
+    }
+  },
+  "scoring": {
+    "pointsBySection": {
+      "한자": 4,
+      "어휘": 6,
+      "독해": 8
+    },
+    "passingScore": 150
+  }
+}

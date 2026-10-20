@@ -34,6 +34,7 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux.HandleFunc("GET /healthz", s.logged(s.health))
 	mux.HandleFunc("GET /api/mock-exam/sentences", s.logged(s.sentenceManifest))
 	mux.HandleFunc("POST /api/mock-exam/sentence", s.logged(s.sentence))
+	mux.HandleFunc("POST /api/mock-exam/passage", s.logged(s.passage))
 	mux.HandleFunc("POST /api/mock-exam/image", s.logged(s.imageQuestion))
 	mux.HandleFunc("POST /api/reader/generate", s.logged(s.readerGenerate))
 	mux.Handle("GET /", s.loggedHandler(s.staticFiles()))

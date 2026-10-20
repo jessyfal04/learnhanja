@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/fs"
 	"log"
-	"math/rand"
 	"net/http"
 	"slices"
 	"strings"
@@ -57,14 +56,21 @@ type blankAmbiguity struct{ retryChoices []string }
 func (e *blankAmbiguity) Error() string { return "blank choices are ambiguous" }
 
 type sentenceGrade struct {
-	types    map[string]sentenceType
-	pictures map[string]string
+	types      map[string]sentenceType
+	pictures   map[string]string
+	characters map[string]string
+}
+
+type passageTarget struct {
+	word          examWord
+	character     string
+	characterText string
+	context       readingContext
 }
 
 type sentenceType struct {
-	words     map[string]examWord
-	sentences map[string][]string
-	context   readingContext
+	words   map[string]examWord
+	context readingContext
 }
 
 type sentenceService struct {
@@ -83,7 +89,8 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 	}
 	var configs map[string]struct {
 		Characters []struct {
-			Hanja string `json:"hanja"`
+			Hanja   string `json:"hanja"`
+			Meaning string `json:"meaning"`
 		} `json:"characters"`
 		PictureTargets []struct {
 			Hanja   string `json:"hanja"`
@@ -112,24 +119,25 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 	if options.client == nil {
 		options.client = http.DefaultClient
 	}
-	var sentenceBank struct {
-		Levels map[string]map[string][]string `json:"levels"`
-	}
-	bankBytes, err := fs.ReadFile(files, "data/mock-exam-sentences.json")
-	if err == nil {
-		if err := json.Unmarshal(bankBytes, &sentenceBank); err != nil {
-			return nil, err
-		}
-	} else if !errors.Is(err, fs.ErrNotExist) {
-		return nil, err
-	}
 	service := &sentenceService{grades: make(map[string]sentenceGrade), options: options}
 	for level, config := range configs {
-		grade := sentenceGrade{types: make(map[string]sentenceType), pictures: make(map[string]string)}
+		grade := sentenceGrade{types: make(map[string]sentenceType), pictures: make(map[string]string), characters: make(map[string]string)}
 		allowed := make(map[rune]bool)
 		for _, character := range config.Characters {
 			for _, symbol := range character.Hanja {
 				allowed[symbol] = true
+			}
+			if utf8.RuneCountInString(character.Hanja) == 1 && onlyHangul(character.Meaning) && utf8.RuneCountInString(character.Meaning) >= 2 && utf8.RuneCountInString(character.Meaning) <= 5 {
+				grade.characters[character.Hanja] = character.Meaning
+			}
+		}
+		meaningCounts := make(map[string]int)
+		for _, meaning := range grade.characters {
+			meaningCounts[meaning]++
+		}
+		for hanja, meaning := range grade.characters {
+			if meaningCounts[meaning] != 1 {
+				delete(grade.characters, hanja)
 			}
 		}
 		for _, picture := range config.PictureTargets {
@@ -143,7 +151,7 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 			if context.Kind == "" {
 				continue
 			}
-			if (context.Kind != "sentence" && context.Kind != "passage" && context.Kind != "blank") || context.WordLength < 2 || context.MinCharacters < 10 || context.MaxCharacters < context.MinCharacters || grade.types[section.Type].words != nil {
+			if (context.Kind != "sentence" && context.Kind != "passage" && context.Kind != "blank" && context.Kind != "paired") || (context.Kind == "paired" && section.Type != "passage") || context.WordLength < 2 || context.MinCharacters < 10 || context.MaxCharacters < context.MinCharacters || grade.types[section.Type].words != nil {
 				return nil, fmt.Errorf("invalid reading context for %s %s", level, section.Type)
 			}
 			words := make(map[string]examWord)
@@ -178,24 +186,7 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 					delete(words, hanja)
 				}
 			}
-			sentences := make(map[string][]string)
-			if bank, ok := sentenceBank.Levels[level]; ok {
-				for hanja, word := range words {
-					for _, text := range bank[hanja] {
-						if validGeneratedText(text, word, context) {
-							sentences[hanja] = append(sentences[hanja], text)
-						}
-					}
-				}
-			}
-			if options.apiKey == "" {
-				for hanja := range words {
-					if len(sentences[hanja]) == 0 {
-						delete(words, hanja)
-					}
-				}
-			}
-			grade.types[section.Type] = sentenceType{words: words, sentences: sentences, context: context}
+			grade.types[section.Type] = sentenceType{words: words, context: context}
 		}
 		if len(grade.types) > 0 || len(grade.pictures) > 0 {
 			service.grades[level] = grade
@@ -239,7 +230,6 @@ func (s *Server) sentenceManifest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	wordsByType := make(map[string][]string)
-	offlineAvailable := len(grade.types) > 0
 	for name, section := range grade.types {
 		words := make([]string, 0, len(section.words))
 		for hanja := range section.words {
@@ -247,15 +237,22 @@ func (s *Server) sentenceManifest(w http.ResponseWriter, r *http.Request) {
 		}
 		slices.Sort(words)
 		wordsByType[name] = words
-		offlineAvailable = offlineAvailable && len(words) > 0
+	}
+	passageCharacters := make([]string, 0, len(grade.characters))
+	if grade.types["passage"].context.Kind == "paired" {
+		for hanja := range grade.characters {
+			passageCharacters = append(passageCharacters, hanja)
+		}
+		slices.Sort(passageCharacters)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	_ = json.NewEncoder(w).Encode(struct {
 		WordsByType            map[string][]string `json:"wordsByType"`
+		PassageCharacters      []string            `json:"passageCharacters"`
 		GenerationEnabled      bool                `json:"generationEnabled"`
 		ImageGenerationEnabled bool                `json:"imageGenerationEnabled"`
-	}{wordsByType, s.sentences.options.apiKey != "" || offlineAvailable, s.sentences.options.apiKey != ""})
+	}{wordsByType, passageCharacters, s.sentences.options.apiKey != "", s.sentences.options.apiKey != ""})
 }
 
 func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {
@@ -281,7 +278,7 @@ func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	section, ok := grade.types[request.Type]
-	if !ok {
+	if !ok || section.context.Kind == "paired" {
 		http.Error(w, "지원하지 않는 독해 유형입니다", http.StatusBadRequest)
 		return
 	}
@@ -314,12 +311,12 @@ func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "독해 요청이 올바르지 않습니다", http.StatusBadRequest)
 		return
 	}
-	var answer sentenceAnswer
-	var generationErr error
-	if s.sentences.options.apiKey != "" {
-		answer, generationErr = s.sentences.generateValid(r.Context(), request.Level, word, section.context, choices)
+	if s.sentences.options.apiKey == "" {
+		http.Error(w, "OpenAI API key is not configured", http.StatusServiceUnavailable)
+		return
 	}
-	if answer.Sentence == "" {
+	answer, generationErr := s.sentences.generateValid(r.Context(), request.Level, word, section.context, choices)
+	if generationErr != nil {
 		var ambiguity *blankAmbiguity
 		if errors.As(generationErr, &ambiguity) {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -328,19 +325,99 @@ func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {
 			_ = json.NewEncoder(w).Encode(map[string][]string{"retryChoices": ambiguity.retryChoices})
 			return
 		}
-		if examples := section.sentences[word.hanja]; len(examples) > 0 {
-			answer = sentenceAnswer{word.hanja, word.reading, word.meaning, examples[rand.Intn(len(examples))], "KRDict"}
-		} else {
-			if generationErr != nil {
-				log.Printf("mock reading %s %s: %v", request.Level, request.Hanja, generationErr)
-			}
-			http.Error(w, "독해 문장을 준비할 수 없습니다. 다시 시도하세요", http.StatusServiceUnavailable)
-			return
-		}
+		log.Printf("mock reading %s %s: %v", request.Level, request.Hanja, generationErr)
+		http.Error(w, "독해 문장을 준비할 수 없습니다. 다시 시도하세요", http.StatusServiceUnavailable)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	_ = json.NewEncoder(w).Encode(answer)
+}
+
+func (s *Server) passage(w http.ResponseWriter, r *http.Request) {
+	if s.sentenceErr != nil {
+		http.Error(w, "독해 자료를 불러올 수 없습니다", http.StatusServiceUnavailable)
+		return
+	}
+	var request struct {
+		Level     string `json:"level"`
+		Word      string `json:"word"`
+		Character string `json:"character"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 2048))
+	decoder.DisallowUnknownFields()
+	if decoder.Decode(&request) != nil {
+		http.Error(w, "독해 요청이 올바르지 않습니다", http.StatusBadRequest)
+		return
+	}
+	grade, ok := s.sentences.grades[request.Level]
+	if !ok {
+		http.Error(w, "지원하지 않는 급수입니다", http.StatusBadRequest)
+		return
+	}
+	section, ok := grade.types["passage"]
+	if !ok || section.context.Kind != "paired" {
+		http.Error(w, "지원하지 않는 독해 유형입니다", http.StatusBadRequest)
+		return
+	}
+	word, validWord := section.words[request.Word]
+	characterText, validCharacter := grade.characters[request.Character]
+	if !validWord || !validCharacter || strings.Contains(request.Word, request.Character) {
+		http.Error(w, "급수에 없는 독해 대상입니다", http.StatusBadRequest)
+		return
+	}
+	target := passageTarget{word, request.Character, characterText, section.context}
+	if s.sentences.options.apiKey == "" {
+		http.Error(w, "OpenAI API key is not configured", http.StatusServiceUnavailable)
+		return
+	}
+	text, err := s.sentences.generatePassage(r.Context(), request.Level, target)
+	if err != nil {
+		log.Printf("mock passage %s %s %s: %v", request.Level, request.Word, request.Character, err)
+		http.Error(w, "독해 글을 준비할 수 없습니다. 다시 시도하세요", http.StatusServiceUnavailable)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(struct {
+		Word          string `json:"word"`
+		Character     string `json:"character"`
+		CharacterText string `json:"characterText"`
+		Text          string `json:"text"`
+		Source        string `json:"source"`
+	}{request.Word, request.Character, target.characterText, text, "ChatGPT"})
+}
+
+func (service *sentenceService) generatePassage(ctx context.Context, level string, target passageTarget) (string, error) {
+	instructions := "한국어 상공회의소 한자 시험의 자연스러운 짧은 글을 쓰세요. 하나의 구체적인 상황을 일관되게 설명하세요. ㉠ 뒤에는 지정 한자어의 독음을, ㉡ 뒤에는 지정 한자의 뜻을 정확히 한 번씩 쓰세요. 두 표기를 서로 다른 문장에 넣으세요. 다른 한자와 다른 동그라미 표시는 쓰지 마세요. 문제나 정답은 쓰지 말고 본문만 JSON으로 반환하세요."
+	input := fmt.Sprintf("급수: %s급\n㉠ 단어: %s, 독음: %s, 뜻: %s\n㉡ 한자: %s, 글에 쓸 뜻: %s\n길이: %d~%d자", level, target.word.hanja, target.word.reading, target.word.meaning, target.character, target.characterText, target.context.MinCharacters, target.context.MaxCharacters)
+	schema := map[string]any{"type": "object", "properties": map[string]any{"text": map[string]any{"type": "string"}}, "required": []string{"text"}, "additionalProperties": false}
+	for attempt := 0; attempt < 3; attempt++ {
+		var result struct {
+			Text string `json:"text"`
+		}
+		if err := service.requestStructured(ctx, instructions, input, schema, target.context.MaxCharacters, &result); err != nil {
+			return "", err
+		}
+		text := strings.TrimSpace(result.Text)
+		length := utf8.RuneCountInString(text)
+		first := "㉠" + target.word.reading
+		second := "㉡" + target.characterText
+		if length < target.context.MinCharacters || length > target.context.MaxCharacters || strings.Count(text, first) != 1 || strings.Count(text, second) != 1 || strings.Count(text, "㉠") != 1 || strings.Count(text, "㉡") != 1 || strings.ContainsRune(text, '\r') {
+			continue
+		}
+		valid := true
+		for _, symbol := range text {
+			if unicode.Is(unicode.Han, symbol) || (symbol >= '㉢' && symbol <= '㉿') {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			return text, nil
+		}
+	}
+	return "", errors.New("model returned no valid paired passage")
 }
 
 func (service *sentenceService) generateValid(ctx context.Context, level string, word examWord, context readingContext, choices []examWord) (sentenceAnswer, error) {
@@ -418,31 +495,38 @@ func (service *sentenceService) generate(ctx context.Context, level string, word
 		optionDetails, _ := json.Marshal(options)
 		input += "\n정답: " + word.hanja + "\n보기(한자어, 독음, 뜻): " + string(optionDetails)
 	}
+	var value generatedReading
+	err := service.requestStructured(ctx, instructions, input, schema, context.MaxCharacters, &value)
+	value.Text = strings.TrimSpace(value.Text)
+	return value, err
+}
+
+func (service *sentenceService) requestStructured(ctx context.Context, instructions, input string, schema map[string]any, maxCharacters int, destination any) error {
 	payload := map[string]any{
 		"model":             service.options.model,
 		"reasoning":         map[string]string{"effort": "none"},
 		"instructions":      instructions,
 		"input":             input,
 		"text":              map[string]any{"format": map[string]any{"type": "json_schema", "name": "mock_exam_reading", "strict": true, "schema": schema}},
-		"max_output_tokens": max(256, context.MaxCharacters*4),
+		"max_output_tokens": max(256, maxCharacters*4),
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return generatedReading{}, err
+		return err
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, service.options.endpoint, bytes.NewReader(body))
 	if err != nil {
-		return generatedReading{}, err
+		return err
 	}
 	request.Header.Set("Authorization", "Bearer "+service.options.apiKey)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := service.options.client.Do(request)
 	if err != nil {
-		return generatedReading{}, err
+		return err
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		return generatedReading{}, fmt.Errorf("OpenAI returned HTTP %d", response.StatusCode)
+		return fmt.Errorf("OpenAI returned HTTP %d", response.StatusCode)
 	}
 	var result struct {
 		Status string `json:"status"`
@@ -454,22 +538,20 @@ func (service *sentenceService) generate(ctx context.Context, level string, word
 		} `json:"output"`
 	}
 	if err := json.NewDecoder(io.LimitReader(response.Body, 65536)).Decode(&result); err != nil {
-		return generatedReading{}, err
+		return err
 	}
 	if result.Status != "completed" {
-		return generatedReading{}, fmt.Errorf("OpenAI response status %q", result.Status)
+		return fmt.Errorf("OpenAI response status %q", result.Status)
 	}
 	for _, output := range result.Output {
 		for _, content := range output.Content {
 			if content.Type != "output_text" {
 				continue
 			}
-			var value generatedReading
-			if json.Unmarshal([]byte(content.Text), &value) == nil {
-				value.Text = strings.TrimSpace(value.Text)
-				return value, nil
+			if json.Unmarshal([]byte(content.Text), destination) == nil {
+				return nil
 			}
 		}
 	}
-	return generatedReading{}, errors.New("OpenAI response has no text")
+	return errors.New("OpenAI response has no text")
 }

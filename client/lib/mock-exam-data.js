@@ -17,6 +17,7 @@ export const examSections = [
 	{type: "sentenceSound", title: "문장 속 한자어의 음", section: "독해", count: 3, answerField: "reading", instruction: "밑줄 친 한자어의 음은 무엇입니까?"},
 	{type: "sentenceMeaning", title: "문장 속 한자어의 뜻", section: "독해", count: 2, answerField: "meaning", instruction: "밑줄 친 한자어의 뜻은 무엇입니까?"},
 	{type: "sentenceBlank", title: "문장 빈칸", section: "독해", count: 2, answerField: "hanja", instruction: "빈칸에 들어갈 알맞은 한자어는 무엇입니까?"},
+	{type: "passage", title: "글 읽고 답하기", section: "독해", count: 2, instruction: "다음 글을 읽고 물음에 답하시오."},
 ];
 
 export function examGroups(data) {
@@ -51,9 +52,12 @@ export function partialExamData(data, ankiStatus) {
 		entries.filter((entry) => [...entry.hanja].every((character) => known.has(character.normalize("NFKC")))),
 	]));
 	const pictureTargets = (data.pictureTargets || []).filter((entry) => known.has(entry.hanja.normalize("NFKC")));
+	const passageCharacters = (data.passageCharacters || []).filter((entry) => known.has(entry.hanja.normalize("NFKC")));
+	const passageWords = sentenceWordsByType.passage || [];
+	const hasPassagePair = passageWords.some((word) => passageCharacters.some((character) => !word.hanja.includes(character.hanja)));
 	const sections = data.format.sections.flatMap((section) => {
-		const pool = section.readingContext ? sentenceWordsByType[section.type] || [] : section.type === "imageCharacter" ? pictureTargets : section.type.startsWith("word") || section.type.endsWith("Word") ? words : characters;
-		const count = Math.min(section.count, pool.length);
+		const pool = section.type === "passage" ? (hasPassagePair ? passageWords : []) : section.readingContext ? sentenceWordsByType[section.type] || [] : section.type === "imageCharacter" ? pictureTargets : section.type.startsWith("word") || section.type.endsWith("Word") ? words : characters;
+		const count = Math.min(section.count, section.type === "passage" ? pool.length * 2 : pool.length);
 		return count ? [{...section, count}] : [];
 	});
 	const fullCount = data.format.sections.reduce((sum, section) => sum + section.count, 0);
@@ -65,7 +69,7 @@ export function partialExamData(data, ankiStatus) {
 	const durationSeconds = Math.max(60, Math.ceil(data.format.durationSeconds * count / fullCount / 60) * 60);
 	return {
 		...data,
-		targets: {characters, words, pictureTargets, sentenceWordsByType},
+		targets: {characters, words, pictureTargets, passageCharacters, sentenceWordsByType},
 		format: {...data.format, sections, durationSeconds, scoring: {...data.format.scoring, passingScore}},
 	};
 }
@@ -128,6 +132,7 @@ export function makeQuestion(data, type, random = secureRandom, excluded = new S
 
 export async function makeQuestionAsync(data, type, providers, random = secureRandom, excluded = new Set()) {
 	const section = examSections.find((entry) => entry.type === type);
+	if (type === "passage") return (await makePassageQuestions(data, providers, random, excluded))[Math.floor(random() * 2)];
 	if (type === "imageCharacter") {
 		const pool = data.targets?.pictureTargets || data.pictureTargets || [];
 		const available = pool.filter((entry) => !excluded.has(entry.hanja));
@@ -178,15 +183,33 @@ export async function makeQuestionAsync(data, type, providers, random = secureRa
 		choices = examChoices(type, target, data.words, random);
 	}
 	const marker = type === "sentenceBlank" ? "□□" : target.hanja;
-	if (response.hanja !== target.hanja || !["ChatGPT", "KRDict"].includes(response.source) || (type === "sentenceBlank" && response.source !== "ChatGPT") || !response.sentence.includes(marker)) throw new Error("독해 문장 응답이 올바르지 않습니다");
+	if (response.hanja !== target.hanja || response.source !== "ChatGPT" || !response.sentence.includes(marker)) throw new Error("독해 문장 응답이 올바르지 않습니다");
 	const correct = target[section.answerField];
 	const at = response.sentence.indexOf(marker);
 	return {
 		type, title: section.title, section: section.section, instruction: section.instruction,
 		stimulus: response.sentence, stimulusParts: type === "sentenceBlank" ? null : [response.sentence.slice(0, at), target.hanja, response.sentence.slice(at + target.hanja.length)],
 		choices, correct, source: target.hanja,
-		explanation: `${target.hanja} · ${target.reading} · ${target.meaning}${response.source === "KRDict" ? " · 국립국어원 한국어기초사전 예문" : ""}`,
+		explanation: `${target.hanja} · ${target.reading} · ${target.meaning}`,
 	};
+}
+
+async function makePassageQuestions(data, providers, random, excluded = new Set()) {
+	const pool = data.targets?.sentenceWordsByType?.passage || data.sentenceWordsByType?.passage || [];
+	const characterPool = data.targets?.passageCharacters || data.passageCharacters || [];
+	const eligible = pool.filter((entry) => characterPool.some((character) => !entry.hanja.includes(character.hanja)));
+	const available = eligible.filter((entry) => !excluded.has(entry.hanja));
+	const word = shuffle(available.length ? available : eligible, random)[0];
+	const characters = characterPool.filter((entry) => !word?.hanja.includes(entry.hanja));
+	const character = shuffle(characters, random)[0];
+	if (!word || !character || typeof providers?.passage !== "function") throw new Error("독해 글 자료가 올바르지 않습니다");
+	const response = await providers.passage(word.hanja, character.hanja);
+	if (response.word !== word.hanja || response.character !== character.hanja || response.source !== "ChatGPT" || response.characterText !== character.meaning || !response.text?.includes(`㉠${word.reading}`) || !response.text?.includes(`㉡${character.meaning}`)) throw new Error("독해 글 응답이 올바르지 않습니다");
+	const shared = {section: "독해", stimulus: response.text, passage: true};
+	return [
+		{...shared, type: "passageWord", title: "글 속 한자어", instruction: `㉠ ‘${word.reading}’의 한자 표기가 바른 것은?`, choices: examChoices("soundWord", word, data.words, random), correct: word.hanja, source: word.hanja, explanation: `${word.hanja} · ${word.reading} · ${word.meaning}`},
+		{...shared, type: "passageCharacter", title: "글 속 한자", instruction: `㉡ ‘${character.meaning}’의 뜻을 가진 한자는?`, choices: examChoices("meaningCharacter", character, data.characters, random), correct: character.hanja, source: character.hanja, explanation: `${character.hanja} · ${character.sound} · ${character.meaning}`},
+	];
 }
 
 export async function makeExamAsync(data, providers, random = secureRandom, onProgress = () => {}) {
@@ -194,6 +217,14 @@ export async function makeExamAsync(data, providers, random = secureRandom, onPr
 	const total = examGroups(data).reduce((sum, section) => sum + section.count, 0);
 	for (const section of examGroups(data)) {
 		const used = new Set();
+		if (section.type === "passage") {
+			const pair = await makePassageQuestions(data, providers, random);
+			for (const question of pair.slice(0, section.count)) {
+				questions.push({...question, number: questions.length + 1});
+				onProgress(questions.length, total);
+			}
+			continue;
+		}
 		for (let index = 0; index < section.count; index++) {
 			const question = await makeQuestionAsync(data, section.type, providers, random, used);
 			used.add(question.source);
@@ -208,6 +239,10 @@ export function makeExam(data, random = secureRandom) {
 	const questions = [];
 	for (const section of examGroups(data)) {
 		const used = new Set();
+		if (section.type === "passage") {
+			throw new Error("이 문항에는 비동기 생성기가 필요합니다");
+			continue;
+		}
 		for (let index = 0; index < section.count; index++) {
 			const question = makeQuestion(data, section.type, random, used);
 			used.add(question.source);

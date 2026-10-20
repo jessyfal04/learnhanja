@@ -1,6 +1,6 @@
-import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=8";
+import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=12";
 import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=7";
-import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=5";
+import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=9";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
 import { loadVocabularyCatalog } from "./vocabulary-data.js?v=3";
@@ -69,7 +69,7 @@ async function prepareLevel() {
 		const minutes = Math.round(levelData.format.durationSeconds / 60);
 		$("mockModeFullTitle").textContent = `${count}문제 실전`;
 		$("mockModeFullDescription").textContent = `기출 순서 그대로, ${minutes}분 안에 풀어요. 결과는 제출 후 공개됩니다.`;
-		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT (일부 국립국어원 예문 대체 가능)" : ""}${groups.some((group) => group.type === "imageCharacter") ? " · 그림: OpenAI" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
+		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT" : ""}${groups.some((group) => group.type === "imageCharacter") ? " · 그림: OpenAI" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
 		const typeSelect = $("mockType");
 		const selected = typeSelect.value;
 		typeSelect.replaceChildren(new Option("전체 유형 · 시험지 순서", "all"), ...groups.map((group) =>
@@ -120,6 +120,7 @@ async function start() {
 		const words = examWordsForLevel(await loadVocabularyCatalog(), levelData.characters);
 		const needsSentences = levelData.format.sections.some((section) => section.readingContext);
 		let sentenceWordsByType = {};
+		let passageCharacters = [];
 		let generationEnabled = false;
 		let imageGenerationEnabled = false;
 		if (needsSentences) {
@@ -130,10 +131,12 @@ async function start() {
 				const allowed = new Set(spellings);
 				return [type, words.filter((entry) => allowed.has(entry.hanja))];
 			}));
+			const allowedPassageCharacters = new Set(manifest.passageCharacters || []);
+			passageCharacters = levelData.characters.filter((entry) => allowedPassageCharacters.has(entry.hanja));
 			generationEnabled = manifest.generationEnabled;
 			imageGenerationEnabled = manifest.imageGenerationEnabled;
 		}
-		const fullData = {...levelData, words, sentenceWordsByType};
+		const fullData = {...levelData, words, sentenceWordsByType, passageCharacters};
 		data = partial ? partialExamData(fullData, state.ankiStatus) : fullData;
 		data.groups = examGroups(data);
 		if (data.level !== level.label || !data.characters?.length || !Array.isArray(data.words) || (!partial && !data.words.length) || !data.format.durationSeconds) throw new Error("시험 문항 자료를 확인할 수 없습니다");
@@ -156,7 +159,11 @@ async function start() {
 			if (!response.ok) throw new Error((await response.text()).trim() || "독해 문장을 준비할 수 없습니다");
 			return response.json();
 		};
-		const providers = {sentence: sentenceProvider, image: async (hanja) => {
+		const providers = {sentence: sentenceProvider, passage: async (word, character) => {
+			const response = await fetch("/api/mock-exam/passage", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, word, character})});
+			if (!response.ok) throw new Error((await response.text()).trim() || "독해 글을 준비할 수 없습니다");
+			return response.json();
+		}, image: async (hanja) => {
 			const response = await fetch("/api/mock-exam/image", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, hanja})});
 			if (!response.ok) throw new Error((await response.text()).trim() || "그림을 준비할 수 없습니다");
 			return response.json();
@@ -183,7 +190,7 @@ async function newTrainingQuestion(previous, selected, position, provider) {
 	const groups = data.groups;
 	const type = selected === "all" ? groups.find((group) => group.startIndex <= position && position <= group.endIndex)?.type : selected;
 	if (!groups.some((group) => group.type === type)) throw new Error("선택한 유형의 문항 자료가 없습니다");
-	const excluded = new Set(previous.slice(-12).filter((entry) => entry.type === type).map((entry) => entry.source));
+	const excluded = new Set(previous.slice(-12).filter((entry) => entry.type === (type === "passage" ? "passageWord" : type)).map((entry) => entry.source));
 	return {...await makeQuestionAsync(data, type, provider, secureRandom, excluded), number: previous.length + 1};
 }
 
@@ -229,6 +236,7 @@ function renderQuestion() {
 	$("mockInstruction").textContent = question.instruction;
 	const stimulus = $("mockStimulus");
 	stimulus.classList.toggle("is-sentence", Boolean(question.stimulusParts));
+	stimulus.classList.toggle("is-passage", Boolean(question.passage));
 	stimulus.classList.toggle("is-image", Boolean(question.imageData));
 	if (question.imageData) {
 		const picture = document.createElement("img");

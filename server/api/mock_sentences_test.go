@@ -66,20 +66,69 @@ func TestSentenceGenerationUsesVerifiedGradeWord(t *testing.T) {
 	}
 }
 
-func TestSentenceFallsBackToKRDictWithoutServerKey(t *testing.T) {
+func TestSentenceRequiresServerKey(t *testing.T) {
 	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	server := &Server{sentences: service}
+	manifest := httptest.NewRecorder()
+	server.sentenceManifest(manifest, httptest.NewRequest(http.MethodGet, "/api/mock-exam/sentences?level=8", nil))
+	if manifest.Code != http.StatusOK || !strings.Contains(manifest.Body.String(), `"generationEnabled":false`) {
+		t.Fatalf("manifest: %d %s", manifest.Code, manifest.Body.String())
+	}
 	response := httptest.NewRecorder()
 	server.sentence(response, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(`{"level":"8","type":"sentenceSound","hanja":"人口"}`)))
-	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"source":"KRDict"`) {
-		t.Fatalf("fallback: %d %s", response.Code, response.Body.String())
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("without key: %d %s", response.Code, response.Body.String())
 	}
 }
 
-func TestSentenceFallsBackWhenGPTFails(t *testing.T) {
+func TestPairedPassageUsesGradePools(t *testing.T) {
+	calls := 0
+	openai := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		var payload map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(payload["input"].(string), "家族") || !strings.Contains(payload["input"].(string), "人") {
+			t.Error("missing paired targets")
+		}
+		text := strings.Repeat("가족이 함께 식사를 준비했다. ", 5) + "㉠가족은 음식을 나누었다. 그 뒤 ㉡사람을 만나 함께 집으로 돌아왔다."
+		if calls == 1 {
+			text = "잘못된 글"
+		}
+		encoded, _ := json.Marshal(map[string]string{"text": text})
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "completed", "output": []any{map[string]any{"content": []any{map[string]string{"type": "output_text", "text": string(encoded)}}}}})
+	}))
+	defer openai.Close()
+	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{apiKey: "test-key", endpoint: openai.URL, client: openai.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &Server{sentences: service}
+	if len(service.grades["6"].types["passage"].words) <= 8 || len(service.grades["6"].characters) <= 8 {
+		t.Fatal("paired passage did not load the grade-wide target pools")
+	}
+	manifest := httptest.NewRecorder()
+	server.sentenceManifest(manifest, httptest.NewRequest(http.MethodGet, "/api/mock-exam/sentences?level=6", nil))
+	if manifest.Code != http.StatusOK || !strings.Contains(manifest.Body.String(), `"passageCharacters"`) || !strings.Contains(manifest.Body.String(), "家族") {
+		t.Fatalf("passage manifest: %d %s", manifest.Code, manifest.Body.String())
+	}
+	bad := httptest.NewRecorder()
+	server.passage(bad, httptest.NewRequest(http.MethodPost, "/api/mock-exam/passage", bytes.NewBufferString(`{"level":"6","word":"家族","character":"齒"}`)))
+	if bad.Code != http.StatusBadRequest || calls != 0 {
+		t.Fatalf("invalid character: %d calls=%d", bad.Code, calls)
+	}
+	response := httptest.NewRecorder()
+	server.passage(response, httptest.NewRequest(http.MethodPost, "/api/mock-exam/passage", bytes.NewBufferString(`{"level":"6","word":"家族","character":"人"}`)))
+	if response.Code != http.StatusOK || calls != 2 || !strings.Contains(response.Body.String(), `"source":"ChatGPT"`) {
+		t.Fatalf("paired passage: %d calls=%d %s", response.Code, calls, response.Body.String())
+	}
+}
+
+func TestSentenceReportsGenerationError(t *testing.T) {
 	calls := 0
 	openai := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
@@ -93,8 +142,8 @@ func TestSentenceFallsBackWhenGPTFails(t *testing.T) {
 	server := &Server{sentences: service}
 	response := httptest.NewRecorder()
 	server.sentence(response, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewBufferString(`{"level":"8","type":"sentenceSound","hanja":"人口"}`)))
-	if response.Code != http.StatusOK || calls != 1 || !strings.Contains(response.Body.String(), `"source":"KRDict"`) {
-		t.Fatalf("fallback: %d calls=%d %s", response.Code, calls, response.Body.String())
+	if response.Code != http.StatusServiceUnavailable || calls != 1 {
+		t.Fatalf("generation error: %d calls=%d %s", response.Code, calls, response.Body.String())
 	}
 }
 

@@ -1,0 +1,119 @@
+{
+  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary; OpenAI reading and image generation; question order based on the 2013년 2회 6급 A형 paper",
+  "sourceLabel": "2013년 2회 6급 A형 시험지의 문항 구성",
+  "durationSeconds": 2400,
+  "sectionCounts": [
+    [
+      "strokes",
+      2
+    ],
+    [
+      "radical",
+      3
+    ],
+    [
+      "imageCharacter",
+      2
+    ],
+    [
+      "characterSound",
+      10
+    ],
+    [
+      "soundCharacter",
+      10
+    ],
+    [
+      "characterMeaning",
+      9
+    ],
+    [
+      "meaningCharacter",
+      9
+    ],
+    [
+      "wordSound",
+      10
+    ],
+    [
+      "soundWord",
+      10
+    ],
+    [
+      "wordMeaning",
+      5
+    ],
+    [
+      "meaningWord",
+      5
+    ],
+    [
+      "sentenceSound",
+      3
+    ],
+    [
+      "sentenceMeaning",
+      5
+    ],
+    [
+      "sentenceBlank",
+      5
+    ],
+    [
+      "passage",
+      2
+    ]
+  ],
+  "readingContexts": {
+    "sentenceSound": {
+      "kind": "sentence",
+      "wordLength": 2,
+      "minCharacters": 15,
+      "maxCharacters": 55
+    },
+    "sentenceMeaning": {
+      "kind": "sentence",
+      "wordLength": 2,
+      "minCharacters": 15,
+      "maxCharacters": 55
+    },
+    "sentenceBlank": {
+      "kind": "blank",
+      "wordLength": 2,
+      "minCharacters": 15,
+      "maxCharacters": 55
+    },
+    "passage": {
+      "kind": "paired",
+      "wordLength": 2,
+      "minCharacters": 110,
+      "maxCharacters": 220
+    }
+  },
+  "pictureTargets": [
+    "雲",
+    "竹",
+    "魚",
+    "馬",
+    "牛",
+    "羊",
+    "花",
+    "山",
+    "日",
+    "月",
+    "木",
+    "火",
+    "石",
+    "鳥",
+    "雨",
+    "相"
+  ],
+  "scoring": {
+    "pointsBySection": {
+      "한자": 4,
+      "어휘": 6,
+      "독해": 8
+    },
+    "passingScore": 288
+  }
+}

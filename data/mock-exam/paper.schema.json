@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learnhanja.local/schemas/mock-exam-paper.json",
+  "title": "Sangong mock exam paper specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "sourceLabel",
+    "durationSeconds",
+    "sectionCounts",
+    "scoring"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceLabel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "durationSeconds": {
+      "type": "integer",
+      "minimum": 60
+    },
+    "sectionCounts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "enum": [
+              "strokes",
+              "radical",
+              "imageCharacter",
+              "characterSound",
+              "soundCharacter",
+              "characterMeaning",
+              "meaningCharacter",
+              "wordSound",
+              "soundWord",
+              "wordMeaning",
+              "meaningWord",
+              "sentenceSound",
+              "sentenceMeaning",
+              "sentenceBlank",
+              "passage"
+            ]
+          },
+          {
+            "type": "integer",
+            "minimum": 1
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "readingContexts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sentenceSound": {
+          "$ref": "#/$defs/readingContext"
+        },
+        "sentenceMeaning": {
+          "$ref": "#/$defs/readingContext"
+        },
+        "sentenceBlank": {
+          "$ref": "#/$defs/readingContext"
+        },
+        "passage": {
+          "$ref": "#/$defs/readingContext"
+        }
+      }
+    },
+    "pictureTargets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pointsBySection",
+        "passingScore"
+      ],
+      "properties": {
+        "pointsBySection": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "한자": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "어휘": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "독해": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "passingScore": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "readingContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "wordLength",
+        "minCharacters",
+        "maxCharacters"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "sentence",
+            "passage",
+            "blank",
+            "paired"
+          ]
+        },
+        "wordLength": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "minCharacters": {
+          "type": "integer",
+          "minimum": 10
+        },
+        "maxCharacters": {
+          "type": "integer",
+          "minimum": 10
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary catalog filtered by selected 9급 Hanja; question order based on 2013 2회 and 2017 1회 papers",
+  "sourceLabel": "2013년 2회 · 2017년 1회 9급 시험지의 문항 구성",
+  "durationSeconds": 1800,
+  "sectionCounts": [
+    [
+      "strokes",
+      1
+    ],
+    [
+      "radical",
+      1
+    ],
+    [
+      "characterSound",
+      5
+    ],
+    [
+      "soundCharacter",
+      5
+    ],
+    [
+      "characterMeaning",
+      4
+    ],
+    [
+      "meaningCharacter",
+      4
+    ],
+    [
+      "wordSound",
+      4
+    ],
+    [
+      "soundWord",
+      2
+    ],
+    [
+      "wordMeaning",
+      2
+    ],
+    [
+      "meaningWord",
+      2
+    ]
+  ],
+  "readingContexts": {},
+  "scoring": {
+    "pointsBySection": {
+      "한자": 4,
+      "어휘": 6
+    },
+    "passingScore": 84
+  }
+}
