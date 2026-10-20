@@ -35,7 +35,7 @@ function responseFor(action, params) {
 	return {ok: true, json: async () => ({result, error: null})};
 }
 
-test("automatic connection refresh shares a request and preserves manual selection", async () => {
+test("connection refresh shares a request and preserves manual selection", async () => {
 	let release;
 	mockFetch(new Promise((resolve) => { release = resolve; }));
 	state.selected = new Set(["日"]);

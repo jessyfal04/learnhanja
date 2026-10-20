@@ -15,15 +15,6 @@ import { initializeReader } from "./reader.js?v=3";
 
 let queryRoutingReady = false;
 let queryRouteQueued = false;
-let lastConnectionRefresh = Date.now();
-let connectionRefreshRunning = false;
-
-function autoRefreshConnection(minAgeMs) {
-	if (document.hidden || connectionRefreshRunning || Date.now() - lastConnectionRefresh < minAgeMs) return;
-	lastConnectionRefresh = Date.now();
-	connectionRefreshRunning = true;
-	void refreshConnection().finally(() => { connectionRefreshRunning = false; });
-}
 
 function currentView() {
 	return window.location.hash.slice(1);
@@ -62,9 +53,19 @@ function scheduleLocationRoute() {
 }
 
 document.getElementById("messageClose").addEventListener("click", hideMessage);
+const headerRefreshButton = document.getElementById("refreshHeaderButton");
+headerRefreshButton.addEventListener("click", async () => {
+	headerRefreshButton.disabled = true;
+	headerRefreshButton.classList.add("is-loading");
+	try {
+		await refreshConnection();
+	} finally {
+		headerRefreshButton.classList.remove("is-loading");
+		headerRefreshButton.disabled = false;
+	}
+});
 document.getElementById("refreshAnkiButton").addEventListener("click", async () => {
-	await loadMetadata();
-	lastConnectionRefresh = Date.now();
+	await loadMetadata({autoSelect: false});
 });
 document.getElementById("deckSelect").addEventListener("change", loadNoteTypes);
 document.getElementById("noteTypeSelect").addEventListener("change", loadFields);
@@ -121,9 +122,6 @@ initializeMockExam();
 initializeReader();
 window.addEventListener("hashchange", scheduleLocationRoute);
 window.addEventListener("popstate", scheduleLocationRoute);
-window.addEventListener("focus", () => autoRefreshConnection(60_000));
-document.addEventListener("visibilitychange", () => autoRefreshConnection(60_000));
-setInterval(() => autoRefreshConnection(5 * 60_000), 60_000);
 applyLocationQuery();
 showView(currentView());
 initializeInsights();
@@ -139,5 +137,5 @@ renderInsights();
 queryRoutingReady = true;
 applyLocationQuery(true);
 await loadMetadata();
-lastConnectionRefresh = Date.now();
+headerRefreshButton.disabled = false;
 await initializeFileSave();

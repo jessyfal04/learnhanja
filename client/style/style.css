@@ -2,6 +2,17 @@
 	background-image: linear-gradient(120deg, var(--bulma-primary), color-mix(in srgb, var(--bulma-primary) 72%, var(--bulma-link)));
 }
 
+.app-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.app-header .subtitle {margin-bottom: 0}
+.app-header > .button {flex: none}
+
 .box,
 .table-container {
 	border: 1px solid var(--bulma-border-weak);

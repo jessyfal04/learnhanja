@@ -117,7 +117,9 @@ Character states mean:
 - **상태 없음 / unknown** — a note exists but no matching card state was returned
 - **일시 중단 / suspended** — shown separately from whether the card is learned or new
 
-Connecting to Anki or refreshing character state automatically selects only active learned catalog characters. New and suspended cards are not automatically selected. Loading a saved selection restores that file instead of replacing it with the automatic Anki selection.
+The initial Anki connection and the **한자 상태 새로고침** button automatically select only active learned catalog characters. New and suspended cards are not automatically selected. Loading a saved selection restores that file instead of replacing it with the automatic Anki selection.
+
+Anki connection and study status load when the page opens. Later updates are manual: use **앙키 새로고침** in the header to refresh connection, character, idiom, and auxiliary deck statuses without replacing the current Hanja selection.
 
 If LearnHanja is served from another origin, add that origin to AnkiConnect's `webCorsOriginList`.
 
