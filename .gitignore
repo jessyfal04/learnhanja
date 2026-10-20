@@ -7,3 +7,5 @@ bin/
 .env.local
 scripts/reply_to_scanner.py
 .migaku
+todo
+*/__pycache__/*
