@@ -5,7 +5,7 @@ import { isActiveStudyStatus } from "./study-status.js?v=2";
 export const examSections = [
 	{type: "strokes", title: "획수", section: "한자", count: 1, instruction: "다음 한자의 획수는 모두 몇 획입니까?"},
 	{type: "radical", title: "부수", section: "한자", count: 1, instruction: "다음 한자의 부수는 무엇입니까?"},
-	{type: "imageCharacter", title: "그림에서 한자", section: "한자", count: 1, instruction: "그림에 알맞은 한자는 무엇입니까?"},
+	{type: "imageCharacter", title: "옛 글자에서 한자", section: "한자", count: 1, instruction: "다음 옛 글자가 나타내는 한자는 무엇입니까?"},
 	{type: "characterSound", title: "한자의 음", section: "한자", count: 5, instruction: "다음 한자의 음은 무엇입니까?"},
 	{type: "soundCharacter", title: "음에서 한자", section: "한자", count: 5, instruction: "다음 음을 가진 한자는 무엇입니까?"},
 	{type: "characterMeaning", title: "한자의 뜻", section: "한자", count: 4, instruction: "다음 한자의 뜻은 무엇입니까?"},
@@ -138,10 +138,10 @@ export async function makeQuestionAsync(data, type, providers, random = secureRa
 		const available = pool.filter((entry) => !excluded.has(entry.hanja));
 		const picture = shuffle(available.length ? available : pool, random)[0];
 		const target = data.characters.find((entry) => entry.hanja === picture?.hanja);
-		if (!target || typeof providers?.image !== "function") throw new Error("그림 문항 자료가 부족합니다");
+		if (!target || typeof providers?.image !== "function") throw new Error("옛 글자 문항 자료가 부족합니다");
 		const response = await providers.image(target.hanja);
-		if (response.hanja !== target.hanja || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/u.test(response.image)) throw new Error("그림 응답이 올바르지 않습니다");
-		return {type, title: section.title, section: section.section, instruction: section.instruction, stimulus: "", imageData: response.image, choices: examChoices("meaningCharacter", target, data.characters, random), correct: target.hanja, source: target.hanja, explanation: `${target.hanja} · ${target.sound} · ${target.meaning}`};
+		if (response.hanja !== target.hanja || !["seal", "bronze", "oracle", "ancient", "bigseal"].includes(response.form) || !/^data:image\/svg\+xml;base64,[A-Za-z0-9+/=]+$/u.test(response.image) || !response.sourcePage?.startsWith("https://commons.wikimedia.org/wiki/File:")) throw new Error("옛 글자 응답이 올바르지 않습니다");
+		return {type, title: section.title, section: section.section, instruction: section.instruction, stimulus: "", imageData: response.image, imageForm: response.form, imageSourcePage: response.sourcePage, choices: examChoices("meaningCharacter", target, data.characters, random), correct: target.hanja, source: target.hanja, explanation: `${target.hanja} · ${target.sound} · ${target.meaning}`};
 	}
 	if (!section?.answerField) return makeQuestion(data, type, random, excluded);
 	const targets = data.targets?.sentenceWordsByType?.[type] || data.sentenceWordsByType?.[type] || [];

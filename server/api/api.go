@@ -26,7 +26,7 @@ func NewServer(files fs.FS) *Server {
 	if readerErr != nil {
 		log.Printf("reader unavailable: %v", readerErr)
 	}
-	return &Server{files: files, sentences: sentences, sentenceErr: err, images: imageOptions{model: os.Getenv("OPENAI_IMAGE_MODEL"), client: &http.Client{Timeout: 120 * time.Second}}, reader: reader}
+	return &Server{files: files, sentences: sentences, sentenceErr: err, images: newImageOptions(files), reader: reader}
 }
 
 func (s *Server) ServeMux() *http.ServeMux {

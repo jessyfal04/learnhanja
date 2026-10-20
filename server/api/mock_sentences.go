@@ -57,7 +57,7 @@ func (e *blankAmbiguity) Error() string { return "blank choices are ambiguous" }
 
 type sentenceGrade struct {
 	types      map[string]sentenceType
-	pictures   map[string]string
+	pictures   map[string]bool
 	characters map[string]string
 }
 
@@ -93,8 +93,7 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 			Meaning string `json:"meaning"`
 		} `json:"characters"`
 		PictureTargets []struct {
-			Hanja   string `json:"hanja"`
-			Subject string `json:"subject"`
+			Hanja string `json:"hanja"`
 		} `json:"pictureTargets"`
 		Format struct {
 			Sections []struct {
@@ -121,7 +120,7 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 	}
 	service := &sentenceService{grades: make(map[string]sentenceGrade), options: options}
 	for level, config := range configs {
-		grade := sentenceGrade{types: make(map[string]sentenceType), pictures: make(map[string]string), characters: make(map[string]string)}
+		grade := sentenceGrade{types: make(map[string]sentenceType), pictures: make(map[string]bool), characters: make(map[string]string)}
 		allowed := make(map[rune]bool)
 		for _, character := range config.Characters {
 			for _, symbol := range character.Hanja {
@@ -141,10 +140,10 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 			}
 		}
 		for _, picture := range config.PictureTargets {
-			if utf8.RuneCountInString(picture.Hanja) != 1 || !allowed[[]rune(picture.Hanja)[0]] || strings.TrimSpace(picture.Subject) == "" {
+			if utf8.RuneCountInString(picture.Hanja) != 1 || !allowed[[]rune(picture.Hanja)[0]] {
 				return nil, fmt.Errorf("invalid picture target for %s", level)
 			}
-			grade.pictures[picture.Hanja] = picture.Subject
+			grade.pictures[picture.Hanja] = true
 		}
 		for _, section := range config.Format.Sections {
 			context := section.ReadingContext
@@ -248,11 +247,11 @@ func (s *Server) sentenceManifest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	_ = json.NewEncoder(w).Encode(struct {
-		WordsByType            map[string][]string `json:"wordsByType"`
-		PassageCharacters      []string            `json:"passageCharacters"`
-		GenerationEnabled      bool                `json:"generationEnabled"`
-		ImageGenerationEnabled bool                `json:"imageGenerationEnabled"`
-	}{wordsByType, passageCharacters, s.sentences.options.apiKey != "", s.sentences.options.apiKey != ""})
+		WordsByType       map[string][]string `json:"wordsByType"`
+		PassageCharacters []string            `json:"passageCharacters"`
+		GenerationEnabled bool                `json:"generationEnabled"`
+		ImageAvailable    bool                `json:"imageAvailable"`
+	}{wordsByType, passageCharacters, s.sentences.options.apiKey != "", len(grade.pictures) > 0})
 }
 
 func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {

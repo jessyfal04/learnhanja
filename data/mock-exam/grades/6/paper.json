@@ -1,5 +1,5 @@
 {
-  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary; OpenAI reading and image generation; question order based on the 2013년 2회 6급 A형 paper",
+  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary; OpenAI reading and Commons old-script glyphs; question order based on the 2013년 2회 6급 A형 paper",
   "sourceLabel": "2013년 2회 6급 A형 시험지의 문항 구성",
   "durationSeconds": 2400,
   "sectionCounts": [
@@ -106,7 +106,13 @@
     "石",
     "鳥",
     "雨",
-    "相"
+    "內",
+    "信",
+    "充",
+    "兩",
+    "江",
+    "仕",
+    "價"
   ],
   "scoring": {
     "pointsBySection": {

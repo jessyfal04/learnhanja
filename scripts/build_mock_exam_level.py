@@ -14,7 +14,6 @@ CONFIG = ROOT / "client/data/mock-exam.json"
 LEVELS = ROOT / "client/data/levels-sangong.json"
 INSIGHTS = ROOT / "client/data/insights.json"
 GRADES = ROOT / "data/mock-exam/grades"
-PICTURE_PROMPTS = ROOT / "data/mock-exam/picture-prompts.json"
 PAPER_SCHEMA = ROOT / "data/mock-exam/paper.schema.json"
 
 
@@ -57,7 +56,7 @@ def exam_huneum(value):
         readings.append((match.group(1).strip(), match.group(2)))
     return readings
 
-def build_grade(level, levels, insights, paper, meaning_new=None, picture_prompts=None):
+def build_grade(level, levels, insights, paper, meaning_new=None):
     validate_paper(paper)
     if meaning_new is None:
         raise ValueError(f"{level}급 requires an Anki MeaningNew snapshot")
@@ -91,9 +90,6 @@ def build_grade(level, levels, insights, paper, meaning_new=None, picture_prompt
     pictures = paper.get("pictureTargets", [])
     if not set(pictures) <= {entry["hanja"] for entry in characters}:
         raise ValueError(f"invalid picture targets for {level}급")
-    picture_prompts = picture_prompts or {}
-    if any(not picture_prompts.get(hanja) for hanja in pictures):
-        raise ValueError(f"missing picture prompt for {level}급")
     sections = []
     for question_type, count in paper["sectionCounts"]:
         section = {"type": question_type, "count": count}
@@ -104,7 +100,7 @@ def build_grade(level, levels, insights, paper, meaning_new=None, picture_prompt
         "level": f"{level}급",
         "source": paper["source"],
         "characters": characters,
-        **({"pictureTargets": [{"hanja": hanja, "subject": picture_prompts[hanja]} for hanja in pictures]} if pictures else {}),
+        **({"pictureTargets": [{"hanja": hanja} for hanja in pictures]} if pictures else {}),
         "format": {
             "sourceLabel": paper["sourceLabel"],
             "durationSeconds": paper["durationSeconds"],
@@ -126,12 +122,11 @@ def main():
         raise SystemExit(f"No paper specification for {args.level}급")
     levels = json.loads(LEVELS.read_text(encoding="utf-8"))
     insights = json.loads(INSIGHTS.read_text(encoding="utf-8"))
-    picture_prompts = json.loads(PICTURE_PROMPTS.read_text(encoding="utf-8"))
     meaning_path = args.meaning_new or GRADES.parent / "anki-meaning-new.json"
     meaning_new = json.loads(meaning_path.read_text(encoding="utf-8"))
     for level in [args.level] if args.level else sorted(grade_dirs, key=int):
         paper = json.loads((grade_dirs[level] / "paper.json").read_text(encoding="utf-8"))
-        grade = build_grade(level, levels, insights, paper, meaning_new, picture_prompts)
+        grade = build_grade(level, levels, insights, paper, meaning_new)
         if args.check:
             if configs.get(level) != grade:
                 raise SystemExit(f"{level}급 mock exam data is out of date")

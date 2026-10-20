@@ -1029,6 +1029,7 @@ body .tag.insight-level.is-danger.is-light {
 .mock-stimulus.is-sentence {font-size: clamp(1.15rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.75; white-space: pre-line}
 .mock-stimulus.is-passage {font-size: clamp(1.05rem, 2.6vw, 1.3rem); font-weight: 500; line-height: 1.85; white-space: pre-line}
 .mock-stimulus.is-image img, .mock-review-image {display: block; width: min(100%, 320px); height: auto; aspect-ratio: 1; object-fit: contain}
+.mock-glyph-form {display: block; margin-top: 0.25rem; color: #60748d; font: 600 0.8rem system-ui, sans-serif}
 .mock-choices {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem}
 .mock-choice.button {justify-content: flex-start; height: auto; min-height: 3.3rem; padding: 0.65rem 0.75rem; text-align: left; white-space: normal}
 .mock-shell .mock-choice.button.is-selected {border-color: var(--bulma-link); background: var(--bulma-link-soft); color: var(--bulma-link-text)}

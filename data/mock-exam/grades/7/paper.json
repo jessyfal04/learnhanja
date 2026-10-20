@@ -1,5 +1,5 @@
 {
-  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary; OpenAI reading and image generation; question order based on 2013 2회 and 2017 1회 papers",
+  "source": "Anki 상공회의소::6 MeaningNew snapshot; KRDict vocabulary; OpenAI reading and Commons old-script glyphs; question order based on 2013 2회 and 2017 1회 papers",
   "sourceLabel": "2013년 2회 · 2017년 1회 7급 시험지의 문항 구성",
   "durationSeconds": 2400,
   "sectionCounts": [
@@ -95,7 +95,12 @@
     "火",
     "石",
     "鳥",
-    "雨"
+    "雨",
+    "內",
+    "信",
+    "充",
+    "兩",
+    "江"
   ],
   "scoring": {
     "pointsBySection": {

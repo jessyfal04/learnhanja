@@ -8,7 +8,9 @@ const catalog = JSON.parse(readFileSync(new URL("../data/levels-sangong.json", i
 
 test("상공회의소 snapshot has exclusive grades through 3급 and includes the Anki variants", () => {
 	assert.deepEqual(catalog.groups.map((group) => group.level), ["9급", "8급", "7급", "6급", "5급", "4급", "3급"]);
-	assert.deepEqual(catalog.groups.map((group) => group.characters.length), [50, 100, 150, 151, 150, 301, 901]);
+	assert.deepEqual(catalog.groups.map((group) => group.characters.length), [50, 100, 150, 150, 150, 301, 901]);
+	assert.ok(catalog.groups.find((group) => group.level === "6급").characters.includes("豐"));
+	assert.ok(!catalog.groups.some((group) => group.characters.includes("豊")));
 	const characters = catalog.groups.flatMap((group) => group.characters);
 	assert.equal(new Set(characters).size, catalog.total);
 	assert.equal(catalog.total - Object.keys(catalog.variants).length, catalog.officialTotal);

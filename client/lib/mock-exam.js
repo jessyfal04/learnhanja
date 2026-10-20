@@ -1,5 +1,5 @@
-import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=12";
-import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=7";
+import { examGroups, examWordsForLevel, makeExamAsync, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions, secureRandom } from "./mock-exam-data.js?v=13";
+import { answerStatus, buildReportHTML, formatDuration, reportFilename, weaknessLines } from "./mock-exam-report.js?v=8";
 import { mockExamLevel, mockExamLevels, mockExamPath } from "./mock-exam-levels.js?v=9";
 import { loadStaticJSON } from "./static-data.js";
 import { koreanError, showMessage } from "./ui.js";
@@ -69,7 +69,7 @@ async function prepareLevel() {
 		const minutes = Math.round(levelData.format.durationSeconds / 60);
 		$("mockModeFullTitle").textContent = `${count}문제 실전`;
 		$("mockModeFullDescription").textContent = `기출 순서 그대로, ${minutes}분 안에 풀어요. 결과는 제출 후 공개됩니다.`;
-		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT" : ""}${groups.some((group) => group.type === "imageCharacter") ? " · 그림: OpenAI" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
+		$("mockSource").textContent = `출제 기준 · ${levelData.format.sourceLabel || levelData.source} · 어휘: 선택 한자 KRDict${groups.some((group) => group.readingContext) ? " · 독해 문장: GPT" : ""}${groups.some((group) => group.type === "imageCharacter") ? " · 옛 글자: Wikimedia Commons" : ""} · ${groups.length}개 유형 / ${count}문항 / ${minutes}분 · 합격 ${levelData.format.scoring.passingScore}/${maxPoints}점`;
 		const typeSelect = $("mockType");
 		const selected = typeSelect.value;
 		typeSelect.replaceChildren(new Option("전체 유형 · 시험지 순서", "all"), ...groups.map((group) =>
@@ -122,7 +122,7 @@ async function start() {
 		let sentenceWordsByType = {};
 		let passageCharacters = [];
 		let generationEnabled = false;
-		let imageGenerationEnabled = false;
+		let imageAvailable = false;
 		if (needsSentences) {
 			const response = await fetch(`/api/mock-exam/sentences?level=${encodeURIComponent(level.value)}`, {cache: "no-store"});
 			if (!response.ok) throw new Error("독해 한자어 목록을 불러올 수 없습니다");
@@ -134,7 +134,7 @@ async function start() {
 			const allowedPassageCharacters = new Set(manifest.passageCharacters || []);
 			passageCharacters = levelData.characters.filter((entry) => allowedPassageCharacters.has(entry.hanja));
 			generationEnabled = manifest.generationEnabled;
-			imageGenerationEnabled = manifest.imageGenerationEnabled;
+			imageAvailable = manifest.imageAvailable;
 		}
 		const fullData = {...levelData, words, sentenceWordsByType, passageCharacters};
 		data = partial ? partialExamData(fullData, state.ankiStatus) : fullData;
@@ -145,7 +145,7 @@ async function start() {
 		const usesSentences = trainingType === "all" ? data.groups.some((group) => group.readingContext) : data.groups.some((group) => group.type === trainingType && group.readingContext);
 		if (usesSentences && !generationEnabled) throw new Error("독해 문장을 준비할 수 없습니다. 서버 설정을 확인하세요");
 		const usesImages = trainingType === "all" ? data.groups.some((group) => group.type === "imageCharacter") : trainingType === "imageCharacter";
-		if (usesImages && !imageGenerationEnabled) throw new Error("그림 문항을 준비할 수 없습니다. 서버 설정을 확인하세요");
+		if (usesImages && !imageAvailable) throw new Error("옛 글자 문항을 준비할 수 없습니다");
 		const trainingPosition = trainingType === "all" ? 0 : data.groups.find((group) => group.type === trainingType)?.startIndex;
 		if (trainingPosition === undefined) throw new Error("학습한 한자와 어휘로 이 유형의 문제를 만들 수 없습니다. 다른 유형을 고르세요");
 		const sentenceProvider = async (hanja, type, choices) => {
@@ -165,7 +165,7 @@ async function start() {
 			return response.json();
 		}, image: async (hanja) => {
 			const response = await fetch("/api/mock-exam/image", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({level: level.value, hanja})});
-			if (!response.ok) throw new Error((await response.text()).trim() || "그림을 준비할 수 없습니다");
+			if (!response.ok) throw new Error((await response.text()).trim() || "옛 글자를 준비할 수 없습니다");
 			return response.json();
 		}};
 		const questions = mode === "full" ? await makeExamAsync(data, providers, secureRandom, (ready, total) => { $("mockSetupStatus").textContent = `문항을 준비하는 중… ${ready}/${total}`; }) : [await newTrainingQuestion([], trainingType, trainingPosition, providers)];
@@ -241,8 +241,11 @@ function renderQuestion() {
 	if (question.imageData) {
 		const picture = document.createElement("img");
 		picture.src = question.imageData;
-		picture.alt = "시험 그림";
-		stimulus.replaceChildren(picture);
+		picture.alt = "옛 글자";
+		const form = document.createElement("small");
+		form.className = "mock-glyph-form";
+		form.textContent = {seal: "소전", bronze: "금문", oracle: "갑골문", ancient: "고문", bigseal: "대전"}[question.imageForm] || "옛 글자";
+		stimulus.replaceChildren(picture, form);
 	} else if (question.stimulusParts) {
 		const marked = document.createElement("u");
 		marked.textContent = question.stimulusParts[1];
@@ -452,8 +455,16 @@ function renderResult() {
 			const picture = document.createElement("img");
 			picture.className = "mock-review-image";
 			picture.src = question.imageData;
-			picture.alt = "시험 그림";
+			picture.alt = "옛 글자";
 			card.append(picture);
+			if (question.imageSourcePage) {
+				const source = document.createElement("a");
+				source.href = question.imageSourcePage;
+				source.target = "_blank";
+				source.rel = "noopener noreferrer";
+				source.textContent = "옛 글자 출처 · Wikimedia Commons";
+				card.append(source);
+			}
 		}
 		const choices = document.createElement("div");
 		choices.className = "mock-review-choices";

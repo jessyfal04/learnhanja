@@ -303,29 +303,30 @@ test("mock reading questions accept generated text only", async () => {
 
 test("7급 paper uses the configured picture and blank types", async () => {
 	assert.equal(levelSeven.characters.length, 300);
-	assert.equal(levelSeven.pictureTargets.length, 15);
+	assert.equal(levelSeven.pictureTargets.length, 20);
+	assert.ok(["內", "信", "充", "兩", "江"].every((hanja) => levelSeven.pictureTargets.some((entry) => entry.hanja === hanja)));
 	assert.deepEqual(examGroups(levelSeven).map((group) => group.count), [2, 3, 1, 9, 9, 8, 8, 8, 4, 4, 4, 3, 5, 2]);
 	const words = examWordsForLevel(catalog, levelSeven.characters);
 	const targets = words.filter((word) => [...word.hanja].length === 2);
 	const grade = {...levelSeven, words, sentenceWordsByType: {sentenceSound: targets, sentenceMeaning: targets, sentenceBlank: targets}};
 	const providers = {
-		image: async (hanja) => ({hanja, image: "data:image/jpeg;base64,YWJj"}),
+		image: async (hanja) => ({hanja, form: "seal", sourcePage: "https://commons.wikimedia.org/wiki/File:test-seal.svg", image: "data:image/svg+xml;base64,YWJj"}),
 		sentence: async (hanja, type) => ({hanja, source: "ChatGPT", sentence: type === "sentenceBlank" ? "사람들은 오늘 □□에 모였다." : `오늘은 ${hanja}를 살펴보았다.`}),
 	};
 	const paper = await makeExamAsync(grade, providers, randomSequence(14));
 	assert.equal(paper.length, 70);
 	assert.equal(paper[5].type, "imageCharacter");
-	assert.match(paper[5].imageData, /^data:image\/jpeg;base64,/);
+	assert.match(paper[5].imageData, /^data:image\/svg\+xml;base64,/);
 	assert.equal(paper.slice(-2).every((question) => question.type === "sentenceBlank" && question.stimulus.includes("□□") && question.correct === question.source), true);
 	assert.equal(scoreExam(paper, paper.map((question) => question.correct), grade.format.scoring).maxPoints, 360);
 	const report = buildReportHTML({questions: paper, answers: paper.map((question) => question.correct), mode: "full", level: "7급", scoring: grade.format.scoring, startedAt: new Date(0), finishedAt: new Date(1000), elapsedSeconds: 1});
-	assert.match(report, /data:image\/jpeg;base64/);
+	assert.match(report, /data:image\/svg\+xml;base64/);
 });
 
 test("7급 picture question samples a broad set of concrete targets", async () => {
 	const sources = new Set();
 	for (let seed = 1; seed <= 80; seed++) {
-		const question = await makeQuestionAsync(levelSeven, "imageCharacter", {image: async (hanja) => ({hanja, image: "data:image/jpeg;base64,YWJj"})}, randomSequence(seed * 7919));
+		const question = await makeQuestionAsync(levelSeven, "imageCharacter", {image: async (hanja) => ({hanja, form: "seal", sourcePage: "https://commons.wikimedia.org/wiki/File:test-seal.svg", image: "data:image/svg+xml;base64,YWJj"})}, randomSequence(seed * 7919));
 		assert.equal(question.choices.filter((choice) => choice === question.correct).length, 1);
 		sources.add(question.source);
 	}
@@ -334,6 +335,9 @@ test("7급 picture question samples a broad set of concrete targets", async () =
 
 test("6급 has a clean 450-character bank and paired passage questions", async () => {
 	assert.equal(levelSix.characters.length, 450);
+	assert.equal(levelSix.pictureTargets.length, 22);
+	assert.ok(["內", "信", "充", "兩", "江", "仕", "價"].every((hanja) => levelSix.pictureTargets.some((entry) => entry.hanja === hanja)));
+	assert.ok(!levelSix.pictureTargets.some((entry) => entry.hanja === "相"));
 	assert.equal(new Set(levelSix.characters.map((entry) => entry.hanja)).size, 450);
 	assert.ok(!levelSix.characters.some((entry) => entry.hanja === "豊" || /[:|()/]/u.test(entry.sound + entry.meaning)));
 	assert.deepEqual(levelSix.characters.find((entry) => entry.hanja === "金").sounds, ["금", "김"]);
@@ -341,7 +345,7 @@ test("6급 has a clean 450-character bank and paired passage questions", async (
 	const words = examWordsForLevel(catalog, levelSix.characters);
 	const passageCharacters = levelSix.characters.filter((entry) => /^[가-힣]{2,5}$/u.test(entry.meaning));
 	const grade = {...levelSix, words, passageCharacters, sentenceWordsByType: {sentenceSound: words, sentenceMeaning: words, sentenceBlank: words, passage: words}};
-	const providers = {image: async (hanja) => ({hanja, image: "data:image/png;base64,YWJj"}), sentence: async (hanja, type) => ({hanja, source: "ChatGPT", sentence: type === "sentenceBlank" ? "오늘은 □□에 관해 이야기했다." : `오늘은 ${hanja}에 관해 이야기했다.`}), passage: async (word, character) => {
+	const providers = {image: async (hanja) => ({hanja, form: "seal", sourcePage: "https://commons.wikimedia.org/wiki/File:test-seal.svg", image: "data:image/svg+xml;base64,YWJj"}), sentence: async (hanja, type) => ({hanja, source: "ChatGPT", sentence: type === "sentenceBlank" ? "오늘은 □□에 관해 이야기했다." : `오늘은 ${hanja}에 관해 이야기했다.`}), passage: async (word, character) => {
 		const target = passageCharacters.find((entry) => entry.hanja === character);
 		const reading = words.find((entry) => entry.hanja === word).reading;
 		return {word, character, characterText: target.meaning, text: `오늘 ㉠${reading}에 관해 이야기했다. 이어서 ㉡${target.meaning}도 살펴보았다.`, source: "ChatGPT"};
