@@ -86,8 +86,8 @@
     "passage": {
       "kind": "paired",
       "wordLength": 2,
-      "minCharacters": 110,
-      "maxCharacters": 220
+      "minCharacters": 100,
+      "maxCharacters": 300
     }
   },
   "pictureTargets": [

@@ -128,6 +128,58 @@ func TestPairedPassageUsesGradePools(t *testing.T) {
 	}
 }
 
+func TestPairedPassageRepairsMarkersAndLengthForExamStructure(t *testing.T) {
+	const draft = "학생들은 학교 텃밭에 물을 공급하는 장치를 만들었다. 먼저 작은 통에 물을 담고 관을 연결한 뒤, 일정한 속도로 흙에 [[A]]했다. 며칠 뒤에는 나무가 자라는 모습을 살펴보았다. 가을에는 가지마다 열린 [[B]]를 따서 친구들과 함께 나누어 먹었다."
+	calls := 0
+	openai := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		var payload map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Fatal(err)
+		}
+		input := payload["input"].(string)
+		if !strings.Contains(input, "㉠주입") || !strings.Contains(input, "㉡실과") || !strings.Contains(input, "[[A]]") || !strings.Contains(input, "[[B]]") {
+			t.Errorf("missing exact exam markers or placeholders: %s", input)
+		}
+		answer := draft
+		if calls == 1 {
+			answer = "[[A]]했다. [[B]]가 있었다."
+		} else if !strings.Contains(input, "이전 응답의 문제: 길이") {
+			t.Error("retry did not explain the rejected length")
+		}
+		encoded, _ := json.Marshal(map[string]string{"text": answer})
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "completed", "output": []any{map[string]any{"content": []any{map[string]string{"type": "output_text", "text": string(encoded)}}}}})
+	}))
+	defer openai.Close()
+	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{apiKey: "test-key", endpoint: openai.URL, client: openai.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &Server{sentences: service}
+	response := httptest.NewRecorder()
+	server.passage(response, httptest.NewRequest(http.MethodPost, "/api/mock-exam/passage", bytes.NewBufferString(`{"level":"6","word":"注入","character":"果"}`)))
+	if response.Code != http.StatusOK || calls != 2 {
+		t.Fatalf("paired passage: %d calls=%d %s", response.Code, calls, response.Body.String())
+	}
+	var result struct {
+		Text string `json:"text"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &result); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(result.Text, "㉠주입했다") || !strings.Contains(result.Text, "㉡실과를") || strings.Contains(result.Text, "[[A]]") {
+		t.Fatalf("unexpected exam passage: %q", result.Text)
+	}
+	target := passageTarget{word: examWord{reading: "주입"}, characterText: "실과", context: readingContext{MinCharacters: 100, MaxCharacters: 300}}
+	if _, reason := validatePairedPassage(strings.ReplaceAll(result.Text, "㉠주입", "㉠ 주입"), target); reason != "" {
+		t.Fatalf("harmless marker spacing rejected: %s", reason)
+	}
+	longPassage := "학생들은 텃밭에 물을 ㉠주입했다. " + strings.Repeat("그날 학생들은 서로 도우며 텃밭의 변화를 살펴보았다. ", 7) + "며칠 뒤에는 ㉡실과를 따서 함께 나누어 먹었다."
+	if _, reason := validatePairedPassage(longPassage, target); reason != "" {
+		t.Fatalf("source-length passage rejected: %s", reason)
+	}
+}
+
 func TestSentenceReportsGenerationError(t *testing.T) {
 	calls := 0
 	openai := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

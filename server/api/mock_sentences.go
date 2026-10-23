@@ -388,35 +388,68 @@ func (s *Server) passage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (service *sentenceService) generatePassage(ctx context.Context, level string, target passageTarget) (string, error) {
-	instructions := "한국어 상공회의소 한자 시험의 자연스러운 짧은 글을 쓰세요. 하나의 구체적인 상황을 일관되게 설명하세요. ㉠ 뒤에는 지정 한자어의 독음을, ㉡ 뒤에는 지정 한자의 뜻을 정확히 한 번씩 쓰세요. 두 표기를 서로 다른 문장에 넣으세요. 다른 한자와 다른 동그라미 표시는 쓰지 마세요. 문제나 정답은 쓰지 말고 본문만 JSON으로 반환하세요."
-	input := fmt.Sprintf("급수: %s급\n㉠ 단어: %s, 독음: %s, 뜻: %s\n㉡ 한자: %s, 글에 쓸 뜻: %s\n길이: %d~%d자", level, target.word.hanja, target.word.reading, target.word.meaning, target.character, target.characterText, target.context.MinCharacters, target.context.MaxCharacters)
+	first := "㉠" + target.word.reading
+	second := "㉡" + target.characterText
+	instructions := "한국어 상공회의소 한자 시험에서 두 문제가 공유하는 독해 지문처럼, 하나의 자연스러운 이야기 지문을 쓰세요. 같은 지문에서 ㉠의 한자어 표기와 ㉡의 한자 뜻을 각각 한 문제씩 묻습니다. JSON의 text 필드에는 지문만 넣으세요. 첫째 표시에는 [[A]], 둘째 표시에는 [[B]]를 정확히 한 번씩 쓰세요. 서버가 [[A]]를 첫째 지정 표현으로, [[B]]를 둘째 지정 표현으로 바꿉니다. 두 표시는 서로 다른 문장의 자연스러운 위치에 놓고, 조사와 어미는 표시 뒤에 붙이세요. 다른 한자, 다른 동그라미 표시, 질문, 정답, 제목은 쓰지 마세요."
+	baseInput := fmt.Sprintf("급수: %s급\n첫째 지정 표현: %s (한자어 %s, 뜻 %s)\n둘째 지정 표현: %s (한자 %s)\n[[A]]와 [[B]]는 각각 위 지정 표현으로 바뀝니다. 서로 다른 문장에 넣고 하나의 구체적인 상황을 이어 쓰세요.\n지문 길이: %d~%d자 (치환 후 공백 포함, 가능한 중간 길이로 작성)", level, first, target.word.hanja, target.word.meaning, second, target.character, target.context.MinCharacters, target.context.MaxCharacters)
 	schema := map[string]any{"type": "object", "properties": map[string]any{"text": map[string]any{"type": "string"}}, "required": []string{"text"}, "additionalProperties": false}
-	for attempt := 0; attempt < 3; attempt++ {
+	input := baseInput
+	reason := ""
+	for attempt := 1; attempt <= 4; attempt++ {
 		var result struct {
 			Text string `json:"text"`
 		}
 		if err := service.requestStructured(ctx, instructions, input, schema, target.context.MaxCharacters, &result); err != nil {
 			return "", err
 		}
-		text := strings.TrimSpace(result.Text)
-		length := utf8.RuneCountInString(text)
-		first := "㉠" + target.word.reading
-		second := "㉡" + target.characterText
-		if length < target.context.MinCharacters || length > target.context.MaxCharacters || strings.Count(text, first) != 1 || strings.Count(text, second) != 1 || strings.Count(text, "㉠") != 1 || strings.Count(text, "㉡") != 1 || strings.ContainsRune(text, '\r') {
-			continue
-		}
-		valid := true
-		for _, symbol := range text {
-			if unicode.Is(unicode.Han, symbol) || (symbol >= '㉢' && symbol <= '㉿') {
-				valid = false
-				break
-			}
-		}
-		if valid {
+		text, invalid := validatePairedPassage(result.Text, target)
+		if invalid == "" {
 			return text, nil
 		}
+		reason = invalid
+		log.Printf("mock passage candidate rejected level=%s word=%s character=%s attempt=%d reason=%s", level, target.word.hanja, target.character, attempt, reason)
+		input = baseInput + "\n이전 응답의 문제: " + reason + ". 이전 글을 반복하지 말고 새 지문을 작성하세요. [[A]]와 [[B]]를 각각 정확히 한 번 쓰고 길이도 다시 확인하세요."
 	}
-	return "", errors.New("model returned no valid paired passage")
+	return "", fmt.Errorf("model returned no valid paired passage after 4 attempts: %s", reason)
+}
+
+func validatePairedPassage(raw string, target passageTarget) (string, string) {
+	text := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(raw, "\r\n", "\n"), "\r", "\n"))
+	first := "㉠" + target.word.reading
+	second := "㉡" + target.characterText
+	if strings.Count(text, "[[A]]") > 1 || strings.Count(text, "[[B]]") > 1 {
+		return "", "표시 자리표가 중복됨"
+	}
+	text = strings.ReplaceAll(text, "[[A]]", first)
+	text = strings.ReplaceAll(text, "[[B]]", second)
+	for _, marker := range []string{"㉠", "㉡"} {
+		if index := strings.Index(text, marker); index >= 0 {
+			after := text[index+len(marker):]
+			text = text[:index+len(marker)] + strings.TrimLeft(after, " \t\n")
+		}
+	}
+	length := utf8.RuneCountInString(text)
+	if length < target.context.MinCharacters || length > target.context.MaxCharacters {
+		return "", fmt.Sprintf("길이 %d자, 허용 %d~%d자", length, target.context.MinCharacters, target.context.MaxCharacters)
+	}
+	if strings.Count(text, "㉠") != 1 || strings.Count(text, first) != 1 {
+		return "", "첫째 표시 또는 독음이 정확하지 않음"
+	}
+	if strings.Count(text, "㉡") != 1 || strings.Count(text, second) != 1 {
+		return "", "둘째 표시 또는 뜻이 정확하지 않음"
+	}
+	if strings.Index(text, "㉠") > strings.Index(text, "㉡") {
+		return "", "㉠과 ㉡의 순서가 바뀜"
+	}
+	for _, symbol := range text {
+		if unicode.Is(unicode.Han, symbol) {
+			return "", "지문에 한자가 포함됨"
+		}
+		if symbol >= '㉢' && symbol <= '㉿' {
+			return "", "다른 동그라미 표시가 포함됨"
+		}
+	}
+	return text, ""
 }
 
 func (service *sentenceService) generateValid(ctx context.Context, level string, word examWord, context readingContext, choices []examWord) (sentenceAnswer, error) {
