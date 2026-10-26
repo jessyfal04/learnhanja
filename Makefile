@@ -22,6 +22,7 @@ test:
 	python3 scripts/build_cheonjamun.py --check
 	python3 -B scripts/build_mock_exam_level.py --check
 	python3 -B -m unittest scripts.test_build_mock_exam_level
+	python3 -B -m unittest discover -s scripts -p 'test_build_topik_reading.py'
 	GOCACHE=$(GOCACHE) go test ./...
 	node --test client/lib/*.test.mjs
 	find client/lib -name '*.js' -exec node --check {} \;

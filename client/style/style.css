@@ -1042,10 +1042,10 @@ body .tag.insight-level.is-danger.is-light {
 .mock-feedback {font-size: 0.88rem}
 .mock-play-actions {justify-content: flex-start; flex-wrap: wrap}
 .mock-play-actions #mockNext {margin-left: auto}
-.mock-play-actions #mockFinish, #mockAgain {overflow: hidden; touch-action: none}
+.mock-play-actions #mockFinish, #topikFinish, #mockAgain {overflow: hidden; touch-action: none}
 .mock-hold-fill {position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: rgb(255 255 255 / 30%); pointer-events: none}
 #mockAgain .mock-hold-fill {background: color-mix(in srgb, var(--bulma-link) 28%, transparent)}
-#mockFinish.is-holding .mock-hold-fill, #mockAgain.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
+#mockFinish.is-holding .mock-hold-fill, #topikFinish.is-holding .mock-hold-fill, #mockAgain.is-holding .mock-hold-fill {width: 100%; transition: width 1.2s linear}
 .mock-hold-label {position: relative}
 
 .mock-score-ring {--mock-score: 0%; --mock-ring-color: var(--bulma-link); --mock-ring-text: var(--bulma-link-text); display: grid; place-items: center; width: 7rem; height: 7rem; flex: 0 0 7rem; border-radius: 50%; background: conic-gradient(var(--mock-ring-color) var(--mock-score), var(--bulma-border) var(--mock-score)); position: relative; color: var(--mock-ring-text); font-size: 1.5rem; font-weight: 800}
@@ -1086,3 +1086,8 @@ body .tag.insight-level.is-danger.is-light {
 .reader-word { border: 0; border-bottom: 1px dotted currentColor; background: transparent; color: var(--bulma-link-text, #305ca8); font: inherit; font-weight: 700; padding: 0 0.08em; cursor: pointer; }
 .reader-word:hover, .reader-word:focus-visible { background: #e7efff; outline: 2px solid #5a80c4; outline-offset: 2px; }
 @media (max-width: 768px) { .reader-passage { font-size: 1.08rem; line-height: 2; } #readerView .buttons { gap: .4rem; } }
+.topik-shell { max-width: 980px; margin-inline: auto; }
+.topik-image { display: block; max-width: 100%; max-height: 32rem; object-fit: contain; margin-block: 1rem; }
+#topikReview details { border-bottom: 1px solid #e5eaf2; padding: .55rem 0; }
+#topikReview summary { cursor: pointer; }
+#topikReview details[open] > p:first-of-type { margin-top: .75rem; }

@@ -10,6 +10,7 @@ LearnHanja is a self-hosted web app for studying Korean Hanja.
 - Explore readings, meanings, radicals, stroke counts, related words, and idioms
 - Practice known Hanja and Migaku vocabulary with two browser-only games
 - Read Korean with optional Hanja substitutions in **한자 몰입 읽기**, including **문맥 복습** for recently missed 독음 cards
+- Generate TOPIK II PBT reading questions for a selected part, or practice locally extracted past-paper EPUBs, one question at a time with immediate feedback, an elapsed clock, and browser-local history
 - Save your selection as a local JSON file
 
 The interface is in Korean. Anki is optional: the catalogs, vocabulary search, and character exploration work without it.
@@ -55,6 +56,16 @@ This design lets a remotely hosted LearnHanja page talk to Anki running on the l
 The server has no accounts or user database. AI reading requests send the chosen subject, length, up to 40 target words, up to 35 familiar words, and up to 8 recent words through the Go server to OpenAI. They do not send the whole Anki collection, Migaku database, or pasted offline text. The reader endpoint accepts same-origin browser requests and limits each client address to 20 generations per hour and the whole server to 60 per day. Browser exposure counts stay local. Server logs include request paths, not passage bodies. A public deployment should restrict access at its reverse proxy if stronger access control is needed.
 
 ## Quick start
+
+### TOPIK II reading papers
+
+Build the local reading bank from the TOPIK II Migaku EPUB directory before starting the app:
+
+```bash
+python3 scripts/build_topik_reading.py /path/to/topik-epubs
+```
+
+The builder requires `*_TOPIK_II_Reading_Listening_Migaku.epub` files with all 50 reading questions, four choices, and answer entries. It writes `client/data/topik-reading.json`, including source images, for the separate **TOPIK** tab. AI practice is the default there: choose a reading question part (1–2 through 42–50) and generate new Korean passages, questions, four choices, and explanations through the server's existing `OPENAI_API_KEY`. Practice follows the Hanja single-question format: answer, see feedback, then continue. The clock counts elapsed time without a limit. Generated answer quality and difficulty are not officially calibrated. Choose **기출 EPUB** for the same one-question flow with a past paper. Scores cover only questions attempted. Neither result predicts a TOPIK II level. EPUB OCR text should be checked against its source page when a past question appears malformed.
 
 ### Requirements
 

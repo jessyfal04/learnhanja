@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
-	<link rel="stylesheet" href="/style/style.css?v=32">
-	<script type="module" src="/lib/app.js?v=59"></script>
+	<link rel="stylesheet" href="/style/style.css?v=33">
+	<script type="module" src="/lib/app.js?v=62"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container app-header">
@@ -28,6 +28,7 @@
 			<li id="gamesTab"><a href="#games"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#games"></use></svg><span>게임</span></a></li>
 			<li id="readerTab"><a href="#reader"><span>한자 몰입 읽기</span></a></li>
 			<li id="mockExamTab"><a href="#mockExam"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#mockExam"></use></svg><span>모의시험</span></a></li>
+			<li id="topikTab"><a href="#topik"><svg class="menu-icon" aria-hidden="true"><use href="/style/menu-icons.svg#mockExam"></use></svg><span>TOPIK</span></a></li>
 		</ul></div>
 
 		<div id="connectionView">
@@ -320,6 +321,28 @@
 					<div class="mock-section-heading"><div><span class="mock-step">02</span><h3>문항별 확인</h3></div><p>오답과 미응답을 색으로 구분했습니다</p></div>
 					<div id="mockReview" class="mock-review"></div>
 				</div>
+			</section>
+		</div>
+
+		<div id="topikView" class="is-hidden">
+			<section class="box mock-shell topik-shell" aria-labelledby="topikTitle">
+				<div class="level mock-hero mb-5"><div class="level-left"><div><p class="mock-kicker">TOPIK II · PBT READING</p><h2 id="topikTitle" class="title is-4 mb-2">TOPIK II 읽기</h2><p class="subtitle is-6 mb-0">문항 파트를 골라 한 문제씩 풀고 바로 정답을 확인합니다.</p></div></div><div class="level-right"><span class="tag is-link is-light is-large">읽기</span></div></div>
+				<div id="topikSetup" class="mock-panel">
+					<div class="mock-section-heading"><div><span class="mock-step">01</span><h3>연습 문제 선택</h3></div><p>선택한 파트의 새 문제를 한 문제씩 만듭니다</p></div>
+					<div class="field"><label class="label" for="topikSource">문제 출처</label><div class="select"><select id="topikSource"><option value="ai">AI 새 문제</option><option value="paper">기출 EPUB</option></select></div></div>
+					<div id="topikPartField" class="field"><label class="label" for="topikPart">문항 파트</label><div class="select"><select id="topikPart"></select></div><p class="help">기출의 문항 순서와 지문 길이를 참고합니다. AI 문제의 정답과 난도는 공식 검증을 거치지 않았습니다.</p></div>
+					<div id="topikPaperField" class="field is-hidden"><label class="label" for="topikPaper">기출 시험지</label><div class="select"><select id="topikPaper"></select></div></div>
+					<p class="help mb-3">한 문제씩 풀고 바로 정답을 확인합니다. 시간 제한 없이 경과 시간을 잽니다.</p>
+					<p id="topikSetupStatus" class="help mb-3" role="status"></p>
+					<div class="buttons is-right"><button id="topikStart" class="button is-link is-medium" type="button">AI 한 문제씩 시작</button></div>
+					<div class="mt-5"><h3 class="is-size-6 has-text-weight-bold mb-2">이전 읽기 점수</h3><div id="topikHistory" class="content is-small"></div></div>
+				</div>
+				<div id="topikPlay" class="mock-panel is-hidden">
+					<div class="level is-mobile mb-3"><div class="level-left"><div><p class="mock-kicker">TOPIK READING PRACTICE</p><h3 id="topikProgress" class="title is-5 mb-0"></h3></div></div><div class="level-right mock-session-meta"><span id="topikTimer" class="tag is-info is-light is-medium mock-timer" role="timer">00:00</span></div></div>
+					<div class="box mock-question"><div class="tags mb-2"><span id="topikQuestionNumber" class="tag is-link is-light"></span></div><p id="topikInstruction" class="has-text-weight-semibold mb-3"></p><div id="topikStimulus" class="content"></div><div id="topikPrompt" class="content"></div><div id="topikChoices" class="mock-choices"></div><div id="topikFeedback" class="notification is-light is-hidden mt-4" role="status"></div></div>
+					<div class="buttons mock-play-actions"><button id="topikFinish" class="button is-danger" type="button"><span class="mock-hold-fill" aria-hidden="true"></span><span class="mock-hold-label">길게 눌러 연습 종료</span></button><button id="topikNext" class="button is-link" type="button">다음 문제 →</button></div><p id="topikNextStatus" class="help has-text-danger" role="status"></p>
+				</div>
+					<div id="topikResult" class="is-hidden"><h3 id="topikScore" class="title is-4"></h3><p id="topikResultMeta" class="mb-3"></p><div id="topikBreakdown" class="content"></div><button id="topikAgain" class="button is-link is-light mb-4" type="button">다른 파트 풀기</button><h4 class="has-text-weight-bold mb-2">문항별 확인</h4><div id="topikReview" class="content"></div></div>
 			</section>
 		</div>
 

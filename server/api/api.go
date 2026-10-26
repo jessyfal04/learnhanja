@@ -14,6 +14,7 @@ type Server struct {
 	sentenceErr error
 	images      imageOptions
 	reader      *readerService
+	topik       *topikService
 }
 
 func NewServer(files fs.FS) *Server {
@@ -26,7 +27,7 @@ func NewServer(files fs.FS) *Server {
 	if readerErr != nil {
 		log.Printf("reader unavailable: %v", readerErr)
 	}
-	return &Server{files: files, sentences: sentences, sentenceErr: err, images: newImageOptions(files), reader: reader}
+	return &Server{files: files, sentences: sentences, sentenceErr: err, images: newImageOptions(files), reader: reader, topik: newTopikService(sentenceOptions{apiKey: os.Getenv("OPENAI_API_KEY"), model: os.Getenv("OPENAI_MODEL"), client: &http.Client{Timeout: 120 * time.Second}})}
 }
 
 func (s *Server) ServeMux() *http.ServeMux {
@@ -37,6 +38,8 @@ func (s *Server) ServeMux() *http.ServeMux {
 	mux.HandleFunc("POST /api/mock-exam/passage", s.logged(s.passage))
 	mux.HandleFunc("POST /api/mock-exam/image", s.logged(s.imageQuestion))
 	mux.HandleFunc("POST /api/reader/generate", s.logged(s.readerGenerate))
+	mux.HandleFunc("GET /api/topik/parts", s.logged(s.topikParts))
+	mux.HandleFunc("POST /api/topik/generate", s.logged(s.topikGenerate))
 	mux.Handle("GET /", s.loggedHandler(s.staticFiles()))
 	return mux
 }
