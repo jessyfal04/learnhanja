@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { examGroups, examSections, examWordsForLevel, makeExam, makeExamAsync, makeQuestion, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions } from "./mock-exam-data.js";
+import { allExamCharacters, examGroups, examSections, examWordsForLevel, makeExam, makeExamAsync, makeQuestion, makeQuestionAsync, partialExamData, scoreExam, scoreQuestions } from "./mock-exam-data.js";
 import { answerStatus, buildReportHTML, reportFilename, weaknessLines } from "./mock-exam-report.js";
 import { expandCatalog } from "./vocabulary-data.js";
 
@@ -15,6 +15,7 @@ const eight = {...levelEight, words: eightWords, sentenceWordsByType: {sentenceS
 const levelSeven = JSON.parse(readFileSync(new URL("../data/mock-exam.json", import.meta.url)))["7"];
 const levelSix = JSON.parse(readFileSync(new URL("../data/mock-exam.json", import.meta.url)))["6"];
 const levels = JSON.parse(readFileSync(new URL("../data/levels-sangong.json", import.meta.url)));
+const insights = JSON.parse(readFileSync(new URL("../data/insights.json", import.meta.url)));
 // 대한상공회의소 배정한자 (1~9급).zip / 배정한자 (5~9급).hwp의 9급 열
 const officialNine = "車高工果交口女大力老立馬萬面母木目文門夫父山夕石手水身心兒羊魚玉王牛雨月衣人日子自長田足主天川土行火";
 
@@ -39,6 +40,20 @@ test("9급 bank uses only the tagged characters and complete source fields", () 
 		assert.equal(entry.reading, dictionary.get(entry.hanja).hangul);
 		assert.equal(entry.meaning, dictionary.get(entry.hanja).definitions[0].replace(/[.!?]$/u, ""));
 	}
+});
+
+test("all-level known scope uses the 1,800 regular Sangong characters with the selected paper format", () => {
+	const characters = allExamCharacters(levels, insights, levelSix.characters);
+	assert.equal(characters.length, 1800);
+	assert.equal(new Set(characters.map((entry) => entry.hanja.normalize("NFKC"))).size, 1800);
+	const beyondSelected = characters.find((entry) => !levelSix.characters.some((known) => known.hanja === entry.hanja));
+	assert.ok(beyondSelected?.sound && beyondSelected.meaning && beyondSelected.strokes && beyondSelected.radical);
+	const expanded = {...data, characters, words: examWordsForLevel(catalog, characters)};
+	const selected = partialExamData(expanded, {characters: {[beyondSelected.hanja.normalize("NFKC")]: {status: "known", suspended: false}}});
+	assert.deepEqual(selected.targets.characters.map((entry) => entry.hanja), [beyondSelected.hanja]);
+	assert.ok(selected.format.sections.every((section) => data.format.sections.some((original) => original.type === section.type)));
+	assert.equal(makeQuestion(selected, "characterSound", randomSequence(17)).source, beyondSelected.hanja);
+	assert.equal(partialExamData(expanded, {characters: {[beyondSelected.hanja.normalize("NFKC")]: {status: "known", suspended: true}}}).targets.characters.length, 0);
 });
 
 test("each generated paper follows all 30 positions and has one valid answer per five choices", () => {

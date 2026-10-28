@@ -43,6 +43,18 @@ export function examWordsForLevel(catalog, characters) {
 	}));
 }
 
+export function allExamCharacters(levels, insights, existing = []) {
+	const characters = new Map(existing.map((entry) => [entry.hanja.normalize("NFKC"), entry]));
+	for (const group of levels.groups) for (const hanja of group.characters) {
+		if (Object.hasOwn(levels.variants || {}, hanja) || characters.has(hanja.normalize("NFKC"))) continue;
+		const record = insights.characters?.[hanja];
+		const readings = String(record?.hun || "").split(/\s*\|\s*/u).map((part) => part.replace(/\([^)]*\)/gu, "").replace(/:/gu, "").trim().match(/^(.+?)\s*([가-힣])$/u)).filter(Boolean);
+		if (!readings.length || !Number.isInteger(record.strokes) || !record.radical) continue;
+		characters.set(hanja.normalize("NFKC"), {hanja, sound: readings[0][2], meaning: readings[0][1].trim(), strokes: record.strokes, radical: record.radical, ...(readings.length > 1 ? {sounds: [...new Set(readings.map((match) => match[2]))]} : {})});
+	}
+	return [...characters.values()];
+}
+
 export function partialExamData(data, ankiStatus) {
 	const characters = data.characters.filter((entry) => isActiveStudyStatus(ankiStatus?.characters?.[entry.hanja.normalize("NFKC")], "known"));
 	const known = new Set(characters.map((entry) => entry.hanja.normalize("NFKC")));

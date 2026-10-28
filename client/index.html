@@ -6,7 +6,7 @@
 	<title>한자 배우기</title>
 	<link rel="stylesheet" href="/style/bulma.min.css">
 	<link rel="stylesheet" href="/style/style.css?v=33">
-	<script type="module" src="/lib/app.js?v=62"></script>
+	<script type="module" src="/lib/app.js?v=63"></script>
 </head>
 <body>
 	<section class="hero is-primary is-small"><div class="hero-body"><div class="container app-header">
@@ -285,7 +285,7 @@
 					<div class="mock-section-heading"><div><span class="mock-step">01</span><h3>연습 방식 선택</h3></div><p>시작할 때마다 문제와 보기 순서가 새로 정해집니다</p></div>
 					<div class="columns is-variable is-4 mb-4" role="group" aria-label="연습 방식"><div class="column is-half"><button id="mockModeSingle" class="button is-light mock-mode is-selected" type="button" aria-pressed="true"><span class="mock-mode-icon tag is-link is-light">✦</span><strong>한 문제씩 연습</strong><span>유형을 고르고 바로 정답을 확인해요. 원하는 만큼 풀고 끝낼 수 있습니다.</span></button></div><div class="column is-half"><button id="mockModeFull" class="button is-light mock-mode" type="button" aria-pressed="false"><span class="mock-mode-icon tag is-link is-light">▦</span><strong id="mockModeFullTitle">실전 모의시험</strong><span id="mockModeFullDescription">기출 순서대로 시간을 재고 풀어요. 결과는 제출 후 공개됩니다.</span></button></div></div>
 					<div class="columns is-variable is-4"><div class="column is-half"><div class="field"><label class="label" for="mockLevel">급수</label><div class="control"><div class="select is-fullwidth"><select id="mockLevel"></select></div></div><p id="mockLevelHelp" class="help"></p></div></div><div id="mockTypeField" class="column is-half"><div class="field"><label class="label" for="mockType">연습할 유형</label><div class="control"><div class="select is-fullwidth"><select id="mockType"><option value="all">전체 유형 · 시험지 순서</option></select></div></div><p class="help">전체 유형은 시험지의 유형별 문항 수와 순서대로 이어집니다</p></div></div></div>
-					<div class="field"><label class="checkbox"><input id="mockKnownOnly" type="checkbox"> 학습한 독음 한자만 · 부분 연습</label><p class="help">문제의 한자와 어휘는 앙키에서 학습한 독음만 사용합니다. 보기는 급수 전체에서 나옵니다.</p><p id="mockKnownHelp" class="help" role="status"></p></div>
+					<div class="field"><label class="label" for="mockCharacterScope">출제 한자</label><div class="select is-fullwidth"><select id="mockCharacterScope"><option value="known-level">선택 급수 · 학습한 독음만</option><option value="all-level" selected>선택 급수 · 모든 독음</option><option value="known-all">전체 급수 · 학습한 독음만</option></select></div><p id="mockKnownHelp" class="help" role="status"></p></div>
 					<div class="notification is-link is-light mock-source-note"><p id="mockSource"></p></div><p id="mockSetupStatus" class="help mb-2" role="status"></p><div class="buttons is-right"><button id="mockStart" class="button is-link is-medium" type="button">연습 시작 →</button></div>
 				</div>
 				<div id="mockPlay" class="mock-panel is-hidden">

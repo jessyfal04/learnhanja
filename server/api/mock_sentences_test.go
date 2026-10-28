@@ -66,6 +66,42 @@ func TestSentenceGenerationUsesVerifiedGradeWord(t *testing.T) {
 	}
 }
 
+func TestSentenceAllScopeAcceptsWordsOutsideSelectedLevel(t *testing.T) {
+	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	grade := service.grades["8"]
+	var outside string
+	for hanja := range grade.allTypes["sentenceSound"].words {
+		if _, inLevel := grade.types["sentenceSound"].words[hanja]; !inLevel {
+			outside = hanja
+			break
+		}
+	}
+	if outside == "" {
+		t.Fatal("all-level pool has no extra word")
+	}
+	server := &Server{sentences: service}
+	manifest := httptest.NewRecorder()
+	server.sentenceManifest(manifest, httptest.NewRequest(http.MethodGet, "/api/mock-exam/sentences?level=8&scope=all", nil))
+	if manifest.Code != http.StatusOK || !strings.Contains(manifest.Body.String(), outside) {
+		t.Fatalf("all-scope manifest: %d", manifest.Code)
+	}
+	request := func(scope string) *httptest.ResponseRecorder {
+		body, _ := json.Marshal(map[string]string{"level": "8", "scope": scope, "type": "sentenceSound", "hanja": outside})
+		recorder := httptest.NewRecorder()
+		server.sentence(recorder, httptest.NewRequest(http.MethodPost, "/api/mock-exam/sentence", bytes.NewReader(body)))
+		return recorder
+	}
+	if got := request("level"); got.Code != http.StatusBadRequest {
+		t.Fatalf("level-only accepted extra word: %d", got.Code)
+	}
+	if got := request("all"); got.Code != http.StatusServiceUnavailable || !strings.Contains(got.Body.String(), "OpenAI API key") {
+		t.Fatalf("all-scope did not accept extra word: %d %s", got.Code, got.Body.String())
+	}
+}
+
 func TestSentenceRequiresServerKey(t *testing.T) {
 	service, err := newSentenceService(os.DirFS("../../client"), sentenceOptions{})
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 	"unicode"
@@ -17,6 +18,8 @@ import (
 )
 
 const defaultResponsesURL = "https://api.openai.com/v1/responses"
+
+var mockHunParentheses = regexp.MustCompile(`\([^)]*\)`)
 
 type sentenceOptions struct {
 	apiKey   string
@@ -56,9 +59,11 @@ type blankAmbiguity struct{ retryChoices []string }
 func (e *blankAmbiguity) Error() string { return "blank choices are ambiguous" }
 
 type sentenceGrade struct {
-	types      map[string]sentenceType
-	pictures   map[string]bool
-	characters map[string]string
+	types         map[string]sentenceType
+	allTypes      map[string]sentenceType
+	pictures      map[string]bool
+	characters    map[string]string
+	allCharacters map[string]string
 }
 
 type passageTarget struct {
@@ -109,6 +114,67 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 	if err := json.Unmarshal(catalogBytes, &catalog); err != nil {
 		return nil, err
 	}
+	allAllowed := make(map[rune]bool)
+	allCharacters := make(map[string]string)
+	for _, config := range configs {
+		for _, character := range config.Characters {
+			if utf8.RuneCountInString(character.Hanja) == 1 {
+				allAllowed[[]rune(character.Hanja)[0]] = true
+				if onlyHangul(character.Meaning) && utf8.RuneCountInString(character.Meaning) >= 2 && utf8.RuneCountInString(character.Meaning) <= 5 {
+					allCharacters[character.Hanja] = character.Meaning
+				}
+			}
+		}
+	}
+	if levelBytes, levelErr := fs.ReadFile(files, "data/levels-sangong.json"); levelErr == nil {
+		var levels struct {
+			Variants map[string]json.RawMessage `json:"variants"`
+			Groups   []struct {
+				Characters []string `json:"characters"`
+			} `json:"groups"`
+		}
+		if err := json.Unmarshal(levelBytes, &levels); err != nil {
+			return nil, err
+		}
+		for _, group := range levels.Groups {
+			for _, hanja := range group.Characters {
+				if _, variant := levels.Variants[hanja]; !variant && utf8.RuneCountInString(hanja) == 1 {
+					allAllowed[[]rune(hanja)[0]] = true
+				}
+			}
+		}
+		if insightBytes, insightErr := fs.ReadFile(files, "data/insights.json"); insightErr == nil {
+			var insights struct {
+				Characters map[string]struct {
+					Hun string `json:"hun"`
+				} `json:"characters"`
+			}
+			if err := json.Unmarshal(insightBytes, &insights); err != nil {
+				return nil, err
+			}
+			for _, group := range levels.Groups {
+				for _, hanja := range group.Characters {
+					if _, variant := levels.Variants[hanja]; variant {
+						continue
+					}
+					if _, exists := allCharacters[hanja]; exists {
+						continue
+					}
+					first := strings.Split(insights.Characters[hanja].Hun, "|")[0]
+					first = mockHunParentheses.ReplaceAllString(first, "")
+					first = strings.TrimSpace(strings.ReplaceAll(first, ":", ""))
+					runes := []rune(first)
+					if len(runes) < 2 {
+						continue
+					}
+					meaning := strings.TrimSpace(string(runes[:len(runes)-1]))
+					if onlyHangul(meaning) && utf8.RuneCountInString(meaning) >= 2 && utf8.RuneCountInString(meaning) <= 5 {
+						allCharacters[hanja] = meaning
+					}
+				}
+			}
+		}
+	}
 	if options.model == "" {
 		options.model = "gpt-6-luna"
 	}
@@ -120,7 +186,7 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 	}
 	service := &sentenceService{grades: make(map[string]sentenceGrade), options: options}
 	for level, config := range configs {
-		grade := sentenceGrade{types: make(map[string]sentenceType), pictures: make(map[string]bool), characters: make(map[string]string)}
+		grade := sentenceGrade{types: make(map[string]sentenceType), allTypes: make(map[string]sentenceType), pictures: make(map[string]bool), characters: make(map[string]string), allCharacters: allCharacters}
 		allowed := make(map[rune]bool)
 		for _, character := range config.Characters {
 			for _, symbol := range character.Hanja {
@@ -186,6 +252,39 @@ func newSentenceService(files fs.FS, options sentenceOptions) (*sentenceService,
 				}
 			}
 			grade.types[section.Type] = sentenceType{words: words, context: context}
+			allWords := make(map[string]examWord)
+			allCounts := make(map[string]int)
+			for _, row := range catalog {
+				if len(row) < 4 {
+					continue
+				}
+				var hanja, reading string
+				var definitions []string
+				if json.Unmarshal(row[0], &hanja) != nil || json.Unmarshal(row[1], &reading) != nil || json.Unmarshal(row[3], &definitions) != nil {
+					continue
+				}
+				if utf8.RuneCountInString(hanja) != context.WordLength || utf8.RuneCountInString(reading) != context.WordLength || !onlyHangul(reading) || !onlyAllowed(hanja, allAllowed) {
+					continue
+				}
+				meaning := ""
+				for _, definition := range definitions {
+					if strings.TrimSpace(definition) != "" {
+						meaning = strings.TrimSpace(definition)
+						break
+					}
+				}
+				if meaning == "" {
+					continue
+				}
+				allCounts[hanja]++
+				allWords[hanja] = examWord{hanja, reading, meaning}
+			}
+			for hanja, count := range allCounts {
+				if count != 1 {
+					delete(allWords, hanja)
+				}
+			}
+			grade.allTypes[section.Type] = sentenceType{words: allWords, context: context}
 		}
 		if len(grade.types) > 0 || len(grade.pictures) > 0 {
 			service.grades[level] = grade
@@ -228,8 +327,18 @@ func (s *Server) sentenceManifest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "지원하지 않는 급수입니다", http.StatusBadRequest)
 		return
 	}
+	if scope := r.URL.Query().Get("scope"); scope != "" && scope != "all" {
+		http.Error(w, "지원하지 않는 출제 범위입니다", http.StatusBadRequest)
+		return
+	}
+	all := r.URL.Query().Get("scope") == "all"
+	types := grade.types
+	characters := grade.characters
+	if all {
+		types, characters = grade.allTypes, grade.allCharacters
+	}
 	wordsByType := make(map[string][]string)
-	for name, section := range grade.types {
+	for name, section := range types {
 		words := make([]string, 0, len(section.words))
 		for hanja := range section.words {
 			words = append(words, hanja)
@@ -238,8 +347,8 @@ func (s *Server) sentenceManifest(w http.ResponseWriter, r *http.Request) {
 		wordsByType[name] = words
 	}
 	passageCharacters := make([]string, 0, len(grade.characters))
-	if grade.types["passage"].context.Kind == "paired" {
-		for hanja := range grade.characters {
+	if types["passage"].context.Kind == "paired" {
+		for hanja := range characters {
 			passageCharacters = append(passageCharacters, hanja)
 		}
 		slices.Sort(passageCharacters)
@@ -261,6 +370,7 @@ func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {
 	}
 	var request struct {
 		Level   string   `json:"level"`
+		Scope   string   `json:"scope"`
 		Type    string   `json:"type"`
 		Hanja   string   `json:"hanja"`
 		Choices []string `json:"choices"`
@@ -276,7 +386,15 @@ func (s *Server) sentence(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "지원하지 않는 급수입니다", http.StatusBadRequest)
 		return
 	}
-	section, ok := grade.types[request.Type]
+	if request.Scope != "" && request.Scope != "level" && request.Scope != "all" {
+		http.Error(w, "지원하지 않는 출제 범위입니다", http.StatusBadRequest)
+		return
+	}
+	types := grade.types
+	if request.Scope == "all" {
+		types = grade.allTypes
+	}
+	section, ok := types[request.Type]
 	if !ok || section.context.Kind == "paired" {
 		http.Error(w, "지원하지 않는 독해 유형입니다", http.StatusBadRequest)
 		return
@@ -340,6 +458,7 @@ func (s *Server) passage(w http.ResponseWriter, r *http.Request) {
 	}
 	var request struct {
 		Level     string `json:"level"`
+		Scope     string `json:"scope"`
 		Word      string `json:"word"`
 		Character string `json:"character"`
 	}
@@ -354,13 +473,22 @@ func (s *Server) passage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "지원하지 않는 급수입니다", http.StatusBadRequest)
 		return
 	}
-	section, ok := grade.types["passage"]
+	if request.Scope != "" && request.Scope != "level" && request.Scope != "all" {
+		http.Error(w, "지원하지 않는 출제 범위입니다", http.StatusBadRequest)
+		return
+	}
+	types := grade.types
+	characters := grade.characters
+	if request.Scope == "all" {
+		types, characters = grade.allTypes, grade.allCharacters
+	}
+	section, ok := types["passage"]
 	if !ok || section.context.Kind != "paired" {
 		http.Error(w, "지원하지 않는 독해 유형입니다", http.StatusBadRequest)
 		return
 	}
 	word, validWord := section.words[request.Word]
-	characterText, validCharacter := grade.characters[request.Character]
+	characterText, validCharacter := characters[request.Character]
 	if !validWord || !validCharacter || strings.Contains(request.Word, request.Character) {
 		http.Error(w, "급수에 없는 독해 대상입니다", http.StatusBadRequest)
 		return
